@@ -122,3 +122,19 @@ None in application code yet. Process note: running `git` from `panal` initially
 **Tradeoffs:** Two markdown files instead of GitHub Issues so the plan travels with the code and works offline. Nested git repo under a home-level repo is slightly unusual; project isolation is worth it.
 
 **Follow-up:** Start Milestone 0 (brief, Dexie schema, export format) then scaffold the Next.js PWA (Milestone 1).
+
+---
+
+### 2026-09-29 — Product brief (`docs/product-brief.md`)
+
+**What:** Created a one-page product brief at `docs/product-brief.md`. Covers the precise V1 promise (local-only, no accounts), the three behavioural success criteria, page list, four key decisions (task math, connector architecture, data integrity, no combined score), the deferred feature list, tech stack table, and the go/no-go gate checklist for Milestone 1.
+
+**How:** Distilled from `plan.md` and `context.md`. The brief is the canonical human-readable summary; `plan.md` remains the authoritative technical spec.
+
+**Errors:** None.
+
+**Issues:** None remaining for this slice.
+
+**Tradeoffs:** Kept as a separate `docs/` file rather than inlining into `context.md` so it reads cleanly on its own and can be shared without the rest of the changelog.
+
+**Follow-up:** Next tasks in Milestone 0 — define personal success metrics, wireframes, Dexie schema, export format.

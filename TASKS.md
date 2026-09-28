@@ -21,7 +21,7 @@ V2+ work (Milestones 4–7) stays deferred until the two-week personal-use test.
 
 ## Milestone 0 — product specification and durable local schema
 
-- [ ] Write a one-page product brief (promise, V1 success criterion, deferred list)
+- [x] Write a one-page product brief (promise, V1 success criterion, deferred list)
 - [ ] Define personal success metrics (e.g. five logged days/week; dashboard loads offline)
 - [ ] Wireframes (Figma or code) for Today, Dashboard, Connectors
 - [ ] Dexie `version(1)` schema for all V1 entities + documented migration policy
@@ -218,6 +218,7 @@ If no: keep improving V1 daily loop. Do not start Milestone 5.
 
 ## Completion log
 
-| Date       | Feature / commit                          | Tasks closed |
-| ---------- | ----------------------------------------- | ------------ |
-| 2026-09-22 | Tracking files + project git repo         | tracker setup |
+| Date       | Feature / commit                  | Tasks closed  |
+| ---------- | --------------------------------- | ------------- |
+| 2026-09-22 | Tracking files + project git repo | tracker setup |
+| 2026-09-29 | Product brief (`docs/product-brief.md`) | Milestone 0 — product brief |
