@@ -138,3 +138,19 @@ None in application code yet. Process note: running `git` from `panal` initially
 **Tradeoffs:** Kept as a separate `docs/` file rather than inlining into `context.md` so it reads cleanly on its own and can be shared without the rest of the changelog.
 
 **Follow-up:** Next tasks in Milestone 0 — define personal success metrics, wireframes, Dexie schema, export format.
+
+---
+
+### 2026-09-29 — Personal success metrics (`docs/success-metrics.md`)
+
+**What:** Created `docs/success-metrics.md` defining the go/no-go gate for Milestone 2. Contains five primary gate metrics (G1–G5: days logged/week, consecutive weeks, offline load, data persistence, task math), five secondary quality metrics (Q1–Q5), four hard blockers that auto-block Milestone 2, and a template for recording two-week test results in `context.md`.
+
+**How:** Gate metrics are concrete and measurable (counts, timed tasks, manual checks). Secondary metrics are observational and inform V2 decisions without blocking. Deliberately excluded speed benchmarks and feature counts as non-metrics.
+
+**Errors:** None.
+
+**Issues:** None.
+
+**Tradeoffs:** Primary / secondary split keeps the gate strict (all 5 must pass) while still capturing useful signal that doesn't warrant blocking progress.
+
+**Follow-up:** Next task in Milestone 0 — wireframes for Today, Dashboard, Connectors.
