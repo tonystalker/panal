@@ -23,10 +23,10 @@ V2+ work (Milestones 4–7) stays deferred until the two-week personal-use test.
 
 - [x] Write a one-page product brief (promise, V1 success criterion, deferred list)
 - [x] Define personal success metrics (e.g. five logged days/week; dashboard loads offline)
-- [ ] Wireframes (Figma or code) for Today, Dashboard, Connectors
-- [ ] Dexie `version(1)` schema for all V1 entities + documented migration policy
-- [ ] Decide encrypted export file format (version, envelope, schema validation)
-- [ ] Sample backup fixture + import test plan
+- [x] Wireframes (Figma or code) for Today, Dashboard, Connectors
+- [x] Dexie `version(1)` schema for all V1 entities + documented migration policy
+- [x] Decide encrypted export file format (version, envelope, schema validation)
+- [x] Sample backup fixture + import test plan
 
 ---
 
@@ -223,3 +223,6 @@ If no: keep improving V1 daily loop. Do not start Milestone 5.
 | 2026-09-22 | Tracking files + project git repo | tracker setup |
 | 2026-09-29 | Product brief (`docs/product-brief.md`) | Milestone 0 — product brief |
 | 2026-09-29 | Success metrics (`docs/success-metrics.md`) | Milestone 0 — success metrics |
+| 2026-09-29 | Wireframes (`docs/wireframes.md` + images) | Milestone 0 — wireframes |
+| 2026-09-29 | Dexie v1 schema (`lib/db.ts` + dexie + zod) | Milestone 0 — schema |
+| 2026-09-29 | Export format + fixture + test plan | Milestone 0 — complete |
