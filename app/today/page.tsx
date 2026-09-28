@@ -4,7 +4,6 @@ import { useState, useEffect, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { db, TaskInstance } from "@/lib/db";
 import {
-  getOrCreateProfile,
   getOrCreateDailyLog,
   getTasksForLog,
   createTask,
@@ -13,13 +12,12 @@ import {
   reopenTask,
   skipTask,
   softDeleteTask,
-  reorderTasks,
   getManualMetricsForLog,
   upsertManualMetric,
   taskCompletionPercent,
   targetProgressPercent,
 } from "@/lib/repositories";
-import { todayKey, dateLabel } from "@/lib/date";
+import { todayKey } from "@/lib/date";
 
 type ManualMetricKey = "exercise_minutes" | "mobile_usage_minutes" | "dsa_problems";
 
@@ -38,7 +36,6 @@ export default function TodayPage() {
   const [newTitle, setNewTitle] = useState("");
   const [newTarget, setNewTarget] = useState("");
   const [newUnit, setNewUnit] = useState("");
-  const [note, setNote] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
   const addInputRef = useRef<HTMLInputElement>(null);
 
@@ -47,13 +44,6 @@ export default function TodayPage() {
     setTimezone(tz);
     setDateKey(todayKey(tz));
   }, []);
-
-  // Profile + DailyLog
-  const { data: profile } = useQuery({
-    queryKey: ["profile"],
-    queryFn: () => getOrCreateProfile(),
-    enabled: !!timezone,
-  });
 
   const { data: log } = useQuery({
     queryKey: ["dailyLog", dateKey],

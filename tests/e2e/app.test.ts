@@ -36,7 +36,7 @@ test.describe("Today page", () => {
     await expect(page.locator("text=50%")).toBeVisible();
   });
 
-  test("reload retains task data (IndexedDB persistence)", async ({ page, context }) => {
+  test("reload retains task data (IndexedDB persistence)", async ({ page }) => {
     await page.locator("#add-task-btn").click();
     await page.locator("#new-task-title").fill("Persistent Task");
     await page.locator("#new-task-title").press("Enter");

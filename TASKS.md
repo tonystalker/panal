@@ -12,8 +12,8 @@ This file tracks **progress**. `context.md` tracks **how it was done** (changelo
 ## Current focus
 
 - [x] Project tracking files (`TASKS.md`, `context.md`) derived from `plan.md`
-- [ ] Milestone 0 — product spec, schema, export format
-- [ ] Milestone 1 — offline personal tracker (core PWA)
+- [x] Milestone 0 — product spec, schema, export format
+- [x] Milestone 1 — offline personal tracker (core PWA)
 
 V2+ work (Milestones 4–7) stays deferred until the two-week personal-use test.
 
@@ -34,66 +34,66 @@ V2+ work (Milestones 4–7) stays deferred until the two-week personal-use test.
 
 ### Scaffold and platform
 
-- [ ] Scaffold Next.js 15+ App Router, TypeScript, Tailwind CSS
-- [ ] Add shadcn/ui
-- [ ] Configure PWA manifest + service worker (installable, offline after first load)
-- [ ] Tooling: ESLint, Prettier, strict TypeScript, Zod, Vitest, Playwright
-- [ ] App shell + five routes: Today, Dashboard, Calendar, Connectors, Settings
-- [ ] Timezone-aware date helper (`YYYY-MM-DD` in user timezone; event timestamps separate)
+- [x] Scaffold Next.js 15+ App Router, TypeScript, Tailwind CSS
+- [x] Add shadcn/ui
+- [x] Configure PWA manifest + service worker (installable, offline after first load)
+- [x] Tooling: ESLint, Prettier, strict TypeScript, Zod, Vitest, Playwright
+- [x] App shell + five routes: Today, Dashboard, Calendar, Connectors, Settings
+- [x] Timezone-aware date helper (`YYYY-MM-DD` in user timezone; event timestamps separate)
 
 ### Local data layer
 
-- [ ] Dexie database: UserProfile, DailyLog, TaskTemplate, TaskInstance, ManualMetric, ConnectorConnection, MetricEvent, DashboardWidget
-- [ ] Client-generated UUIDs, immutable IDs, schema version from day one
-- [ ] Indexes for idempotent connector imports `(connectionId, metricKey, date, sourceEventId)`
-- [ ] Repositories + Zod validation at write/import boundaries
-- [ ] Seeded demo data behind explicit “Load demo data” (not auto-injected)
-- [ ] Soft-delete fields prepared for later sync (no cloud yet)
+- [x] Dexie database: UserProfile, DailyLog, TaskTemplate, TaskInstance, ManualMetric, ConnectorConnection, MetricEvent, DashboardWidget
+- [x] Client-generated UUIDs, immutable IDs, schema version from day one
+- [x] Indexes for idempotent connector imports `(connectionId, metricKey, date, sourceEventId)`
+- [x] Repositories + Zod validation at write/import boundaries
+- [x] Seeded demo data behind explicit “Load demo data” (not auto-injected)
+- [x] Soft-delete fields prepared for later sync (no cloud yet)
 
 ### Today page
 
-- [ ] One DailyLog per date; note field
-- [ ] Create, edit, reorder, complete, skip, delete daily tasks
-- [ ] Binary and quantitative tasks (`title`, `targetValue`, `completedValue`, `unit`, `status`)
-- [ ] Task completion = completed count / planned count (e.g. 3/6 → 50%)
-- [ ] Target progress shown separately (e.g. 3 of 10 → 30%); incomplete quantitative ≠ failed
-- [ ] Manual metrics: exercise, DSA problems, mobile usage minutes
-- [ ] Live progress on Today
+- [x] One DailyLog per date; note field
+- [x] Create, edit, reorder, complete, skip, delete daily tasks
+- [x] Binary and quantitative tasks (`title`, `targetValue`, `completedValue`, `unit`, `status`)
+- [x] Task completion = completed count / planned count (e.g. 3/6 → 50%)
+- [x] Target progress shown separately (e.g. 3 of 10 → 30%); incomplete quantitative ≠ failed
+- [x] Manual metrics: exercise, DSA problems, mobile usage minutes
+- [x] Live progress on Today
 
 ### Dashboard (manual metrics first)
 
-- [ ] Date range selector (7 / 30 / 90 / custom)
-- [ ] Task-completion-percent line (not raw count alone)
-- [ ] Manual metric charts (exercise, DSA, mobile minutes) with sensible defaults
-- [ ] Custom SVG calendar heatmap for streaks
-- [ ] Explicit axes/units; empty vs zero per missing-data policy
-- [ ] Loading / empty / error states; no combined productivity score
-- [ ] Daily detail panel: planned vs completed vs connector records (connectors later)
+- [x] Date range selector (7 / 30 / 90 / custom)
+- [x] Task-completion-percent line (not raw count alone)
+- [x] Manual metric charts (exercise, DSA, mobile minutes) with sensible defaults
+- [x] Custom SVG calendar heatmap for streaks
+- [x] Explicit axes/units; empty vs zero per missing-data policy
+- [x] Loading / empty / error states; no combined productivity score
+- [x] Daily detail panel: planned vs completed vs connector records (connectors later)
 
 ### Calendar
 
-- [ ] Day-by-day history
-- [ ] Streaks and concise daily summary
-- [ ] Navigate to a day’s Today/log view
+- [x] Day-by-day history
+- [x] Streaks and concise daily summary
+- [x] Navigate to a day’s Today/log view
 
 ### Settings (local privacy)
 
-- [ ] Preferences: timezone and display options
-- [ ] Privacy copy: local-first, no account, no server personal data
-- [ ] Readable JSON + CSV export
-- [ ] Encrypted JSON backup export/import (passphrase / recovery phrase)
-- [ ] Validate backup schema/version before replace or merge
-- [ ] Delete local data
-- [ ] Web Crypto AES-GCM envelopes for backup; interfaces suitable for later sync
-- [ ] No plaintext credentials in localStorage, URLs, logs, or error reports
+- [x] Preferences: timezone and display options
+- [x] Privacy copy: local-first, no account, no server personal data
+- [x] Readable JSON + CSV export
+- [x] Encrypted JSON backup export/import (passphrase / recovery phrase)
+- [x] Validate backup schema/version before replace or merge
+- [x] Delete local data
+- [x] Web Crypto AES-GCM envelopes for backup; interfaces suitable for later sync
+- [x] No plaintext credentials in localStorage, URLs, logs, or error reports
 
 ### Milestone 1 tests and polish
 
-- [ ] Unit: task percentages, target progress, date/timezone boundaries
-- [ ] Unit: crypto envelope round trip
-- [ ] E2E: complete tasks; reload retains data; offline after first load
-- [ ] Polished empty states; restrained dashboard UI
-- [ ] README: setup, Vercel, PWA/offline check, backup restore (example env only)
+- [x] Unit: task percentages, target progress, date/timezone boundaries
+- [x] Unit: crypto envelope round trip
+- [x] E2E: complete tasks; reload retains data; offline after first load
+- [x] Polished empty states; restrained dashboard UI
+- [x] README: setup, Vercel, PWA/offline check, backup restore (example env only)
 
 **Acceptance:** works fully without network after first load; reload retains data; 3 of 6 tasks shows 50% task completion.
 
@@ -226,3 +226,4 @@ If no: keep improving V1 daily loop. Do not start Milestone 5.
 | 2026-09-29 | Wireframes (`docs/wireframes.md` + images) | Milestone 0 — wireframes |
 | 2026-09-29 | Dexie v1 schema (`lib/db.ts` + dexie + zod) | Milestone 0 — schema |
 | 2026-09-29 | Export format + fixture + test plan | Milestone 0 — complete |
+| 2026-09-29 | Offline tracker PWA + shadcn/ui + Dexie | Milestone 1 — complete |

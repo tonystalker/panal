@@ -21,7 +21,7 @@ import {
   DashboardWidgetSchema,
 } from "./db";
 import { generateId } from "./uuid";
-import { nowISO, todayKey } from "./date";
+import { nowISO } from "./date";
 
 // ---------------------------------------------------------------------------
 // UserProfile

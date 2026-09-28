@@ -7,7 +7,7 @@ import {
   Tooltip, ResponsiveContainer, ReferenceLine, Cell,
 } from "recharts";
 import { getDailyLogsInRange, getManualMetricsInRange, getTasksForLog, taskCompletionPercent } from "@/lib/repositories";
-import { todayKey, dateRange, daysBetween } from "@/lib/date";
+import { todayKey, dateRange } from "@/lib/date";
 import { format, parseISO, subDays } from "date-fns";
 
 type Range = "7d" | "30d" | "90d";
@@ -147,11 +147,17 @@ export default function DashboardPage() {
           <EmptyChart />
         ) : (
           <ResponsiveContainer width="100%" height={160}>
-            <LineChart data={taskCompletionData} onClick={(e) => e?.activePayload && setSelectedDate(e.activePayload[0]?.payload?.date)}>
+            <LineChart
+              data={taskCompletionData}
+              onClick={(e) => {
+                const ev = e as { activePayload?: Array<{ payload?: { date?: string } }> } | null;
+                if (ev?.activePayload) setSelectedDate(ev.activePayload[0]?.payload?.date ?? null);
+              }}
+            >
               <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
               <XAxis dataKey="date" tickFormatter={shortDate} tick={{ fontSize: 11 }} />
               <YAxis domain={[0, 100]} unit="%" tick={{ fontSize: 11 }} />
-              <Tooltip formatter={(v) => [`${v}%`, "Completion"]} labelFormatter={(l) => format(parseISO(l), "EEE, MMM d")} />
+              <Tooltip formatter={(v) => [`${v}%`, "Completion"]} labelFormatter={(l) => l ? format(parseISO(String(l)), "EEE, MMM d") : ""} />
               <ReferenceLine y={100} stroke="var(--success)" strokeDasharray="4 4" />
               <Line type="monotone" dataKey="value" stroke="var(--accent)" strokeWidth={2} dot={{ r: 3, fill: "var(--accent)" }} connectNulls={false} />
             </LineChart>
@@ -202,7 +208,7 @@ export default function DashboardPage() {
           )}
           {selectedDetail.note && (
             <p style={{ marginTop: "0.75rem", color: "var(--text-2)", fontSize: "0.875rem", fontStyle: "italic" }}>
-              "{selectedDetail.note}"
+              &ldquo;{selectedDetail.note}&rdquo;
             </p>
           )}
         </div>
@@ -243,7 +249,7 @@ function MetricBarChart({
         <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
         <XAxis dataKey="date" tickFormatter={shortDate} tick={{ fontSize: 11 }} />
         <YAxis tick={{ fontSize: 11 }} />
-        <Tooltip labelFormatter={(l) => format(parseISO(l), "EEE, MMM d")} />
+        <Tooltip labelFormatter={(l) => l ? format(parseISO(String(l)), "EEE, MMM d") : ""} />
         <ReferenceLine y={goalLine} stroke={color} strokeDasharray="4 4" opacity={0.6} />
         <Bar dataKey="value" radius={[3, 3, 0, 0]}>
           {data.map((entry, i) => (

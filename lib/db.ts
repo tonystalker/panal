@@ -80,7 +80,7 @@ export const ConnectorConnectionSchema = z.object({
   connectorId: z.enum(["github", "leetcode"]),
   displayName: z.string().max(200),
   status: z.enum(["not_connected", "connected", "error", "syncing"]).default("not_connected"),
-  settings: z.record(z.unknown()).default({}), // connector-specific config (never credentials)
+  settings: z.record(z.string(), z.unknown()).default({}), // connector-specific config (never credentials)
   encryptedCredential: z.string().nullable().default(null), // AES-GCM encrypted blob; NOT exported in backups
   lastSyncedAt: z.string().datetime().nullable().default(null),
   lastError: z.string().nullable().default(null),
@@ -110,13 +110,21 @@ export const DashboardWidgetSchema = z.object({
     z.object({ from: z.string(), to: z.string() }),
   ]),
   aggregation: z.enum(["daily", "weekly", "monthly"]).default("daily"),
-  config: z.object({
-    goalLine: z.number().nullable().default(null),
-    rollingAverage: z.number().int().positive().nullable().default(null), // window in days
-    title: z.string().nullable().default(null),
-    color: z.string().nullable().default(null),
-    visible: z.boolean().default(true),
-  }).default({}),
+  config: z
+    .object({
+      goalLine: z.number().nullable().default(null),
+      rollingAverage: z.number().int().positive().nullable().default(null), // window in days
+      title: z.string().nullable().default(null),
+      color: z.string().nullable().default(null),
+      visible: z.boolean().default(true),
+    })
+    .default({
+      goalLine: null,
+      rollingAverage: null,
+      title: null,
+      color: null,
+      visible: true,
+    }),
   position: z.number().int().min(0).default(0),
 });
 

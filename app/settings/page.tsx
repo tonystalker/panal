@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { db } from "@/lib/db";
 import { getOrCreateProfile, updateProfile } from "@/lib/repositories";
@@ -36,7 +36,7 @@ export default function SettingsPage() {
 
   const { data: profile } = useQuery({
     queryKey: ["profile"],
-    queryFn: getOrCreateProfile,
+    queryFn: () => getOrCreateProfile(),
   });
 
   const showStatus = (type: "success" | "error", msg: string) => {

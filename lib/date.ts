@@ -9,7 +9,7 @@
  *  - Never use new Date().toISOString().slice(0,10) — that is UTC, not local time.
  */
 
-import { format, parseISO, startOfDay, differenceInCalendarDays, isValid } from "date-fns";
+import { format, parseISO, differenceInCalendarDays, isValid } from "date-fns";
 import { toZonedTime, fromZonedTime } from "date-fns-tz";
 
 /**
