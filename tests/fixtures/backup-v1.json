@@ -1,0 +1,110 @@
+{
+  "_comment": "Sample V1 encrypted backup fixture — passphrase is 'test-passphrase-do-not-use'",
+  "version": 1,
+  "app": "personal-analytics",
+  "exportedAt": "2026-09-29T00:00:00.000Z",
+  "deviceId": "11111111-1111-1111-1111-111111111111",
+  "encryption": {
+    "algorithm": "AES-GCM",
+    "kdf": "PBKDF2",
+    "kdfParams": {
+      "hash": "SHA-256",
+      "iterations": 600000,
+      "saltB64": "AAAAAAAAAAAAAAAAAAAAAA"
+    },
+    "ivB64": "AAAAAAAAAAAAAAAAAAAA",
+    "tagLength": 128
+  },
+  "_plaintext_for_tests": {
+    "schemaVersion": 1,
+    "exportedAt": "2026-09-29T00:00:00.000Z",
+    "tables": {
+      "userProfile": [
+        {
+          "id": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+          "timezone": "Asia/Kolkata",
+          "createdAt": "2026-09-22T00:00:00.000Z",
+          "preferences": { "firstDayOfWeek": 1, "theme": "dark" }
+        }
+      ],
+      "dailyLogs": [
+        {
+          "id": "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb",
+          "date": "2026-09-29",
+          "timezone": "Asia/Kolkata",
+          "note": "Good focus day.",
+          "createdAt": "2026-09-29T04:30:00.000Z",
+          "updatedAt": "2026-09-29T18:00:00.000Z"
+        }
+      ],
+      "taskTemplates": [
+        {
+          "id": "cccccccc-cccc-cccc-cccc-cccccccccccc",
+          "title": "Solve DSA problems",
+          "defaultTargetValue": 10,
+          "unit": "problems",
+          "category": "coding",
+          "active": true
+        }
+      ],
+      "taskInstances": [
+        {
+          "id": "dddddddd-dddd-dddd-dddd-dddddddddddd",
+          "dailyLogId": "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb",
+          "templateId": "cccccccc-cccc-cccc-cccc-cccccccccccc",
+          "title": "Solve DSA problems",
+          "targetValue": 10,
+          "completedValue": 3,
+          "unit": "problems",
+          "status": "todo",
+          "createdAt": "2026-09-29T04:30:00.000Z",
+          "completedAt": null
+        },
+        {
+          "id": "eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee",
+          "dailyLogId": "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb",
+          "templateId": null,
+          "title": "Morning run",
+          "targetValue": null,
+          "completedValue": 1,
+          "unit": null,
+          "status": "done",
+          "createdAt": "2026-09-29T04:30:00.000Z",
+          "completedAt": "2026-09-29T07:00:00.000Z"
+        }
+      ],
+      "manualMetrics": [
+        {
+          "id": "ffffffff-ffff-ffff-ffff-ffffffffffff",
+          "dailyLogId": "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb",
+          "metricKey": "exercise_minutes",
+          "value": 30,
+          "unit": "minutes",
+          "source": "manual"
+        },
+        {
+          "id": "00000000-0000-0000-0000-000000000001",
+          "dailyLogId": "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb",
+          "metricKey": "mobile_usage_minutes",
+          "value": 90,
+          "unit": "minutes",
+          "source": "manual"
+        }
+      ],
+      "connectorConnections": [],
+      "metricEvents": [],
+      "dashboardWidgets": [
+        {
+          "id": "00000000-0000-0000-0000-000000000002",
+          "metricKeys": ["task_completion_percent"],
+          "chartType": "line",
+          "range": "7d",
+          "aggregation": "daily",
+          "config": { "goalLine": 100, "title": "Task Completion %" },
+          "position": 0
+        }
+      ]
+    }
+  },
+  "payload": "__PLACEHOLDER_replace_with_real_ciphertext_in_tests__"
+}
