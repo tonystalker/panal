@@ -7,6 +7,8 @@ import { nowISO } from "@/lib/date";
 import { generateId } from "@/lib/uuid";
 import { vaultStore, vaultRead, vaultClear } from "@/lib/connectors/vault";
 import { githubAdapter } from "@/lib/connectors/github";
+import { leetcodeAdapter } from "@/lib/connectors/leetcode";
+import type { LeetCodeSettings } from "@/lib/connectors/leetcode";
 import { requestDeviceCode, pollForToken } from "@/lib/connectors/github-oauth";
 import { persistSyncResult, deleteConnectorEvents } from "@/lib/connectors/sync";
 import { format, parseISO, subDays } from "date-fns";
@@ -46,28 +48,13 @@ export default function ConnectorsPage() {
       </header>
 
       <GitHubPanel />
-
-      {/* LeetCode — Milestone 3 */}
-      <div className="card" style={{ marginBottom: "0.75rem", opacity: 0.5 }}>
-        <div style={{ display: "flex", gap: "0.875rem", alignItems: "center" }}>
-          <LeetCodeIcon />
-          <div>
-            <div style={{ display: "flex", alignItems: "center", gap: "0.625rem" }}>
-              <h2 style={{ fontWeight: 600, fontSize: "1rem" }}>LeetCode</h2>
-              <span className="badge badge-muted">Milestone 3</span>
-            </div>
-            <p style={{ fontSize: "0.8125rem", color: "var(--text-3)", marginTop: "0.25rem" }}>
-              Accepted problems · Easy / Medium / Hard
-            </p>
-          </div>
-        </div>
-      </div>
+      <LeetCodePanel />
 
       <div className="card" style={{ marginTop: "1rem", padding: "1rem", background: "var(--bg-3)" }}>
         <p style={{ fontSize: "0.8125rem", color: "var(--text-3)", lineHeight: 1.6 }}>
-          🔒 <strong style={{ color: "var(--text-2)" }}>Privacy:</strong> Your OAuth token is
-          encrypted on-device using AES-GCM before being stored. It is sent only to GitHub's
-          API — never to any other server.
+          🔒 <strong style={{ color: "var(--text-2)" }}>Privacy:</strong> Credentials are
+          encrypted on-device using AES-GCM before being stored. They are sent only to the
+          respective service API — never to any other server.
         </p>
       </div>
     </div>
@@ -256,7 +243,7 @@ function GitHubPanel() {
           {/* Title + badge */}
           <div style={{ display: "flex", alignItems: "center", gap: "0.625rem", flexWrap: "wrap", marginBottom: "0.25rem" }}>
             <h2 style={{ fontWeight: 600, fontSize: "1rem" }}>GitHub</h2>
-            <StatusBadge conn={conn} />
+            <StatusBadge conn={conn ?? undefined} />
           </div>
           <p style={{ fontSize: "0.8125rem", color: "var(--text-3)", marginBottom: "0.875rem" }}>
             Daily contributions · Commits · Pull requests
@@ -593,6 +580,278 @@ function DisconnectPanel({
         <button className="btn btn-ghost btn-sm" onClick={onCancel} disabled={busy}>
           Cancel
         </button>
+      </div>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// LeetCode panel
+// ---------------------------------------------------------------------------
+
+function useLeetCodeConnection() {
+  return useQuery({
+    queryKey: ["connector", "leetcode"],
+    queryFn: () =>
+      db.connectorConnections
+        .where("connectorId")
+        .equals("leetcode")
+        .first()
+        .then((r) => r ?? null),
+  });
+}
+
+function LeetCodePanel() {
+  const qc = useQueryClient();
+  const { data: conn } = useLeetCodeConnection();
+
+  const [username, setUsername] = useState("");
+  const [syncDays, setSyncDays] = useState(30);
+  const [error, setError] = useState<string | null>(null);
+  const [successMsg, setSuccessMsg] = useState<string | null>(null);
+  const [deleteHistory, setDeleteHistory] = useState(false);
+  const [confirming, setConfirming] = useState(false);
+  const [syncing, setSyncing] = useState(false);
+
+  const showSuccess = useCallback((msg: string) => {
+    setSuccessMsg(msg);
+    setTimeout(() => setSuccessMsg(null), 6000);
+  }, []);
+
+  const connectMut = useMutation({
+    mutationFn: async () => {
+      const uname = username.trim();
+      if (!uname) throw new Error("Enter your LeetCode username.");
+      const settings: LeetCodeSettings = { username: uname, syncDays };
+      // Validate by attempting a sync with mock or real data
+      // For LeetCode, "token" = username (no secret needed for public profiles)
+      await vaultStore(
+        "leetcode",
+        process.env.NODE_ENV === "development" ? "mock" : uname,
+        settings as unknown as Record<string, unknown>,
+        `LeetCode (@${uname})`,
+      );
+      const to = new Date().toISOString().slice(0, 10);
+      const from = format(subDays(parseISO(to), syncDays - 1), "yyyy-MM-dd");
+      const token = await vaultRead("leetcode");
+      const result = await leetcodeAdapter.sync(settings, token, from, to);
+      const counts = await persistSyncResult("leetcode", result);
+      return { uname, counts, result };
+    },
+    onSuccess: ({ uname, counts, result }) => {
+      qc.invalidateQueries({ queryKey: ["connector", "leetcode"] });
+      qc.invalidateQueries({ queryKey: ["metricEvents"] });
+      qc.invalidateQueries({ queryKey: ["metric"] });
+      setUsername("");
+      showSuccess(
+        `Connected as @${uname}. Synced ${Math.round(result.events.length / 5)} days` +
+          (result.latencyMs ? ` (${result.latencyMs}ms)` : "") + ".",
+      );
+    },
+    onError: (e: Error) => setError(e.message),
+  });
+
+  const syncMut = useMutation({
+    mutationFn: async () => {
+      if (!conn) throw new Error("Not connected");
+      const settings = conn.settings as unknown as LeetCodeSettings;
+      const days = settings.syncDays ?? 30;
+      const to = new Date().toISOString().slice(0, 10);
+      const from = format(subDays(parseISO(to), days - 1), "yyyy-MM-dd");
+      setSyncing(true);
+      await db.connectorConnections.update(conn.id, { status: "syncing", updatedAt: nowISO() });
+      qc.invalidateQueries({ queryKey: ["connector", "leetcode"] });
+      const token = await vaultRead("leetcode");
+      const result = await leetcodeAdapter.sync(settings, token, from, to);
+      return persistSyncResult("leetcode", result).then((counts) => ({ counts, result }));
+    },
+    onSuccess: ({ counts, result }) => {
+      setSyncing(false);
+      qc.invalidateQueries({ queryKey: ["connector", "leetcode"] });
+      qc.invalidateQueries({ queryKey: ["metricEvents"] });
+      qc.invalidateQueries({ queryKey: ["metric"] });
+      showSuccess(
+        `Synced: +${counts.inserted} new, ${counts.updated} updated` +
+          (result.latencyMs ? ` · ${result.latencyMs}ms` : "") + ".",
+      );
+    },
+    onError: async (e: Error) => {
+      setSyncing(false);
+      if (conn) {
+        await db.connectorConnections.update(conn.id, {
+          status: "error",
+          lastError: e.message,
+          updatedAt: nowISO(),
+        });
+        qc.invalidateQueries({ queryKey: ["connector", "leetcode"] });
+      }
+      setError(e.message);
+    },
+  });
+
+  const disconnectMut = useMutation({
+    mutationFn: async () => {
+      await vaultClear("leetcode");
+      if (deleteHistory && conn) {
+        await deleteConnectorEvents("leetcode");
+        await db.connectorConnections.delete(conn.id);
+      } else if (conn) {
+        await db.connectorConnections.update(conn.id, {
+          status: "not_connected",
+          encryptedCredential: null,
+          updatedAt: nowISO(),
+        });
+      }
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["connector", "leetcode"] });
+      qc.invalidateQueries({ queryKey: ["metricEvents"] });
+      qc.invalidateQueries({ queryKey: ["metric"] });
+      setConfirming(false);
+      setDeleteHistory(false);
+      showSuccess("LeetCode disconnected" + (deleteHistory ? " and history deleted." : "."));
+    },
+    onError: (e: Error) => setError(e.message),
+  });
+
+  const isConnected = conn?.status === "connected" || conn?.status === "syncing" || conn?.status === "error";
+  const isBusy = connectMut.isPending || syncMut.isPending || disconnectMut.isPending || syncing;
+
+  return (
+    <div className="card" style={{ marginBottom: "0.75rem" }}>
+      <div style={{ display: "flex", gap: "0.875rem", alignItems: "flex-start" }}>
+        <div style={{ color: "#f59e0b", flexShrink: 0, marginTop: "2px" }}>
+          <LeetCodeIcon />
+        </div>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "0.625rem", flexWrap: "wrap", marginBottom: "0.25rem" }}>
+            <h2 style={{ fontWeight: 600, fontSize: "1rem" }}>LeetCode</h2>
+            <StatusBadge conn={conn ?? undefined} />
+          </div>
+          <p style={{ fontSize: "0.8125rem", color: "var(--text-3)", marginBottom: "0.875rem" }}>
+            Accepted problems · Easy / Medium / Hard · No scraping
+          </p>
+
+          {conn?.lastSyncedAt && (
+            <p style={{ fontSize: "0.75rem", color: "var(--text-3)", marginBottom: "0.625rem" }}>
+              Last sync: {format(parseISO(conn.lastSyncedAt), "MMM d, yyyy 'at' HH:mm")}
+              {conn.displayName && <> · <strong style={{ color: "var(--text-2)" }}>{conn.displayName}</strong></>}
+            </p>
+          )}
+
+          {conn?.status === "error" && conn.lastError && (
+            <div style={alertStyle("danger")}>⚠ {conn.lastError}</div>
+          )}
+          {error && (
+            <div style={alertStyle("danger")}>
+              ⚠ {error}
+              <button onClick={() => setError(null)} style={dismissBtn}>✕</button>
+            </div>
+          )}
+          {successMsg && <div style={alertStyle("success")}>✓ {successMsg}</div>}
+
+          {/* Not connected */}
+          {!isConnected && !confirming && (
+            <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+              <div>
+                <label htmlFor="lc-username" style={{ fontSize: "0.8125rem", fontWeight: 500, display: "block", marginBottom: "0.375rem" }}>
+                  LeetCode username
+                </label>
+                <input
+                  id="lc-username"
+                  type="text"
+                  className="input"
+                  placeholder="your_username"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  style={{ width: "100%" }}
+                  autoComplete="off"
+                />
+                <p style={{ fontSize: "0.6875rem", color: "var(--text-3)", marginTop: "0.25rem" }}>
+                  Only public profile data is fetched. No credentials stored.
+                </p>
+              </div>
+              <div>
+                <label htmlFor="lc-sync-days" style={{ fontSize: "0.8125rem", fontWeight: 500, display: "block", marginBottom: "0.375rem" }}>
+                  Sync range
+                </label>
+                <select
+                  id="lc-sync-days"
+                  className="input"
+                  value={syncDays}
+                  onChange={(e) => setSyncDays(Number(e.target.value))}
+                  style={{ width: "100%" }}
+                >
+                  <option value={7}>Last 7 days</option>
+                  <option value={14}>Last 14 days</option>
+                  <option value={30}>Last 30 days</option>
+                  <option value={90}>Last 90 days</option>
+                </select>
+              </div>
+              <button
+                id="connector-connect-leetcode"
+                className="btn btn-primary btn-sm"
+                onClick={() => connectMut.mutate()}
+                disabled={isBusy || !username.trim()}
+              >
+                {isBusy ? "Connecting…" : "Connect"}
+              </button>
+            </div>
+          )}
+
+          {/* Connected */}
+          {isConnected && !confirming && (
+            <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
+              <button
+                id="connector-sync-leetcode"
+                className="btn btn-ghost btn-sm"
+                onClick={() => syncMut.mutate()}
+                disabled={isBusy}
+              >
+                {syncing || conn?.status === "syncing" ? "Syncing…" : "Sync now"}
+              </button>
+              <button
+                id="connector-disconnect-leetcode"
+                className="btn btn-ghost btn-sm"
+                style={{ color: "var(--danger)" }}
+                onClick={() => { setConfirming(true); setError(null); }}
+                disabled={isBusy}
+              >
+                Disconnect
+              </button>
+            </div>
+          )}
+
+          {/* Disconnect confirm */}
+          {confirming && (
+            <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+              <div style={{ background: "#ef444415", border: "1px solid #ef444440", borderRadius: "var(--radius-sm)", padding: "0.875rem" }}>
+                <p style={{ fontWeight: 600, fontSize: "0.9375rem", marginBottom: "0.375rem", color: "var(--danger)" }}>Disconnect LeetCode?</p>
+                <p style={{ fontSize: "0.8125rem", color: "var(--text-2)" }}>Your connection info will be removed from the local vault.</p>
+              </div>
+              <label style={{ display: "flex", alignItems: "flex-start", gap: "0.625rem", fontSize: "0.8125rem", cursor: "pointer" }}>
+                <input type="checkbox" checked={deleteHistory} onChange={(e) => setDeleteHistory(e.target.checked)} style={{ marginTop: "2px" }} />
+                <span>
+                  Also delete all imported LeetCode metric history
+                  <br />
+                  <span style={{ fontSize: "0.75rem", color: "var(--text-3)" }}>Leave unchecked to keep past data in charts.</span>
+                </span>
+              </label>
+              <div style={{ display: "flex", gap: "0.5rem" }}>
+                <button
+                  id="lc-confirm-disconnect-btn"
+                  className="btn btn-ghost btn-sm"
+                  style={{ color: "var(--danger)", borderColor: "var(--danger)" }}
+                  onClick={() => disconnectMut.mutate()}
+                  disabled={isBusy}
+                >
+                  {isBusy ? "Disconnecting…" : "Disconnect"}
+                </button>
+                <button className="btn btn-ghost btn-sm" onClick={() => setConfirming(false)} disabled={isBusy}>Cancel</button>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

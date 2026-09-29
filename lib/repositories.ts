@@ -212,6 +212,50 @@ export async function upsertDashboardWidget(widget: DashboardWidget): Promise<vo
   await db.dashboardWidgets.put(validated);
 }
 
+export async function deleteWidget(id: string): Promise<void> {
+  await db.dashboardWidgets.delete(id);
+}
+
+export async function reorderWidgets(orderedIds: string[]): Promise<void> {
+  await db.transaction("rw", db.dashboardWidgets, async () => {
+    for (let i = 0; i < orderedIds.length; i++) {
+      await db.dashboardWidgets.update(orderedIds[i], { position: i });
+    }
+  });
+}
+
+/**
+ * Seed the default widget layout if no widgets exist yet.
+ * Called on first dashboard load.
+ */
+export async function seedDefaultWidgets(): Promise<void> {
+  const count = await db.dashboardWidgets.count();
+  if (count > 0) return;
+
+  const { DEFAULT_WIDGETS, METRIC_BY_KEY } = await import("./metrics/definitions");
+
+  const widgets: DashboardWidget[] = DEFAULT_WIDGETS.map((dw, i) => {
+    const def = METRIC_BY_KEY[dw.metricKey];
+    return DashboardWidgetSchema.parse({
+      id: generateId(),
+      metricKeys: [dw.metricKey],
+      chartType: dw.chartType,
+      range: dw.range,
+      aggregation: "daily",
+      config: {
+        goalLine: def?.defaultGoalLine ?? null,
+        rollingAverage: null,
+        title: null,
+        color: def?.defaultColor ?? null,
+        visible: true,
+      },
+      position: i,
+    });
+  });
+
+  await db.dashboardWidgets.bulkAdd(widgets);
+}
+
 // ---------------------------------------------------------------------------
 // Task completion math — pure functions (no DB calls)
 // ---------------------------------------------------------------------------

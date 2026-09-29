@@ -224,3 +224,31 @@ None in application code yet. Process note: running `git` from `panal` initially
 
 **Follow-up:** ✅ Milestone 1 complete. Next: Milestone 2 — GitHub connector and two-week personal-use test.
 
+---
+
+### 2026-09-30 — Milestone 3: LeetCode + chart customization
+
+**What:**
+- `lib/connectors/leetcode.ts` — LeetCode connector adapter. Username-based (no OAuth), mocked in dev (`token === "mock"`), graceful failure with clear error messages, no HTML scraping. Normalizes to 5 metric keys per day: `leetcode.accepted`, `leetcode.easy`, `leetcode.medium`, `leetcode.hard`, `leetcode.active`.
+- `lib/metrics/definitions.ts` — Central `MetricDefinition` registry. Every metric key (computed, manual, connector) has a canonical definition with label, unit, aggregation, default chart, color, goal line, and missing-data policy. Dashboard reads from this registry — no `if connector === "github"` anywhere.
+- `lib/metrics/resolver.ts` — Universal data resolver called by all dashboard widgets. Dispatches by `def.source` (computed, manual, connector) internally. Also exports `applyRollingAverage`.
+- `app/dashboard/page.tsx` — Fully rewritten as a data-driven widget system. Widgets loaded from `DashboardWidget` table, rendered via `MetricDefinition`. Features: configure chart type (line/bar/area/heatmap), date range, goal line, rolling average, color, title; reorder (up/down); hide/show; add new widget; reset to defaults; collapsible tabular data alternative (keyboard accessible with `role="gridcell"` on heatmap, `<table>` under each chart).
+- `app/connectors/page.tsx` — Added full `LeetCodePanel` (connect by username, sync, reconnect, disconnect, last-sync time, error state, history-delete option).
+- `lib/repositories.ts` — Added `deleteWidget`, `reorderWidgets`, `seedDefaultWidgets` (idempotent, seeds 6 default widgets on first load).
+- `app/globals.css` — Added `.sr-only` utility class for accessible table captions.
+- Tests: `tests/unit/connectors.test.ts` extended with LeetCode unit tests; `tests/unit/metrics.test.ts` added (definitions registry + rolling average); `tests/e2e/milestone3.spec.ts` added (widget config flow, LeetCode connect/disconnect).
+
+**How:**
+- Dashboard architecture: `DashboardWidget` rows drive the UI; `MetricDefinition` provides display config; `resolveMetricData()` fetches data. Adding a new connector requires only: (1) a new adapter in `lib/connectors/`, (2) entries in `lib/metrics/definitions.ts`. Zero dashboard code changes needed.
+- LeetCode: Uses LeetCode's public GraphQL endpoint (not HTML scraping). In dev mode, `token === "mock"` triggers `buildMockedLeetCodeResult`. Production mode fetches real data via POST to `https://leetcode.com/graphql` with `Referer: https://leetcode.com`.
+- Widget config dialog: bottom-sheet modal pattern. `seedDefaultWidgets()` is called on dashboard load, guarded by `count > 0` check (idempotent).
+
+**Errors:** 5 TypeScript errors fixed — tooltip formatter types (Recharts `Formatter` generic), null vs undefined for StatusBadge, MetricDefinition type annotation, range setState cast.
+
+**Tradeoffs:**
+- LeetCode's `recentSubmissionList` doesn't include difficulty — all accepted submissions counted under `leetcode.easy` as an approximation. The plan.md notes LeetCode has no stable public API for every desired activity endpoint; the manual DSA fallback remains the reliable path.
+- Rolling average uses non-null values only in the window, which is more honest than zero-filling nulls before averaging.
+- Widget config uses a bottom-sheet dialog (no shadcn/ui Dialog dependency) to keep the component self-contained.
+
+**Follow-up:** ✅ Milestone 3 complete. Next: Milestone 4 — personal-use evaluation (go/no-go for V2 sync).
+

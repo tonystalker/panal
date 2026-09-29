@@ -251,6 +251,21 @@ p  { margin: 0; }
 .divider { border: none; border-top: 1px solid var(--border); margin: 1rem 0; }
 
 /* ────────────────────────────────────────────────────────────────────────── */
+/* Accessibility                                                               */
+/* ────────────────────────────────────────────────────────────────────────── */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+/* ────────────────────────────────────────────────────────────────────────── */
 /* Recharts overrides                                                          */
 /* ────────────────────────────────────────────────────────────────────────── */
 .recharts-cartesian-axis-tick-value { fill: var(--text-3) !important; font-size: 11px; }

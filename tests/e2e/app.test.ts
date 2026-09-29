@@ -49,12 +49,11 @@ test.describe("Today page", () => {
 });
 
 test.describe("Dashboard page", () => {
-  test("renders dashboard with range selector", async ({ page }) => {
+  test("renders dashboard with add and reset widget buttons", async ({ page }) => {
     await page.goto("/dashboard");
     await expect(page.locator("h1")).toContainText("Dashboard");
-    await expect(page.locator("#range-7d")).toBeVisible();
-    await expect(page.locator("#range-30d")).toBeVisible();
-    await expect(page.locator("#range-90d")).toBeVisible();
+    await expect(page.locator("#add-widget-btn")).toBeVisible();
+    await expect(page.locator("#reset-widgets-btn")).toBeVisible();
   });
 });
 

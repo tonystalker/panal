@@ -319,3 +319,101 @@ describe("deleteConnectorEvents", () => {
     expect(count).toBe(0);
   });
 });
+
+// ---------------------------------------------------------------------------
+// LeetCode connector — Milestone 3
+// ---------------------------------------------------------------------------
+
+import { buildMockedLeetCodeResult, leetcodeAdapter } from "@/lib/connectors/leetcode";
+
+const LC_FROM = "2025-01-06";
+const LC_TO   = "2025-01-12";
+const LC_FETCHED = "2025-01-12T12:00:00.000Z";
+const LC_METRIC_KEYS = [
+  "leetcode.accepted",
+  "leetcode.easy",
+  "leetcode.medium",
+  "leetcode.hard",
+  "leetcode.active",
+] as const;
+
+describe("buildMockedLeetCodeResult", () => {
+  it("covers all days in range", () => {
+    const result = buildMockedLeetCodeResult(LC_FROM, LC_TO, LC_FETCHED);
+    const dates = new Set(result.events.map((e) => e.date));
+    expect(dates.size).toBe(7);
+    for (const d of ["2025-01-06","2025-01-07","2025-01-08","2025-01-09","2025-01-10","2025-01-11","2025-01-12"]) {
+      expect(dates.has(d)).toBe(true);
+    }
+  });
+
+  it("emits exactly 5 metric keys per day", () => {
+    const result = buildMockedLeetCodeResult(LC_FROM, LC_TO, LC_FETCHED);
+    const perDay = new Map<string, Set<string>>();
+    for (const e of result.events) {
+      if (!perDay.has(e.date)) perDay.set(e.date, new Set());
+      perDay.get(e.date)!.add(e.metricKey);
+    }
+    for (const [, keys] of perDay) {
+      expect(keys.size).toBe(5);
+      for (const k of LC_METRIC_KEYS) expect(keys.has(k)).toBe(true);
+    }
+  });
+
+  it("leetcode.active is 1 when accepted > 0, else 0", () => {
+    const result = buildMockedLeetCodeResult(LC_FROM, LC_TO, LC_FETCHED);
+    for (const date of ["2025-01-06","2025-01-07","2025-01-08","2025-01-09","2025-01-10","2025-01-11","2025-01-12"]) {
+      const accepted = result.events.find((e) => e.metricKey === "leetcode.accepted" && e.date === date)!.value;
+      const active   = result.events.find((e) => e.metricKey === "leetcode.active"   && e.date === date)!.value;
+      expect(active).toBe(accepted > 0 ? 1 : 0);
+    }
+  });
+
+  it("source event IDs are unique per day and metric", () => {
+    const result = buildMockedLeetCodeResult(LC_FROM, LC_TO, LC_FETCHED);
+    const ids = result.events.map((e) => e.sourceEventId);
+    expect(new Set(ids).size).toBe(ids.length);
+  });
+
+  it("fills SyncResult metadata", () => {
+    const result = buildMockedLeetCodeResult(LC_FROM, LC_TO, LC_FETCHED, "testuser");
+    expect(result.fetchedAt).toBe(LC_FETCHED);
+    expect(result.fromDate).toBe(LC_FROM);
+    expect(result.toDate).toBe(LC_TO);
+    expect(result.latencyMs).toBe(0);
+  });
+});
+
+describe("leetcodeAdapter.sync (mock mode)", () => {
+  it("returns mock result in development mode", async () => {
+    const result = await leetcodeAdapter.sync({ username: "testuser", syncDays: 7 }, "mock", LC_FROM, LC_TO);
+    expect(result.events.length).toBe(7 * 5);
+    expect(result.fromDate).toBe(LC_FROM);
+    expect(result.toDate).toBe(LC_TO);
+  });
+});
+
+describe("persistSyncResult — LeetCode", () => {
+  beforeEach(async () => { await db.metricEvents.clear(); await db.connectorConnections.clear(); });
+
+  it("inserts LeetCode events and marks connection synced", async () => {
+    await seedConnection("leetcode");
+    const result = buildMockedLeetCodeResult(LC_FROM, LC_TO, LC_FETCHED);
+    const counts = await persistSyncResult("leetcode", result);
+    expect(counts.inserted).toBe(result.events.length);
+    expect(counts.updated).toBe(0);
+    const conn = await db.connectorConnections.where("connectorId").equals("leetcode").first();
+    expect(conn?.status).toBe("connected");
+    expect(conn?.lastSyncedAt).toBe(LC_FETCHED);
+  });
+
+  it("is idempotent — re-importing same events skips them", async () => {
+    await seedConnection("leetcode");
+    const result = buildMockedLeetCodeResult(LC_FROM, LC_TO, LC_FETCHED);
+    await persistSyncResult("leetcode", result);
+    const second = await persistSyncResult("leetcode", result);
+    expect(second.inserted).toBe(0);
+    expect(second.skipped).toBe(result.events.length);
+  });
+});
+

@@ -14,8 +14,8 @@ This file tracks **progress**. `context.md` tracks **how it was done** (changelo
 - [x] Project tracking files (`TASKS.md`, `context.md`) derived from `plan.md`
 - [x] Milestone 0 — product spec, schema, export format
 - [x] Milestone 1 — offline personal tracker (core PWA)
-
-V2+ work (Milestones 4–7) stays deferred until the two-week personal-use test.
+- [x] Milestone 2 — GitHub connector
+- [~] Milestone 3 — LeetCode + chart customization (in progress)
 
 ---
 
@@ -127,17 +127,17 @@ V2+ work (Milestones 4–7) stays deferred until the two-week personal-use test.
 
 ## Milestone 3 — LeetCode and chart customization (after usage test)
 
-- [ ] Username-based LeetCode adapter; mocked data in development
-- [ ] Graceful failure; no HTML scraping
-- [ ] Manual DSA fallback remains durable
-- [ ] Normalize: `leetcode.accepted`, `leetcode.easy`, `leetcode.medium`, `leetcode.hard`, `leetcode.active`
-- [ ] LeetCode panel: connect/configure/sync/reconnect/disconnect, last sync, errors
-- [ ] Widget config: chart type, range, aggregation, goal line, reorder/hide, rolling average, color, title
-- [ ] Chart types: line, bar, area, calendar heatmap — presentation only, not data mutation
-- [ ] Charts from metric definitions (no `if connector === "github"` in dashboard)
-- [ ] Keyboard-accessible charts + tabular alternative under each chart
-- [ ] Default widgets: mobile line, GitHub bar, LeetCode/DSA bar, task-completion line
-- [ ] E2E: change a widget chart type; connect mocked GitHub
+- [x] Username-based LeetCode adapter; mocked data in development
+- [x] Graceful failure; no HTML scraping
+- [x] Manual DSA fallback remains durable
+- [x] Normalize: `leetcode.accepted`, `leetcode.easy`, `leetcode.medium`, `leetcode.hard`, `leetcode.active`
+- [x] LeetCode panel: connect/configure/sync/reconnect/disconnect, last sync, errors
+- [x] Widget config: chart type, range, aggregation, goal line, reorder/hide, rolling average, color, title
+- [x] Chart types: line, bar, area, calendar heatmap — presentation only, not data mutation
+- [x] Charts from metric definitions (no `if connector === "github"` in dashboard)
+- [x] Keyboard-accessible charts + tabular alternative under each chart
+- [x] Default widgets: mobile line, GitHub bar, LeetCode/DSA bar, task-completion line
+- [x] E2E: change a widget chart type; connect mocked LeetCode
 
 **Acceptance:** GitHub as bar and LeetCode as line with no connector-specific dashboard code.
 
@@ -228,3 +228,4 @@ If no: keep improving V1 daily loop. Do not start Milestone 5.
 | 2026-09-29 | Export format + fixture + test plan | Milestone 0 — complete |
 | 2026-09-29 | Offline tracker PWA + shadcn/ui + Dexie | Milestone 1 — complete |
 | 2026-09-29 | GitHub connector: vault, GraphQL, sync engine, dashboard widget | Milestone 2 — complete |
+| 2026-09-30 | LeetCode adapter + widget config system + data-driven dashboard | Milestone 3 — complete |
