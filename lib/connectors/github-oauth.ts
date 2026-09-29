@@ -16,8 +16,8 @@
  *   → OAuth Apps → (your app) → Client ID
  */
 
-const DEVICE_CODE_URL = "https://github.com/login/device/code";
-const TOKEN_URL = "https://github.com/login/oauth/access_token";
+const DEVICE_CODE_URL = "/api/github/device";
+const TOKEN_URL = "/api/github/token";
 
 // read:user lets the GraphQL contributions query run.
 // repo is added only when the user opts in to private-repo activity.
@@ -66,9 +66,9 @@ export async function requestDeviceCode(includePrivate: boolean): Promise<Device
     method: "POST",
     headers: {
       Accept: "application/json",
-      "Content-Type": "application/x-www-form-urlencoded",
+      "Content-Type": "application/json",
     },
-    body: new URLSearchParams({
+    body: JSON.stringify({
       client_id: clientId,
       scope: includePrivate ? PRIVATE_SCOPE : BASE_SCOPE,
     }),
@@ -109,9 +109,9 @@ export async function pollForToken(
       method: "POST",
       headers: {
         Accept: "application/json",
-        "Content-Type": "application/x-www-form-urlencoded",
+        "Content-Type": "application/json",
       },
-      body: new URLSearchParams({
+      body: JSON.stringify({
         client_id: clientId,
         device_code: challenge.deviceCode,
         grant_type: "urn:ietf:params:oauth:grant-type:device_code",
