@@ -86,7 +86,7 @@ interface GHContributionsResponse {
 // Mocked data for development (no real PAT required)
 // ---------------------------------------------------------------------------
 
-function buildMockedResult(fromDate: string, toDate: string, fetchedAt: string): SyncResult {
+export function buildMockedResult(fromDate: string, toDate: string, fetchedAt: string): SyncResult {
   const events: MetricEventInput[] = [];
   const start = new Date(fromDate + "T00:00:00Z");
   const end = new Date(toDate + "T00:00:00Z");

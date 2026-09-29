@@ -101,23 +101,23 @@ V2+ work (Milestones 4–7) stays deferred until the two-week personal-use test.
 
 ## Milestone 2 — GitHub + two-week personal-use test
 
-- [ ] Connector types + `MetricEvent` normalization (`lib/connectors`)
-- [ ] Generic adapter interface; no marketplace / catalog UI
-- [ ] Mocked GitHub provider for development
-- [ ] GitHub settings panel: connect, configure, sync, reconnect, disconnect
-- [ ] Last successful sync + actionable error state
-- [ ] PAT (owner fine-grained token) in local encrypted vault — V1 private build
-- [ ] Optional OAuth+PKCE path later; never store token in localStorage / query / logs
-- [ ] User choice: include private-repo activity or not
-- [ ] GraphQL contributions collection (not scraping the graph)
-- [ ] Normalize: `github.contributions`, `github.commits`, `github.pull_requests`, `github.active`
-- [ ] Source refs + fetched timestamp; merge/replace on re-sync
-- [ ] 7–30 day preview + confirm before first persist
-- [ ] Show provider latency (GitHub is not real-time)
-- [ ] Encrypt credentials before persistence
-- [ ] Disconnect: wipe credentials; user-selected policy for historical imports
-- [ ] Default GitHub contribution bar widget
-- [ ] Device-side fetch only (no server connector jobs)
+- [x] Connector types + `MetricEvent` normalization (`lib/connectors`)
+- [x] Generic adapter interface; no marketplace / catalog UI
+- [x] Mocked GitHub provider for development
+- [x] GitHub settings panel: connect, configure, sync, reconnect, disconnect
+- [x] Last successful sync + actionable error state
+- [x] PAT (owner fine-grained token) in local encrypted vault — V1 private build
+- [x] Optional OAuth+PKCE path later; never store token in localStorage / query / logs
+- [x] User choice: include private-repo activity or not
+- [x] GraphQL contributions collection (not scraping the graph)
+- [x] Normalize: `github.contributions`, `github.commits`, `github.pull_requests`, `github.active`
+- [x] Source refs + fetched timestamp; merge/replace on re-sync
+- [x] 7–30 day preview + confirm before first persist
+- [x] Show provider latency (GitHub is not real-time)
+- [x] Encrypt credentials before persistence
+- [x] Disconnect: wipe credentials; user-selected policy for historical imports
+- [x] Default GitHub contribution bar widget
+- [x] Device-side fetch only (no server connector jobs)
 
 **Acceptance:** GitHub metrics appear in dashboard widgets; disconnect follows chosen history policy.
 
@@ -227,3 +227,4 @@ If no: keep improving V1 daily loop. Do not start Milestone 5.
 | 2026-09-29 | Dexie v1 schema (`lib/db.ts` + dexie + zod) | Milestone 0 — schema |
 | 2026-09-29 | Export format + fixture + test plan | Milestone 0 — complete |
 | 2026-09-29 | Offline tracker PWA + shadcn/ui + Dexie | Milestone 1 — complete |
+| 2026-09-29 | GitHub connector: vault, GraphQL, sync engine, dashboard widget | Milestone 2 — complete |
