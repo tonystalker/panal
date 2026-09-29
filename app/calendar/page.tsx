@@ -9,7 +9,7 @@ import { format, parseISO, startOfMonth, endOfMonth, getDay, subDays, addDays } 
 import { PageHeader } from "@/components/ui/PageHeader";
 import { MetricValue } from "@/components/ui/MetricValue";
 import { SectionHeading } from "@/components/ui/SectionHeading";
-import { ChevronLeftIcon, ChevronRightIcon, FlameIcon, CalendarIcon } from "lucide-react";
+import { ChevronLeftIcon, ChevronRightIcon, FlameIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export default function CalendarPage() {

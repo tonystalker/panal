@@ -37,10 +37,8 @@ import { PageHeader } from "@/components/ui/PageHeader";
 import { ChartWidget } from "@/components/ChartWidget";
 import { MetricValue } from "@/components/ui/MetricValue";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { PlusIcon, RotateCcwIcon, FlameIcon, XIcon, CheckCircle2Icon } from "lucide-react";
+import { PlusIcon, RotateCcwIcon, FlameIcon, XIcon } from "lucide-react";
 import Link from "next/link";
-
-type Range = "7d" | "30d" | "90d";
 
 function computeFrom(range: string, today: string): string {
   if (range === "7d") return format(subDays(parseISO(today), 6), "yyyy-MM-dd");

@@ -32,6 +32,7 @@ export function ConnectorPanel({
 
   return (
     <div
+      id={id}
       data-slot="connector-panel"
       className={cn(
         "card p-5 transition-all hover:border-border-strong flex flex-col gap-4",

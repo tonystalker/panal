@@ -3,7 +3,6 @@
 import * as React from "react";
 import { usePathname } from "next/navigation";
 import { Sidebar, MobileDrawer, NAV_ITEMS } from "@/components/Sidebar";
-import { BottomNav } from "@/components/BottomNav";
 import { AppMonogram } from "@/components/ui/AppMonogram";
 import { MenuIcon } from "lucide-react";
 
@@ -90,9 +89,6 @@ export function AppShell({ children }: AppShellProps) {
           {children}
         </main>
       </div>
-
-      {/* Mobile Bottom Navigation */}
-      <BottomNav />
     </div>
   );
 }

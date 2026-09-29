@@ -1,8 +1,7 @@
 "use client";
 
-import * as React from "react";
 import type { TaskInstance } from "@/lib/db";
-import { CheckIcon, MinusIcon, Trash2Icon, PencilIcon } from "lucide-react";
+import { CheckIcon, MinusIcon, Trash2Icon } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export interface TaskRowProps {

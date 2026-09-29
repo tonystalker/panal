@@ -52,15 +52,11 @@ export const NAV_ITEMS = [
 interface SidebarProps {
   collapsed: boolean;
   onToggleCollapse: () => void;
-  mobileOpen?: boolean;
-  onCloseMobile?: () => void;
 }
 
 export function Sidebar({
   collapsed,
   onToggleCollapse,
-  mobileOpen,
-  onCloseMobile,
 }: SidebarProps) {
   const pathname = usePathname();
 

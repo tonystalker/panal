@@ -22,7 +22,7 @@ import { TaskRow } from "@/components/TaskRow";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { PlusIcon, CheckCircle2Icon, SparklesIcon, CalendarIcon } from "lucide-react";
+import { PlusIcon, CalendarIcon } from "lucide-react";
 
 type ManualMetricKey = "exercise_minutes" | "mobile_usage_minutes" | "dsa_problems";
 

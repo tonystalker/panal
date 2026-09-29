@@ -11,7 +11,6 @@ import type { LeetCodeSettings } from "@/lib/connectors/leetcode";
 import { requestDeviceCode, pollForToken } from "@/lib/connectors/github-oauth";
 import { persistSyncResult, deleteConnectorEvents } from "@/lib/connectors/sync";
 import { format, parseISO, subDays } from "date-fns";
-import type { ConnectorConnection } from "@/lib/db";
 import type { GitHubSettings } from "@/lib/connectors/types";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { ConnectorPanel } from "@/components/ConnectorPanel";
@@ -20,8 +19,6 @@ import {
   RefreshCwIcon,
   CheckIcon,
   AlertTriangleIcon,
-  ExternalLinkIcon,
-  UnplugIcon,
   KeyRoundIcon,
 } from "lucide-react";
 
@@ -94,16 +91,14 @@ function GitHubPanel() {
   const { data: conn } = useGitHubConnection();
 
   const [view, setView] = useState<PanelView>("idle");
-  const [includePrivate, setIncludePrivate] = useState(false);
-  const [syncDays, setSyncDays] = useState(30);
+  const includePrivate = false;
+  const syncDays = 30;
   const [error, setError] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
   const [deleteHistory, setDeleteHistory] = useState(false);
 
   // OAuth device flow state
   const [userCode, setUserCode] = useState<string>("");
-  const [verificationUri, setVerificationUri] = useState("");
-  const [expiresAt, setExpiresAt] = useState(0);
   const abortRef = useRef<AbortController | null>(null);
 
   // PAT fallback state
@@ -149,8 +144,6 @@ function GitHubPanel() {
       setError(null);
       const challenge = await requestDeviceCode(includePrivate);
       setUserCode(challenge.userCode);
-      setVerificationUri(challenge.verificationUri);
-      setExpiresAt(challenge.expiresAt);
       setView("waiting-auth");
 
       window.open(challenge.verificationUri, "_blank", "noopener,noreferrer");
@@ -434,7 +427,7 @@ function LeetCodePanel() {
   const { data: conn } = useLeetCodeConnection();
 
   const [username, setUsername] = useState("");
-  const [syncDays, setSyncDays] = useState(30);
+  const syncDays = 30;
   const [view, setView] = useState<"idle" | "disconnect-confirm">("idle");
   const [error, setError] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
