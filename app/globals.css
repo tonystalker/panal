@@ -292,8 +292,8 @@ p {
 }
 
 .input:focus {
-  border-color: var(--accent);
-  box-shadow: 0 0 0 1px var(--accent);
+  border-color: var(--border-strong);
+  box-shadow: 0 0 0 1px rgba(163, 255, 18, 0.4);
 }
 
 .input::placeholder {
@@ -303,6 +303,28 @@ p {
 .input-sm {
   padding: 0.3125rem 0.5rem;
   font-size: 0.8125rem;
+}
+
+/* Compact fixed number input */
+.input-number {
+  width: 4.5rem !important;
+  min-width: 4.5rem !important;
+  max-width: 4.5rem !important;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  padding: 0.25rem 0.5rem;
+}
+
+/* Hide number input spin buttons across WebKit and Firefox */
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+input[type="number"] {
+  -moz-appearance: textfield;
+  appearance: textfield;
 }
 
 /* ────────────────────────────────────────────────────────────────────────── */

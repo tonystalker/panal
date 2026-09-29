@@ -284,14 +284,14 @@ export default function SettingsPage() {
                   <label htmlFor="timezone-select" className="text-sm font-medium text-foreground block">
                     Timezone
                   </label>
-                  <span className="text-xs text-subtle-foreground font-mono">
+                  <span className="text-xs text-muted-foreground">
                     Currently: {profile?.timezone ?? "UTC"}
                   </span>
                 </div>
               </div>
               <select
                 id="timezone-select"
-                className="input input-sm w-48 text-xs font-mono cursor-pointer"
+                className="input input-sm w-48 text-xs cursor-pointer"
                 value={profile?.timezone ?? "UTC"}
                 onChange={(e) => updateTz.mutate(e.target.value)}
               >
@@ -311,8 +311,8 @@ export default function SettingsPage() {
           />
           <div className="card p-4 bg-surface-muted/30 border-border/80 flex flex-col gap-2">
             <div className="flex items-center gap-2 text-foreground font-medium text-xs">
-              <ShieldCheckIcon className="size-4 text-accent" />
-              <span>Zero-knowledge local storage</span>
+              <ShieldCheckIcon className="size-4 text-muted-foreground" />
+              <span>Local-only storage</span>
             </div>
             <p className="text-xs text-muted-foreground leading-relaxed">
               All personal metrics, logs, and connector tokens are kept solely inside your browser&apos;s local IndexedDB. No analytics tracking, telemetry, or remote user accounts are utilized.

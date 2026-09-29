@@ -113,9 +113,9 @@ export default function CalendarPage() {
         description="Monthly completion patterns and activity history."
         badge={
           streak > 0 ? (
-            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-accent/10 text-accent border border-accent/20">
-              <FlameIcon className="size-3.5 fill-accent" />
-              <span>🔥 {streak}-day streak</span>
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-zinc-800/80 text-zinc-300 border border-zinc-700/60">
+              <FlameIcon className="size-3 text-zinc-400" />
+              <span>{streak}-day streak</span>
             </span>
           ) : undefined
         }
@@ -135,7 +135,7 @@ export default function CalendarPage() {
                 <ChevronLeftIcon className="size-3.5" />
                 <span>Prev</span>
               </button>
-              <h2 className="text-sm font-semibold tracking-tight text-foreground font-mono">
+              <h2 className="text-sm font-semibold tracking-tight text-foreground">
                 {format(viewDate, "MMMM yyyy")}
               </h2>
               <button

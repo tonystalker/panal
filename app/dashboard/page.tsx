@@ -156,8 +156,8 @@ export default function DashboardPage() {
         description="Data-driven workspace with custom metric analytics."
         badge={
           streak > 0 ? (
-            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-accent/10 text-accent border border-accent/20">
-              <FlameIcon className="size-3.5 fill-accent" />
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-zinc-800/80 text-zinc-300 border border-zinc-700/60">
+              <FlameIcon className="size-3 text-zinc-400" />
               <span>{streak}-day streak</span>
             </span>
           ) : undefined
@@ -464,32 +464,41 @@ interface UniversalChartProps {
 }
 
 function UniversalChart({ data, chartType, color, goalLine, unit, shortDate, onClick }: UniversalChartProps) {
+  const isPrimary = color === "#a3ff12" || color === "var(--accent)";
+  const primaryColor = isPrimary ? "var(--accent)" : color;
+  const secondaryColor = "#71717a";
+
   const tooltipFormatter = (v: unknown) => [`${v}${unit ? " " + unit : ""}`, ""] as [string, string];
   const labelFormatter = (l: unknown) => {
     try { return format(parseISO(String(l)), "EEE, MMM d"); } catch { return String(l); }
   };
 
-  const common = { data, onClick };
+  const common = {
+    data,
+    onClick,
+    margin: { top: 8, right: 12, left: 16, bottom: 4 },
+  };
 
   const axisProps = {
     xAxis: (
       <XAxis
         dataKey="date"
         tickFormatter={shortDate}
-        tick={{ fontSize: 11, fill: "var(--subtle-foreground)" }}
+        tick={{ fontSize: 10, fill: "var(--subtle-foreground)" }}
         axisLine={{ stroke: "var(--border)" }}
         tickLine={false}
       />
     ),
     yAxis: (
       <YAxis
-        tick={{ fontSize: 11, fill: "var(--subtle-foreground)" }}
+        width={36}
+        tick={{ fontSize: 10, fill: "var(--subtle-foreground)" }}
         axisLine={false}
         tickLine={false}
-        unit={unit ? ` ${unit}` : ""}
+        tickFormatter={(val) => (unit === "%" ? `${val}%` : String(val))}
       />
     ),
-    grid: <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} opacity={0.5} />,
+    grid: <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} opacity={0.4} />,
     tooltip: (
       <Tooltip
         formatter={tooltipFormatter}
@@ -517,10 +526,10 @@ function UniversalChart({ data, chartType, color, goalLine, unit, shortDate, onC
           <Line
             type="monotone"
             dataKey="value"
-            stroke={color}
-            strokeWidth={2}
-            dot={{ r: 2.5, fill: color, strokeWidth: 0 }}
-            activeDot={{ r: 4, fill: color }}
+            stroke={primaryColor}
+            strokeWidth={1.75}
+            dot={{ r: 2, fill: primaryColor, strokeWidth: 0 }}
+            activeDot={{ r: 3.5, fill: primaryColor }}
             connectNulls={false}
           />
         </LineChart>
@@ -529,22 +538,22 @@ function UniversalChart({ data, chartType, color, goalLine, unit, shortDate, onC
   }
 
   if (chartType === "area") {
-    const gradId = `grad-${color.replace("#", "")}`;
+    const gradId = `grad-${color.replace(/[^a-zA-Z0-9]/g, "")}`;
     return (
       <ResponsiveContainer width="100%" height={160}>
         <AreaChart {...common}>
           {axisProps.grid}{axisProps.xAxis}{axisProps.yAxis}{axisProps.tooltip}{axisProps.refLine}
           <defs>
             <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor={color} stopOpacity={0.25} />
-              <stop offset="95%" stopColor={color} stopOpacity={0.0} />
+              <stop offset="5%" stopColor={primaryColor} stopOpacity={0.2} />
+              <stop offset="95%" stopColor={primaryColor} stopOpacity={0.0} />
             </linearGradient>
           </defs>
           <Area
             type="monotone"
             dataKey="value"
-            stroke={color}
-            strokeWidth={2}
+            stroke={primaryColor}
+            strokeWidth={1.75}
             fill={`url(#${gradId})`}
             connectNulls={false}
           />
@@ -558,14 +567,23 @@ function UniversalChart({ data, chartType, color, goalLine, unit, shortDate, onC
     <ResponsiveContainer width="100%" height={160}>
       <BarChart {...common}>
         {axisProps.grid}{axisProps.xAxis}{axisProps.yAxis}{axisProps.tooltip}{axisProps.refLine}
-        <Bar dataKey="value" radius={[3, 3, 0, 0]}>
-          {data.map((entry, i) => (
-            <Cell
-              key={i}
-              fill={goalLine != null && (entry.value ?? 0) >= goalLine ? color : "var(--accent)"}
-              opacity={entry.value === 0 || entry.value === null ? 0.12 : 0.9}
-            />
-          ))}
+        <Bar dataKey="value" radius={[2, 2, 0, 0]}>
+          {data.map((entry, i) => {
+            const hasMetGoal = goalLine != null && (entry.value ?? 0) >= goalLine;
+            const barFill = isPrimary
+              ? "var(--accent)"
+              : hasMetGoal
+              ? "#a1a1aa"
+              : secondaryColor;
+
+            return (
+              <Cell
+                key={i}
+                fill={barFill}
+                opacity={entry.value === 0 || entry.value === null ? 0.15 : 0.85}
+              />
+            );
+          })}
         </Bar>
       </BarChart>
     </ResponsiveContainer>

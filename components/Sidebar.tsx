@@ -82,8 +82,8 @@ export function Sidebar({
               <span className="text-sm font-semibold text-foreground tracking-tight leading-none group-hover:text-accent transition-colors">
                 Personal Analytics
               </span>
-              <span className="text-[10px] text-muted-foreground mt-1 flex items-center gap-1 font-mono">
-                <span className="size-1 rounded-full bg-emerald-400" />
+              <span className="text-[11px] text-muted-foreground mt-0.5 flex items-center gap-1.5">
+                <span className="size-1.5 rounded-full bg-emerald-400/80" />
                 Local & Private
               </span>
             </div>
@@ -108,14 +108,14 @@ export function Sidebar({
                   "flex items-center gap-3 rounded-lg text-sm font-medium transition-colors outline-none",
                   collapsed ? "justify-center h-10 w-10 mx-auto" : "px-3 py-2 w-full",
                   isActive
-                    ? "bg-accent/10 text-accent font-semibold border border-accent/20"
-                    : "text-muted-foreground hover:bg-surface-muted hover:text-foreground border border-transparent"
+                    ? "bg-surface-raised text-foreground font-medium border-l-2 border-accent rounded-l-none pl-2.5"
+                    : "text-muted-foreground hover:bg-surface-muted hover:text-foreground border-l-2 border-transparent pl-2.5"
                 )}
               >
                 <Icon
                   className={cn(
                     "size-4 shrink-0 transition-colors",
-                    isActive ? "text-accent" : "text-muted-foreground group-hover/nav:text-foreground"
+                    isActive ? "text-foreground" : "text-muted-foreground group-hover/nav:text-foreground"
                   )}
                 />
                 {!collapsed && <span>{item.label}</span>}
@@ -136,17 +136,7 @@ export function Sidebar({
       </nav>
 
       {/* Bottom Area */}
-      <div className="p-2 border-t border-border/60 mt-auto flex flex-col gap-2">
-        {!collapsed && (
-          <div className="px-2.5 py-2 rounded-lg bg-surface-muted/60 border border-border/60 text-[11px] text-muted-foreground flex items-center justify-between">
-            <span className="flex items-center gap-1.5 font-mono">
-              <ShieldCheckIcon className="size-3 text-accent" />
-              IndexedDB local
-            </span>
-            <span className="size-1.5 rounded-full bg-emerald-400 animate-pulse" title="Ready offline" />
-          </div>
-        )}
-
+      <div className="p-2.5 pb-16 border-t border-border/60 mt-auto flex flex-col gap-2 relative z-20">
         {/* Collapse / Expand Button */}
         <button
           type="button"
@@ -167,6 +157,16 @@ export function Sidebar({
             </>
           )}
         </button>
+
+        {!collapsed && (
+          <div className="px-2.5 py-1.5 rounded-lg bg-surface-muted/40 border border-border/40 text-[11px] text-muted-foreground flex items-center justify-between">
+            <span className="flex items-center gap-1.5">
+              <ShieldCheckIcon className="size-3 text-muted-foreground" />
+              Local storage
+            </span>
+            <span className="size-1.5 rounded-full bg-emerald-400/80" title="Ready offline" />
+          </div>
+        )}
       </div>
     </aside>
   );
@@ -241,11 +241,11 @@ export function MobileDrawer({
                 className={cn(
                   "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors",
                   isActive
-                    ? "bg-accent/10 text-accent font-semibold border border-accent/20"
-                    : "text-muted-foreground hover:bg-surface-muted hover:text-foreground"
+                    ? "bg-surface-raised text-foreground font-medium border-l-2 border-accent rounded-l-none pl-3"
+                    : "text-muted-foreground hover:bg-surface-muted hover:text-foreground border-l-2 border-transparent pl-3"
                 )}
               >
-                <Icon className={cn("size-4 shrink-0", isActive ? "text-accent" : "")} />
+                <Icon className={cn("size-4 shrink-0", isActive ? "text-foreground" : "text-muted-foreground")} />
                 <span>{item.label}</span>
               </Link>
             );
@@ -254,8 +254,8 @@ export function MobileDrawer({
 
         <div className="pt-4 border-t border-border/60">
           <div className="px-3 py-2 rounded-lg bg-surface-muted/60 border border-border/60 text-xs text-muted-foreground flex items-center justify-between">
-            <span className="font-mono">Local IndexedDB</span>
-            <span className="size-1.5 rounded-full bg-emerald-400" />
+            <span>Local IndexedDB</span>
+            <span className="size-1.5 rounded-full bg-emerald-400/80" />
           </div>
         </div>
       </div>

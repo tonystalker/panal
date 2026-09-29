@@ -21,7 +21,6 @@ import { todayKey } from "@/lib/date";
 import { TaskRow } from "@/components/TaskRow";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { SectionHeading } from "@/components/ui/SectionHeading";
-import { EmptyState } from "@/components/ui/EmptyState";
 import { PlusIcon, CalendarIcon } from "lucide-react";
 
 type ManualMetricKey = "exercise_minutes" | "mobile_usage_minutes" | "dsa_problems";
@@ -165,8 +164,8 @@ export default function TodayPage() {
       <PageHeader
         title="Today"
         description={
-          <span className="flex items-center gap-1.5 font-medium text-subtle-foreground">
-            <CalendarIcon className="size-3.5 text-accent" />
+          <span className="flex items-center gap-1.5 font-medium text-muted-foreground">
+            <CalendarIcon className="size-3.5 text-zinc-400" />
             {todayFormatted}
           </span>
         }
@@ -183,60 +182,52 @@ export default function TodayPage() {
       />
 
       {/* Main 2-column Layout on Desktop */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
         {/* Left Column (Primary Tasks Workflow ~ 65%) */}
-        <div className="lg:col-span-8 flex flex-col gap-5">
-          {/* Day Progress Strip */}
-          <div className="card p-4 sm:p-5 flex flex-col gap-2.5">
-            <div className="flex items-baseline justify-between">
-              <div className="flex items-center gap-2">
+        <div className="lg:col-span-8 flex flex-col gap-4">
+          {/* Unified Compact Tasks Surface */}
+          <div className="card p-0 flex flex-col overflow-hidden">
+            {/* Integrated Header with Precision Progress Indicator */}
+            <div className="px-4 py-3 bg-surface-muted/30 border-b border-border/60 flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2.5">
                 <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground select-none">
-                  Task Completion
+                  Tasks
                 </span>
-                <span className="text-xs text-subtle-foreground font-mono">
-                  ({doneTasks}/{activeTasks} done)
+                <span className="text-xs text-muted-foreground">
+                  <span className="text-foreground font-mono font-medium tabular-nums">{doneTasks}</span> of{" "}
+                  <span className="font-mono tabular-nums">{activeTasks}</span> done
+                  {tasks.some((t) => t.targetValue != null) && (
+                    <> · <span className="font-mono tabular-nums text-foreground">{targetPct}%</span> target</>
+                  )}
                 </span>
               </div>
-              <span className="text-2xl font-bold font-mono text-accent tabular-nums">
-                {completion}%
-              </span>
-            </div>
 
-            {/* Thin precise progress track */}
-            <div className="progress-track h-2 bg-surface-muted">
-              <div className="progress-bar bg-accent" style={{ width: `${completion}%` }} />
-            </div>
-
-            <div className="flex items-center justify-between text-xs text-subtle-foreground font-mono tabular-nums">
-              <span>{doneTasks} of {activeTasks} tasks done</span>
-              {tasks.some((t) => t.targetValue != null) && (
-                <span className="text-muted-foreground">
-                  Target progress: <strong className="text-foreground">{targetPct}%</strong>
+              <div className="flex items-center gap-3">
+                <div className="w-24 sm:w-36 h-1.5 bg-surface-muted rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-accent transition-all duration-300"
+                    style={{ width: `${completion}%` }}
+                  />
+                </div>
+                <span className="text-xs font-semibold font-mono text-accent tabular-nums min-w-[3ch] text-right">
+                  {completion}%
                 </span>
-              )}
+              </div>
             </div>
-          </div>
 
-          {/* Tasks Section */}
-          <section className="flex flex-col gap-3">
-            <SectionHeading
-              title="Tasks"
-              description="Keep today focused on high-priority outcomes."
-            />
-
-            {/* Add Task Form */}
+            {/* Inline Add Task Form */}
             {showAddTask && (
-              <div className="card card-raised p-4 fade-in border-accent/30 flex flex-col gap-3">
+              <div className="p-3.5 bg-surface-raised border-b border-border/60 fade-in flex flex-col gap-2.5">
                 <input
                   ref={addInputRef}
                   id="new-task-title"
-                  className="input"
+                  className="input input-sm"
                   placeholder="What needs to be done today?"
                   value={newTitle}
                   onChange={(e) => setNewTitle(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && addTask.mutate()}
                 />
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   <input
                     id="new-task-target"
                     className="input input-sm"
@@ -253,16 +244,16 @@ export default function TodayPage() {
                     onChange={(e) => setNewUnit(e.target.value)}
                   />
                 </div>
-                <div className="flex items-center gap-2 pt-1">
+                <div className="flex items-center gap-2 pt-0.5">
                   <button
-                    className="btn btn-primary btn-sm"
+                    className="btn btn-primary btn-sm text-xs"
                     onClick={() => addTask.mutate()}
                     disabled={!newTitle.trim()}
                   >
                     Add Task
                   </button>
                   <button
-                    className="btn btn-ghost btn-sm"
+                    className="btn btn-ghost btn-sm text-xs"
                     onClick={() => setShowAddTask(false)}
                   >
                     Cancel
@@ -272,69 +263,75 @@ export default function TodayPage() {
             )}
 
             {/* Tasks Container */}
-            <div className="card p-1.5 sm:p-2">
-              {tasks.length === 0 ? (
-                <EmptyState
-                  title="Plan one thing worth finishing today."
-                  description="A clear, quiet day begins with a single focused task."
-                  action={
-                    <button
-                      className="btn btn-ghost btn-sm text-xs"
-                      onClick={() => setShowAddTask(true)}
-                    >
-                      + Create first task
-                    </button>
-                  }
-                />
-              ) : (
-                <div className="flex flex-col">
-                  {tasks.map((task) => (
-                    <TaskRow
-                      key={task.id}
-                      task={task}
-                      editing={editingId === task.id}
-                      onToggle={() => toggleTask.mutate(task)}
-                      onSkip={() => skipTaskMut.mutate(task.id)}
-                      onDelete={() => deleteTaskMut.mutate(task.id)}
-                      onEditValue={(v) => updateTaskValue.mutate({ id: task.id, completedValue: v })}
-                      onSetEditing={(id) => setEditingId(id)}
-                    />
-                  ))}
-                </div>
-              )}
-            </div>
-          </section>
+            {tasks.length === 0 ? (
+              <div className="py-7 px-4 flex flex-col items-center justify-center text-center">
+                <p className="text-sm font-medium text-foreground tracking-tight">
+                  Plan one thing worth finishing today.
+                </p>
+                <p className="text-xs text-muted-foreground mt-0.5 max-w-sm leading-relaxed">
+                  A clear, quiet day begins with a single focused task.
+                </p>
+                <button
+                  className="btn btn-secondary btn-sm mt-3 text-xs"
+                  onClick={() => setShowAddTask(true)}
+                >
+                  + Create first task
+                </button>
+              </div>
+            ) : (
+              <div className="flex flex-col divide-y divide-border/40">
+                {tasks.map((task) => (
+                  <TaskRow
+                    key={task.id}
+                    task={task}
+                    editing={editingId === task.id}
+                    onToggle={() => toggleTask.mutate(task)}
+                    onSkip={() => skipTaskMut.mutate(task.id)}
+                    onDelete={() => deleteTaskMut.mutate(task.id)}
+                    onEditValue={(v) => updateTaskValue.mutate({ id: task.id, completedValue: v })}
+                    onSetEditing={(id) => setEditingId(id)}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
         </div>
 
-        {/* Right Column (Narrow check-ins and reflection ~ 35%) */}
-        <div className="lg:col-span-4 flex flex-col gap-5">
-          {/* Manual Metrics Panel */}
-          <section className="flex flex-col gap-3">
+        {/* Right Column (Narrow grouped check-ins and reflection ~ 35%) */}
+        <div className="lg:col-span-4 flex flex-col gap-4">
+          {/* Manual Metrics — Grouped Rows */}
+          <section className="flex flex-col gap-2">
             <SectionHeading
               title="Manual Check-ins"
               description="Daily habits & quantitative logs"
             />
-            <div className="card p-3.5 flex flex-col divide-y divide-border/60">
+            <div className="rounded-xl border border-border/80 divide-y divide-border/60 bg-surface/50 overflow-hidden">
               {MANUAL_METRICS.map((m) => (
                 <div
                   key={m.key}
-                  className="flex items-center justify-between py-2.5 first:pt-1 last:pb-1"
+                  className="flex items-center justify-between gap-4 px-3.5 py-2.5 hover:bg-surface-muted/20 transition-colors"
                 >
-                  <div className="flex flex-col">
-                    <span className="text-sm font-medium text-foreground">{m.label}</span>
-                    <span className="text-[11px] text-subtle-foreground font-mono">{m.unit}</span>
+                  <div className="flex items-baseline gap-1.5 shrink-0 select-none">
+                    <span className="text-xs font-medium text-foreground whitespace-nowrap">{m.label}</span>
+                    <span className="text-[11px] text-muted-foreground whitespace-nowrap">({m.unit})</span>
                   </div>
                   <input
                     id={`metric-${m.key}`}
-                    className="input input-sm h-8 w-24 text-right font-mono tabular-nums"
-                    type="number"
-                    min={0}
+                    type="text"
+                    inputMode="numeric"
+                    style={{ width: "4rem" }}
+                    className="h-7 w-16 shrink-0 rounded-md border border-border/80 bg-surface-muted/60 px-2 text-right font-mono text-xs tabular-nums text-foreground outline-none transition-colors hover:border-border-strong focus:border-border-strong focus:bg-surface-muted focus:ring-1 focus:ring-border-strong"
                     defaultValue={getMetricValue(m.key) || ""}
                     placeholder={m.placeholder}
                     onBlur={(e) => {
                       const val = parseFloat(e.target.value);
                       if (!isNaN(val) && val >= 0) {
                         updateMetric.mutate({ key: m.key, value: val, unit: m.unit });
+                      }
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        (e.target as HTMLInputElement).blur();
                       }
                     }}
                   />
@@ -344,15 +341,15 @@ export default function TodayPage() {
           </section>
 
           {/* Daily Note / Reflection */}
-          <section className="flex flex-col gap-3">
+          <section className="flex flex-col gap-2">
             <SectionHeading
               title="Daily Reflection"
               description="Capture context, energy, or thoughts"
             />
-            <div className="card p-3.5">
+            <div className="rounded-xl border border-border/80 bg-surface/50 p-2.5">
               <textarea
                 id="daily-note"
-                className="input resize-y text-sm font-sans min-h-[96px] leading-relaxed p-2.5"
+                className="w-full bg-transparent resize-y text-xs text-foreground placeholder:text-muted-foreground focus:outline-none min-h-[76px] leading-relaxed p-1"
                 placeholder="How's today going? Any key reflections…"
                 defaultValue={log?.note ?? ""}
                 rows={3}

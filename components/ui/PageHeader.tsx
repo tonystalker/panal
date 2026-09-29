@@ -20,14 +20,14 @@ export function PageHeader({
     <div
       data-slot="page-header"
       className={cn(
-        "flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 mb-6 border-b border-border/60",
+        "flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 mb-5 border-b border-border/60",
         className
       )}
       {...props}
     >
-      <div className="flex flex-col gap-1 min-w-0">
-        <div className="flex items-center gap-3 flex-wrap">
-          <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight text-foreground">
+      <div className="flex flex-col gap-0.5 min-w-0">
+        <div className="flex items-center gap-2.5 flex-wrap">
+          <h1 className="text-xl sm:text-2xl font-semibold tracking-tight text-foreground">
             {title}
           </h1>
           {badge}

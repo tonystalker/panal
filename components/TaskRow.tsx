@@ -91,9 +91,10 @@ export function TaskRow({
             {editing ? (
               <input
                 id={`task-value-${task.id}`}
-                className="input input-sm h-6 w-16 px-1.5 py-0 text-xs font-mono tabular-nums"
-                type="number"
-                min={0}
+                type="text"
+                inputMode="numeric"
+                style={{ width: "3.75rem" }}
+                className="h-6 w-16 shrink-0 rounded border border-border/80 bg-surface-muted/60 px-1.5 py-0 text-right font-mono text-xs tabular-nums text-foreground outline-none transition-colors hover:border-border-strong focus:border-border-strong focus:bg-surface-muted focus:ring-1 focus:ring-border-strong"
                 defaultValue={task.completedValue}
                 onBlur={(e) => {
                   const val = parseFloat(e.target.value);

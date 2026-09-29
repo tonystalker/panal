@@ -24,7 +24,6 @@ export function AppMonogram({ size = "md", className, ...props }: AppMonogramPro
       {...props}
     >
       <span>PA</span>
-      <span className="absolute -top-0.5 -right-0.5 size-1.5 rounded-full bg-accent ring-1 ring-background" />
     </div>
   );
 }

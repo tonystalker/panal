@@ -79,7 +79,7 @@ export function AppShell({ children }: AppShellProps) {
               </span>
             </div>
           </div>
-          <span className="text-[10px] text-muted-foreground font-mono uppercase tracking-wider px-2 py-0.5 rounded border border-border/60 bg-surface-muted">
+          <span className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider px-2 py-0.5 rounded border border-border/60 bg-surface-muted">
             local
           </span>
         </header>

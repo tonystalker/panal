@@ -69,8 +69,8 @@ export default function ConnectorsPage() {
         <LeetCodePanel />
 
         {/* Privacy Note */}
-        <div className="p-4 rounded-xl border border-border/60 bg-surface-muted/40 flex items-start gap-3">
-          <ShieldCheckIcon className="size-4 text-accent shrink-0 mt-0.5" />
+        <div className="p-4 rounded-xl border border-border/60 bg-surface-muted/30 flex items-start gap-3">
+          <ShieldCheckIcon className="size-4 text-muted-foreground shrink-0 mt-0.5" />
           <p className="text-xs text-muted-foreground leading-relaxed">
             <strong className="text-foreground font-medium">Privacy First:</strong> Connector credentials are encrypted on-device using AES-GCM before being stored. Tokens are transmitted directly to the respective service API and never forwarded to any intermediary servers.
           </p>

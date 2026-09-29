@@ -64,12 +64,12 @@ export function ChartWidget({
               {title}
             </h3>
             {unit && (
-              <span className="text-xs text-subtle-foreground font-mono">
+              <span className="text-xs text-muted-foreground font-normal">
                 ({unit})
               </span>
             )}
           </div>
-          <p className="text-[11px] text-muted-foreground font-mono mt-0.5 flex items-center gap-1.5">
+          <p className="text-[11px] text-muted-foreground mt-0.5 flex items-center gap-1.5">
             <span>{range}</span>
             <span className="text-subtle-foreground">·</span>
             <span className="capitalize">{chartType}</span>
@@ -139,7 +139,7 @@ export function ChartWidget({
             aria-expanded={showTable}
             aria-controls={`table-${id}`}
             onClick={() => setShowTable((s) => !s)}
-            className="self-start text-[11px] font-mono text-muted-foreground hover:text-foreground flex items-center gap-1.5 py-0.5 outline-none transition-colors"
+            className="self-start text-[11px] font-medium text-muted-foreground hover:text-foreground flex items-center gap-1.5 py-0.5 outline-none transition-colors"
           >
             <TableIcon className="size-3" />
             <span>{showTable ? "Hide data table" : "Show data table"}</span>
