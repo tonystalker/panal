@@ -8,6 +8,19 @@ import { encryptBackup, decryptBackup, type BackupEnvelope } from "@/lib/crypto"
 import { loadDemoData } from "@/lib/demo-data";
 import { nowISO } from "@/lib/date";
 import { generateId } from "@/lib/uuid";
+import { PageHeader } from "@/components/ui/PageHeader";
+import { SectionHeading } from "@/components/ui/SectionHeading";
+import {
+  ShieldCheckIcon,
+  DownloadIcon,
+  UploadIcon,
+  DatabaseIcon,
+  Trash2Icon,
+  KeyRoundIcon,
+  GlobeIcon,
+  CheckIcon,
+  AlertTriangleIcon,
+} from "lucide-react";
 
 const TIMEZONES = [
   "UTC",
@@ -41,7 +54,7 @@ export default function SettingsPage() {
 
   const showStatus = (type: "success" | "error", msg: string) => {
     setStatus({ type, msg });
-    setTimeout(() => setStatus(null), 4000);
+    setTimeout(() => setStatus(null), 5000);
   };
 
   // Timezone update
@@ -137,7 +150,7 @@ export default function SettingsPage() {
       const envelope = await encryptBackup(payload, exportPassphrase, deviceId);
       downloadFile(JSON.stringify(envelope, null, 2), "panal.panal-backup", "application/json");
       setExportPassphrase("");
-      showStatus("success", "Encrypted backup exported. Keep this file and passphrase safe.");
+      showStatus("success", "Encrypted backup exported. Store file and passphrase safely.");
     } catch (e) {
       showStatus("error", `Backup failed: ${(e as Error).message}`);
     }
@@ -230,187 +243,292 @@ export default function SettingsPage() {
 
   return (
     <div className="page fade-in">
-      <header style={{ marginBottom: "1.5rem" }}>
-        <h1>Settings</h1>
-      </header>
+      <PageHeader
+        title="Settings"
+        description="Local data vault, preferences, export, and storage controls."
+      />
 
-      {/* Status toast */}
+      {/* Floating Status Notification */}
       {status && (
         <div
-          className="fade-in"
-          style={{
-            background: status.type === "success" ? "#166534" : "#7f1d1d",
-            color: status.type === "success" ? "#86efac" : "#fca5a5",
-            padding: "0.75rem 1rem",
-            borderRadius: "var(--radius-sm)",
-            marginBottom: "1rem",
-            fontSize: "0.875rem",
-          }}
+          className={`p-3.5 rounded-xl border text-xs mb-6 flex items-center justify-between gap-3 fade-in max-w-2xl ${
+            status.type === "success"
+              ? "bg-emerald-500/10 border-emerald-500/25 text-emerald-300"
+              : "bg-rose-500/10 border-rose-500/25 text-rose-300"
+          }`}
         >
-          {status.msg}
+          <div className="flex items-center gap-2">
+            {status.type === "success" ? (
+              <CheckIcon className="size-4 shrink-0 text-emerald-400" />
+            ) : (
+              <AlertTriangleIcon className="size-4 shrink-0 text-rose-400" />
+            )}
+            <span>{status.msg}</span>
+          </div>
+          <button onClick={() => setStatus(null)} className="text-xs hover:text-foreground">✕</button>
         </div>
       )}
 
-      {/* Preferences */}
-      <section>
-        <h2 style={{ marginBottom: "0.75rem" }}>Preferences</h2>
-        <div className="card">
-          <label htmlFor="timezone-select" style={{ fontSize: "0.875rem", color: "var(--text-2)", display: "block", marginBottom: "0.375rem" }}>
-            Timezone
-          </label>
-          <select
-            id="timezone-select"
-            className="input"
-            value={profile?.timezone ?? "UTC"}
-            onChange={(e) => updateTz.mutate(e.target.value)}
-          >
-            {TIMEZONES.map((tz) => (
-              <option key={tz} value={tz}>{tz}</option>
-            ))}
-          </select>
-        </div>
-      </section>
-
-      {/* Privacy */}
-      <section style={{ marginTop: "1.5rem" }}>
-        <h2 style={{ marginBottom: "0.75rem" }}>Privacy</h2>
-        <div className="card" style={{ background: "var(--bg-3)" }}>
-          <p style={{ fontSize: "0.875rem", color: "var(--text-2)", lineHeight: 1.7 }}>
-            🔒 <strong>Local-first.</strong> All your data lives only on this device in IndexedDB.
-            No account. No server receives your personal data. Network is only used to load the app.
-          </p>
-          <p style={{ fontSize: "0.875rem", color: "var(--text-3)", marginTop: "0.5rem", lineHeight: 1.7 }}>
-            Connector credentials are stored in an encrypted local vault. They are never sent to external servers except the respective provider (GitHub, LeetCode) during sync.
-          </p>
-        </div>
-      </section>
-
-      {/* Export */}
-      <section style={{ marginTop: "1.5rem" }}>
-        <h2 style={{ marginBottom: "0.75rem" }}>Export</h2>
-        <div className="card">
-          <p style={{ fontSize: "0.875rem", color: "var(--text-3)", marginBottom: "0.875rem" }}>
-            Download a readable copy of your data. Not encrypted — store securely.
-          </p>
-          <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
-            <button id="export-json-btn" className="btn btn-ghost btn-sm" onClick={exportJSON}>
-              Download JSON
-            </button>
-            <button id="export-csv-btn" className="btn btn-ghost btn-sm" onClick={exportCSV}>
-              Download CSV
-            </button>
+      <div className="flex flex-col gap-6 max-w-2xl">
+        {/* Preferences */}
+        <section className="flex flex-col gap-3">
+          <SectionHeading
+            title="Preferences"
+            description="Adjust your local timezone for day boundary calculations."
+          />
+          <div className="card p-4">
+            <div className="flex items-center justify-between gap-4 flex-wrap">
+              <div className="flex items-center gap-2.5">
+                <GlobeIcon className="size-4 text-muted-foreground" />
+                <div>
+                  <label htmlFor="timezone-select" className="text-sm font-medium text-foreground block">
+                    Timezone
+                  </label>
+                  <span className="text-xs text-subtle-foreground font-mono">
+                    Currently: {profile?.timezone ?? "UTC"}
+                  </span>
+                </div>
+              </div>
+              <select
+                id="timezone-select"
+                className="input input-sm w-48 text-xs font-mono cursor-pointer"
+                value={profile?.timezone ?? "UTC"}
+                onChange={(e) => updateTz.mutate(e.target.value)}
+              >
+                {TIMEZONES.map((tz) => (
+                  <option key={tz} value={tz}>{tz}</option>
+                ))}
+              </select>
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* Encrypted backup */}
-      <section style={{ marginTop: "1.5rem" }}>
-        <h2 style={{ marginBottom: "0.75rem" }}>Encrypted Backup</h2>
-
-        {/* Export */}
-        <div className="card" style={{ marginBottom: "0.75rem" }}>
-          <h3 style={{ marginBottom: "0.5rem", fontSize: "0.9375rem" }}>Export backup</h3>
-          <p style={{ fontSize: "0.8125rem", color: "var(--text-3)", marginBottom: "0.75rem" }}>
-            AES-GCM encrypted with your passphrase. Keep the file <em>and</em> the passphrase — losing both makes the backup unrecoverable.
-          </p>
-          <input
-            id="export-passphrase"
-            className="input input-sm"
-            type="password"
-            placeholder="Backup passphrase"
-            value={exportPassphrase}
-            onChange={(e) => setExportPassphrase(e.target.value)}
-            style={{ marginBottom: "0.5rem" }}
+        {/* Privacy Architecture */}
+        <section className="flex flex-col gap-3">
+          <SectionHeading
+            title="Privacy Architecture"
+            description="How personal data is handled by design."
           />
-          <button id="export-backup-btn" className="btn btn-primary btn-sm" onClick={exportEncrypted}>
-            Export .panal-backup
-          </button>
-        </div>
+          <div className="card p-4 bg-surface-muted/30 border-border/80 flex flex-col gap-2">
+            <div className="flex items-center gap-2 text-foreground font-medium text-xs">
+              <ShieldCheckIcon className="size-4 text-accent" />
+              <span>Zero-knowledge local storage</span>
+            </div>
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              All personal metrics, logs, and connector tokens are kept solely inside your browser&apos;s local IndexedDB. No analytics tracking, telemetry, or remote user accounts are utilized.
+            </p>
+          </div>
+        </section>
 
-        {/* Import */}
-        <div className="card">
-          <h3 style={{ marginBottom: "0.5rem", fontSize: "0.9375rem" }}>Import backup</h3>
-          <p style={{ fontSize: "0.8125rem", color: "var(--text-3)", marginBottom: "0.75rem" }}>
-            Importing will <strong style={{ color: "var(--warning)" }}>replace all local data</strong>. A confirmation prompt will appear.
-          </p>
-          <input
-            id="import-file-input"
-            ref={fileInputRef}
-            type="file"
-            accept=".panal-backup,application/json"
-            style={{ display: "none" }}
-            onChange={(e) => setImportFile(e.target.files?.[0] ?? null)}
+        {/* Readable Export */}
+        <section className="flex flex-col gap-3">
+          <SectionHeading
+            title="Export Data"
+            description="Download an unencrypted readable snapshot of your activity."
           />
-          <button className="btn btn-ghost btn-sm" onClick={() => fileInputRef.current?.click()} style={{ marginBottom: "0.5rem" }}>
-            {importFile ? `📄 ${importFile.name}` : "Choose file…"}
-          </button>
-          <input
-            id="import-passphrase"
-            className="input input-sm"
-            type="password"
-            placeholder="Backup passphrase"
-            value={importPassphrase}
-            onChange={(e) => setImportPassphrase(e.target.value)}
-            style={{ marginBottom: "0.5rem", marginTop: "0.5rem" }}
-          />
-          <button id="import-backup-btn" className="btn btn-primary btn-sm" onClick={importEncrypted}>
-            Import backup
-          </button>
-        </div>
-      </section>
-
-      {/* Demo data */}
-      <section style={{ marginTop: "1.5rem" }}>
-        <h2 style={{ marginBottom: "0.75rem" }}>Demo Data</h2>
-        <div className="card">
-          <p style={{ fontSize: "0.875rem", color: "var(--text-3)", marginBottom: "0.75rem" }}>
-            Load 2 weeks of realistic sample data to explore the app. This will clear existing data.
-          </p>
-          {showDemoConfirm ? (
-            <div style={{ display: "flex", gap: "0.5rem" }}>
-              <button id="demo-confirm-btn" className="btn btn-primary btn-sm" onClick={loadDemo}>
-                Yes, load demo data
+          <div className="card p-4 flex flex-col gap-3">
+            <p className="text-xs text-muted-foreground">
+              Export all tables in standard formats for external spreadsheets or personal data archival.
+            </p>
+            <div className="flex items-center gap-2.5 flex-wrap">
+              <button
+                id="export-json-btn"
+                className="btn btn-ghost btn-sm flex items-center gap-1.5 text-xs font-mono"
+                onClick={exportJSON}
+              >
+                <DownloadIcon className="size-3.5" />
+                <span>Download JSON</span>
               </button>
-              <button className="btn btn-ghost btn-sm" onClick={() => setShowDemoConfirm(false)}>
-                Cancel
+              <button
+                id="export-csv-btn"
+                className="btn btn-ghost btn-sm flex items-center gap-1.5 text-xs font-mono"
+                onClick={exportCSV}
+              >
+                <DownloadIcon className="size-3.5" />
+                <span>Download CSV</span>
               </button>
             </div>
-          ) : (
-            <button id="load-demo-btn" className="btn btn-ghost btn-sm" onClick={() => setShowDemoConfirm(true)}>
-              Load demo data
-            </button>
-          )}
-        </div>
-      </section>
+          </div>
+        </section>
 
-      {/* Danger zone */}
-      <section style={{ marginTop: "1.5rem", marginBottom: "2rem" }}>
-        <h2 style={{ marginBottom: "0.75rem", color: "var(--danger)" }}>Danger Zone</h2>
-        <div className="card" style={{ border: "1px solid #7f1d1d" }}>
-          <p style={{ fontSize: "0.875rem", color: "var(--text-3)", marginBottom: "0.875rem" }}>
-            Permanently delete all local data. This cannot be undone.
-          </p>
-          {showDeleteConfirm ? (
-            <div>
-              <p style={{ fontSize: "0.875rem", color: "var(--danger)", marginBottom: "0.5rem", fontWeight: 600 }}>
-                Are you absolutely sure? All data will be gone forever.
+        {/* Encrypted Backup */}
+        <section className="flex flex-col gap-3">
+          <SectionHeading
+            title="Encrypted Backup"
+            description="AES-GCM encrypted vault export and restore."
+          />
+          <div className="card p-5 flex flex-col gap-5">
+            {/* Export Backup */}
+            <div className="flex flex-col gap-2.5">
+              <div className="flex items-center gap-2">
+                <KeyRoundIcon className="size-4 text-accent" />
+                <h3 className="text-sm font-semibold text-foreground">Create encrypted backup</h3>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Enter a passphrase. The export is encrypted on-device. Losing this passphrase makes the backup irrecoverable.
               </p>
-              <div style={{ display: "flex", gap: "0.5rem" }}>
-                <button id="delete-confirm-btn" className="btn btn-danger btn-sm" onClick={deleteAll}>
-                  Yes, delete everything
-                </button>
-                <button className="btn btn-ghost btn-sm" onClick={() => setShowDeleteConfirm(false)}>
-                  Cancel
+              <div className="flex items-center gap-2 max-w-md pt-1">
+                <input
+                  id="export-passphrase"
+                  type="password"
+                  placeholder="Backup passphrase"
+                  value={exportPassphrase}
+                  onChange={(e) => setExportPassphrase(e.target.value)}
+                  className="input input-sm text-xs font-mono flex-1"
+                />
+                <button
+                  id="export-backup-btn"
+                  className="btn btn-primary btn-sm shrink-0"
+                  onClick={exportEncrypted}
+                >
+                  Export .panal-backup
                 </button>
               </div>
             </div>
-          ) : (
-            <button id="delete-all-btn" className="btn btn-danger btn-sm" onClick={() => setShowDeleteConfirm(true)}>
-              Delete all local data
-            </button>
-          )}
-        </div>
-      </section>
+
+            <hr className="border-border/60" />
+
+            {/* Import Backup */}
+            <div className="flex flex-col gap-2.5">
+              <div className="flex items-center gap-2">
+                <UploadIcon className="size-4 text-muted-foreground" />
+                <h3 className="text-sm font-semibold text-foreground">Restore from backup</h3>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Importing an existing backup will replace current local database tables.
+              </p>
+              <div className="flex flex-col gap-2.5 max-w-md pt-1">
+                <input
+                  id="import-file-input"
+                  ref={fileInputRef}
+                  type="file"
+                  accept=".panal-backup,application/json"
+                  className="hidden"
+                  onChange={(e) => setImportFile(e.target.files?.[0] ?? null)}
+                />
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    className="btn btn-ghost btn-sm text-xs font-mono"
+                    onClick={() => fileInputRef.current?.click()}
+                  >
+                    {importFile ? `Selected: ${importFile.name}` : "Choose backup file…"}
+                  </button>
+                  {importFile && (
+                    <button
+                      type="button"
+                      className="text-xs text-subtle-foreground hover:text-foreground"
+                      onClick={() => setImportFile(null)}
+                    >
+                      Clear
+                    </button>
+                  )}
+                </div>
+                <div className="flex items-center gap-2">
+                  <input
+                    id="import-passphrase"
+                    type="password"
+                    placeholder="Enter backup passphrase"
+                    value={importPassphrase}
+                    onChange={(e) => setImportPassphrase(e.target.value)}
+                    className="input input-sm text-xs font-mono flex-1"
+                  />
+                  <button
+                    id="import-backup-btn"
+                    className="btn btn-primary btn-sm shrink-0"
+                    onClick={importEncrypted}
+                  >
+                    Import backup
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Demo Data */}
+        <section className="flex flex-col gap-3">
+          <SectionHeading
+            title="Sample Data"
+            description="Explore the interface with 2 weeks of realistic mock metrics."
+          />
+          <div className="card p-4 flex flex-col gap-3">
+            <p className="text-xs text-muted-foreground">
+              Loads 14 days of realistic task history, DSA problem counts, exercise logs, and connector metrics.
+            </p>
+            {showDemoConfirm ? (
+              <div className="flex items-center gap-2">
+                <button
+                  id="demo-confirm-btn"
+                  className="btn btn-primary btn-sm text-xs font-medium"
+                  onClick={loadDemo}
+                >
+                  Yes, populate demo data
+                </button>
+                <button
+                  className="btn btn-ghost btn-sm text-xs"
+                  onClick={() => setShowDemoConfirm(false)}
+                >
+                  Cancel
+                </button>
+              </div>
+            ) : (
+              <button
+                id="load-demo-btn"
+                className="btn btn-ghost btn-sm self-start text-xs font-mono flex items-center gap-1.5"
+                onClick={() => setShowDemoConfirm(true)}
+              >
+                <DatabaseIcon className="size-3.5" />
+                <span>Load demo data</span>
+              </button>
+            )}
+          </div>
+        </section>
+
+        {/* Danger Zone */}
+        <section className="flex flex-col gap-3 pt-2">
+          <SectionHeading
+            title="Danger Zone"
+            description="Permanent data removal."
+          />
+          <div className="card p-4 border-rose-500/30 bg-rose-500/5 flex flex-col gap-3">
+            <p className="text-xs text-muted-foreground">
+              Permanently wipe all IndexedDB database tables on this device. This action cannot be reversed.
+            </p>
+            {showDeleteConfirm ? (
+              <div className="flex flex-col gap-2.5 p-3 rounded-lg bg-rose-500/10 border border-rose-500/30">
+                <p className="text-xs font-semibold text-rose-400">
+                  Are you absolutely certain? All history will be deleted.
+                </p>
+                <div className="flex items-center gap-2">
+                  <button
+                    id="delete-confirm-btn"
+                    className="btn btn-danger btn-sm text-xs"
+                    onClick={deleteAll}
+                  >
+                    Yes, delete everything
+                  </button>
+                  <button
+                    className="btn btn-ghost btn-sm text-xs"
+                    onClick={() => setShowDeleteConfirm(false)}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <button
+                id="delete-all-btn"
+                className="btn btn-danger btn-sm self-start text-xs flex items-center gap-1.5"
+                onClick={() => setShowDeleteConfirm(true)}
+              >
+                <Trash2Icon className="size-3.5" />
+                <span>Delete all local data</span>
+              </button>
+            )}
+          </div>
+        </section>
+      </div>
     </div>
   );
 }
