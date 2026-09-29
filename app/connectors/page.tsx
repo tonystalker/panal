@@ -23,7 +23,11 @@ function useGitHubConnection() {
   return useQuery({
     queryKey: ["connector", "github"],
     queryFn: () =>
-      db.connectorConnections.where("connectorId").equals("github").first(),
+      db.connectorConnections
+        .where("connectorId")
+        .equals("github")
+        .first()
+        .then((r) => r ?? null),
   });
 }
 
