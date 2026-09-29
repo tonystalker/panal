@@ -9,6 +9,8 @@ import {
 import { getDailyLogsInRange, getManualMetricsInRange, getTasksForLog, taskCompletionPercent } from "@/lib/repositories";
 import { todayKey, dateRange } from "@/lib/date";
 import { format, parseISO, subDays } from "date-fns";
+import { db } from "@/lib/db";
+import Link from "next/link";
 
 type Range = "7d" | "30d" | "90d";
 
@@ -73,6 +75,20 @@ export default function DashboardPage() {
   const { data: mobileData = [] } = useQuery({
     queryKey: ["mobile", from, to],
     queryFn: () => getManualMetricsInRange("mobile_usage_minutes", from, to),
+    enabled: !!timezone,
+  });
+
+  // GitHub contributions from connector
+  const { data: githubData = [] } = useQuery({
+    queryKey: ["metricEvents", "github.contributions", from, to],
+    queryFn: async () => {
+      const events = await db.metricEvents
+        .where("metricKey")
+        .equals("github.contributions")
+        .and((e) => e.date >= from && e.date <= to)
+        .toArray();
+      return events.map((e) => ({ date: e.date, value: e.value }));
+    },
     enabled: !!timezone,
   });
 
@@ -185,6 +201,9 @@ export default function DashboardPage() {
         <MetricBarChart data={mobileSeries} shortDate={shortDate} goalLine={180} color="#ef4444" />
       </ChartCard>
 
+      {/* GitHub contributions widget */}
+      <GitHubContributionsWidget data={githubData} keys={keys} shortDate={shortDate} />
+
       {/* Daily detail panel */}
       {selectedDate && selectedDetail && (
         <div className="card fade-in" style={{ marginTop: "1rem" }}>
@@ -258,6 +277,51 @@ function MetricBarChart({
         </Bar>
       </BarChart>
     </ResponsiveContainer>
+  );
+}
+
+function GitHubContributionsWidget({
+  data, keys, shortDate,
+}: { data: { date: string; value: number }[]; keys: string[]; shortDate: (d: string) => string }) {
+  const map = Object.fromEntries(data.map((d) => [d.date, d.value]));
+  const filled = keys.map((k) => ({ date: k, value: map[k] ?? 0 }));
+  const hasData = filled.some((d) => d.value > 0);
+
+  return (
+    <ChartCard title="GitHub Contributions" unit="contributions">
+      {!hasData ? (
+        <div className="empty-state" style={{ padding: "1.5rem 0" }}>
+          <p style={{ fontSize: "0.875rem" }}>
+            No data.{" "}
+            <Link href="/connectors" style={{ color: "var(--accent)" }}>
+              Connect GitHub ↗
+            </Link>{" "}
+            to import your contribution history.
+          </p>
+        </div>
+      ) : (
+        <ResponsiveContainer width="100%" height={140}>
+          <BarChart data={filled}>
+            <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
+            <XAxis dataKey="date" tickFormatter={shortDate} tick={{ fontSize: 11 }} />
+            <YAxis tick={{ fontSize: 11 }} allowDecimals={false} />
+            <Tooltip
+              labelFormatter={(l) => (l ? format(parseISO(String(l)), "EEE, MMM d") : "")}
+              formatter={(v) => [`${v}`, "Contributions"]}
+            />
+            <Bar dataKey="value" radius={[3, 3, 0, 0]}>
+              {filled.map((entry, i) => (
+                <Cell
+                  key={i}
+                  fill="#6e40c9"
+                  opacity={entry.value === 0 ? 0.1 : Math.min(0.4 + entry.value * 0.06, 1)}
+                />
+              ))}
+            </Bar>
+          </BarChart>
+        </ResponsiveContainer>
+      )}
+    </ChartCard>
   );
 }
 
