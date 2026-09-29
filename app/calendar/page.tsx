@@ -6,6 +6,11 @@ import { useRouter } from "next/navigation";
 import { getDailyLogsInRange, getTasksForLog, taskCompletionPercent } from "@/lib/repositories";
 import { todayKey, dateRange } from "@/lib/date";
 import { format, parseISO, startOfMonth, endOfMonth, getDay, subDays, addDays } from "date-fns";
+import { PageHeader } from "@/components/ui/PageHeader";
+import { MetricValue } from "@/components/ui/MetricValue";
+import { SectionHeading } from "@/components/ui/SectionHeading";
+import { ChevronLeftIcon, ChevronRightIcon, FlameIcon, CalendarIcon } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 export default function CalendarPage() {
   const router = useRouter();
@@ -50,165 +55,223 @@ export default function CalendarPage() {
     else break;
   }
 
-  // Build calendar grid
-  const startDow = getDay(monthStart); // 0=Sun
-  const prefixDays = startDow; // days before month start
+  // Calendar grid math
+  const startDow = getDay(monthStart);
+  const prefixDays = startDow;
   const allKeys = dateRange(from, to);
 
-  // Color by completion
-  function cellColor(pct: number | undefined) {
-    if (pct == null) return "var(--bg-3)";
-    if (pct >= 80) return "#7c3aed";
-    if (pct >= 50) return "#6d28d9";
-    if (pct > 0) return "#4c1d95";
-    return "var(--bg-3)";
+  // Restrained editorial cell styling
+  function getCellStyles(pct: number | undefined, isToday: boolean, hasLog: boolean) {
+    if (!hasLog) {
+      return {
+        bg: "bg-surface-muted/30 hover:bg-surface-muted/60",
+        border: isToday ? "border-accent ring-1 ring-accent" : "border-border/50",
+        text: "text-subtle-foreground",
+      };
+    }
+    if (pct == null || pct === 0) {
+      return {
+        bg: "bg-surface-muted border-border",
+        border: isToday ? "border-accent ring-1 ring-accent" : "border-border",
+        text: "text-muted-foreground",
+      };
+    }
+    if (pct >= 80) {
+      return {
+        bg: "bg-accent/15 border-accent/35 hover:bg-accent/25",
+        border: isToday ? "border-accent ring-1 ring-accent" : "border-accent/30",
+        text: "text-accent font-semibold",
+      };
+    }
+    if (pct >= 50) {
+      return {
+        bg: "bg-white/12 border-white/20 hover:bg-white/18",
+        border: isToday ? "border-accent ring-1 ring-accent" : "border-border-strong",
+        text: "text-foreground font-medium",
+      };
+    }
+    return {
+      bg: "bg-white/6 border-white/10 hover:bg-white/10",
+      border: isToday ? "border-accent ring-1 ring-accent" : "border-border",
+      text: "text-muted-foreground",
+    };
   }
+
+  const avgCompletion =
+    logs.length > 0
+      ? `${Math.round(
+          Object.values(completionMap).reduce((a, b) => a + b, 0) /
+            Math.max(Object.values(completionMap).length, 1)
+        )}%`
+      : "—";
 
   return (
     <div className="page fade-in">
-      <header style={{ marginBottom: "1rem" }}>
-        <h1>Calendar</h1>
-        {streak > 0 && (
-          <p style={{ color: "var(--accent)", fontWeight: 600, fontSize: "0.9375rem", marginTop: "0.25rem" }}>
-            🔥 {streak}-day streak
-          </p>
-        )}
-      </header>
+      {/* Editorial Page Header */}
+      <PageHeader
+        title="Calendar"
+        description="Monthly completion patterns and activity history."
+        badge={
+          streak > 0 ? (
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-accent/10 text-accent border border-accent/20">
+              <FlameIcon className="size-3.5 fill-accent" />
+              <span>🔥 {streak}-day streak</span>
+            </span>
+          ) : undefined
+        }
+      />
 
-      {/* Month navigator */}
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "1rem" }}>
-        <button className="btn btn-ghost btn-sm" onClick={() => setViewDate((d) => subDays(startOfMonth(d), 1))}>
-          ← Prev
-        </button>
-        <h2 style={{ fontWeight: 600 }}>{format(viewDate, "MMMM yyyy")}</h2>
-        <button className="btn btn-ghost btn-sm" onClick={() => setViewDate((d) => addDays(endOfMonth(d), 1))}>
-          Next →
-        </button>
-      </div>
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        {/* Left Column: Calendar Grid (~60%) */}
+        <div className="lg:col-span-7 flex flex-col gap-4">
+          <div className="card p-4 sm:p-5 flex flex-col gap-4">
+            {/* Month Navigator */}
+            <div className="flex items-center justify-between">
+              <button
+                type="button"
+                className="btn btn-ghost btn-sm text-xs flex items-center gap-1"
+                onClick={() => setViewDate((d) => subDays(startOfMonth(d), 1))}
+              >
+                <ChevronLeftIcon className="size-3.5" />
+                <span>Prev</span>
+              </button>
+              <h2 className="text-sm font-semibold tracking-tight text-foreground font-mono">
+                {format(viewDate, "MMMM yyyy")}
+              </h2>
+              <button
+                type="button"
+                className="btn btn-ghost btn-sm text-xs flex items-center gap-1"
+                onClick={() => setViewDate((d) => addDays(endOfMonth(d), 1))}
+              >
+                <span>Next</span>
+                <ChevronRightIcon className="size-3.5" />
+              </button>
+            </div>
 
-      {/* Day-of-week headers */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: "4px", marginBottom: "4px" }}>
-        {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((d) => (
-          <div key={d} style={{ textAlign: "center", fontSize: "0.6875rem", color: "var(--text-3)", padding: "0.25rem 0" }}>
-            {d}
+            {/* Day of Week Headers */}
+            <div className="grid grid-cols-7 gap-1.5 text-center text-[10px] font-mono uppercase text-subtle-foreground font-medium py-1 border-b border-border/40">
+              {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((d) => (
+                <div key={d}>{d}</div>
+              ))}
+            </div>
+
+            {/* Calendar Cells */}
+            <div className="grid grid-cols-7 gap-1.5" role="grid" aria-label="Monthly activity calendar">
+              {/* Blank Prefix Cells */}
+              {Array.from({ length: prefixDays }, (_, i) => (
+                <div key={`pre-${i}`} className="aspect-square" />
+              ))}
+
+              {/* Day Cells */}
+              {allKeys.map((dateKey) => {
+                const pct = completionMap[dateKey];
+                const isToday = dateKey === today;
+                const hasLog = logDates.has(dateKey);
+                const dayNum = format(parseISO(dateKey), "d");
+                const style = getCellStyles(pct, isToday, hasLog);
+
+                return (
+                  <button
+                    key={dateKey}
+                    id={`cal-day-${dateKey}`}
+                    type="button"
+                    onClick={() => router.push(`/today?date=${dateKey}`)}
+                    title={`${format(parseISO(dateKey), "EEE, MMM d")}${pct != null ? ` · ${pct}% done` : ""}`}
+                    className={cn(
+                      "aspect-square rounded-lg border flex flex-col items-center justify-center p-1 text-xs font-mono tabular-nums transition-all outline-none",
+                      style.bg,
+                      style.border,
+                      style.text
+                    )}
+                  >
+                    <span>{dayNum}</span>
+                    {pct != null && pct > 0 && (
+                      <span className="text-[9px] opacity-75 mt-0.5 leading-none">
+                        {pct}%
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Restrained Legend */}
+            <div className="flex items-center gap-3 pt-2 border-t border-border/40 text-[11px] font-mono text-subtle-foreground flex-wrap">
+              <span className="flex items-center gap-1.5">
+                <span className="size-2.5 rounded bg-accent/25 border border-accent/40" />
+                ≥80%
+              </span>
+              <span className="flex items-center gap-1.5">
+                <span className="size-2.5 rounded bg-white/15 border border-white/25" />
+                50–79%
+              </span>
+              <span className="flex items-center gap-1.5">
+                <span className="size-2.5 rounded bg-white/6 border border-white/15" />
+                1–49%
+              </span>
+              <span className="flex items-center gap-1.5">
+                <span className="size-2.5 rounded bg-surface-muted/30 border border-border/50" />
+                No log
+              </span>
+            </div>
           </div>
-        ))}
-      </div>
+        </div>
 
-      {/* Calendar grid */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: "4px" }}>
-        {/* Prefix blanks */}
-        {Array.from({ length: prefixDays }, (_, i) => (
-          <div key={`pre-${i}`} />
-        ))}
+        {/* Right Column: Month Summary & Scannable History (~40%) */}
+        <div className="lg:col-span-5 flex flex-col gap-5">
+          {/* Month Summary Metrics */}
+          <div className="card p-4 sm:p-5 flex flex-col gap-3">
+            <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Month Summary
+            </h3>
+            <div className="grid grid-cols-3 gap-3 pt-1">
+              <MetricValue label="Days logged" value={logs.length} size="sm" />
+              <MetricValue label="Current streak" value={`${streak}d`} size="sm" />
+              <MetricValue label="Avg completion" value={avgCompletion} size="sm" />
+            </div>
+          </div>
 
-        {/* Days */}
-        {allKeys.map((dateKey) => {
-          const pct = completionMap[dateKey];
-          const isToday = dateKey === today;
-          const hasLog = logDates.has(dateKey);
-          const dayNum = format(parseISO(dateKey), "d");
-
-          return (
-            <button
-              key={dateKey}
-              id={`cal-day-${dateKey}`}
-              onClick={() => router.push(`/today?date=${dateKey}`)}
-              title={`${format(parseISO(dateKey), "EEE, MMM d")}${pct != null ? ` · ${pct}%` : ""}`}
-              style={{
-                aspectRatio: "1",
-                borderRadius: "8px",
-                background: hasLog ? cellColor(pct) : "var(--bg-3)",
-                border: isToday ? "2px solid var(--accent)" : "none",
-                color: hasLog ? "#fff" : "var(--text-3)",
-                fontSize: "0.8125rem",
-                fontWeight: isToday ? 700 : 400,
-                cursor: "pointer",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                transition: "opacity 0.15s",
-                opacity: hasLog ? 1 : 0.5,
-              }}
-            >
-              {dayNum}
-            </button>
-          );
-        })}
-      </div>
-
-      {/* Legend */}
-      <div style={{ display: "flex", gap: "1rem", marginTop: "1rem", flexWrap: "wrap", fontSize: "0.75rem", color: "var(--text-3)" }}>
-        <span style={{ display: "flex", alignItems: "center", gap: "0.375rem" }}>
-          <span style={{ display: "inline-block", width: "12px", height: "12px", background: "#7c3aed", borderRadius: "3px" }} />
-          ≥80% complete
-        </span>
-        <span style={{ display: "flex", alignItems: "center", gap: "0.375rem" }}>
-          <span style={{ display: "inline-block", width: "12px", height: "12px", background: "#6d28d9", borderRadius: "3px" }} />
-          50–79%
-        </span>
-        <span style={{ display: "flex", alignItems: "center", gap: "0.375rem" }}>
-          <span style={{ display: "inline-block", width: "12px", height: "12px", background: "#4c1d95", borderRadius: "3px" }} />
-          1–49%
-        </span>
-        <span style={{ display: "flex", alignItems: "center", gap: "0.375rem" }}>
-          <span style={{ display: "inline-block", width: "12px", height: "12px", background: "var(--bg-3)", borderRadius: "3px" }} />
-          No log
-        </span>
-      </div>
-
-      {/* Monthly summary */}
-      <div className="card" style={{ marginTop: "1.5rem" }}>
-        <h3 style={{ marginBottom: "0.75rem" }}>Month summary</h3>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "0.75rem" }}>
-          <Stat label="Days logged" value={logs.length} />
-          <Stat label="Current streak" value={`${streak}d`} />
-          <Stat label="Avg completion" value={
-            logs.length > 0
-              ? `${Math.round(Object.values(completionMap).reduce((a, b) => a + b, 0) / Math.max(Object.values(completionMap).length, 1))}%`
-              : "—"
-          } />
+          {/* History List */}
+          {logs.length > 0 && (
+            <section className="flex flex-col gap-3">
+              <SectionHeading
+                title="Recent Logged Days"
+                description="Scannable history of daily check-ins"
+              />
+              <div className="card p-1 divide-y divide-border/60">
+                {[...logs].reverse().slice(0, 7).map((log) => {
+                  const pct = completionMap[log.date];
+                  return (
+                    <button
+                      key={log.id}
+                      id={`cal-log-${log.date}`}
+                      type="button"
+                      onClick={() => router.push(`/today?date=${log.date}`)}
+                      className="w-full text-left p-3 hover:bg-surface-muted/40 transition-colors flex items-center justify-between gap-3 outline-none first:rounded-t-lg last:rounded-b-lg"
+                    >
+                      <div className="flex flex-col min-w-0">
+                        <span className="text-sm font-medium text-foreground">
+                          {format(parseISO(log.date), "EEEE, MMM d")}
+                        </span>
+                        {log.note && (
+                          <p className="text-xs text-muted-foreground truncate mt-0.5 max-w-xs">
+                            {log.note}
+                          </p>
+                        )}
+                      </div>
+                      {pct != null && (
+                        <span className="badge badge-accent font-mono shrink-0">
+                          {pct}%
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            </section>
+          )}
         </div>
       </div>
-
-      {/* Recent log list */}
-      {logs.length > 0 && (
-        <section style={{ marginTop: "1.5rem" }}>
-          <h2 style={{ marginBottom: "0.75rem" }}>Recent days</h2>
-          {[...logs].reverse().slice(0, 7).map((log) => (
-            <button
-              key={log.id}
-              id={`cal-log-${log.date}`}
-              className="card"
-              onClick={() => router.push(`/today?date=${log.date}`)}
-              style={{ width: "100%", textAlign: "left", cursor: "pointer", display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.5rem" }}
-            >
-              <div>
-                <span style={{ fontWeight: 500, fontSize: "0.9375rem" }}>
-                  {format(parseISO(log.date), "EEE, MMM d")}
-                </span>
-                {log.note && (
-                  <p style={{ fontSize: "0.8125rem", color: "var(--text-3)", marginTop: "0.125rem" }}>
-                    {log.note.slice(0, 60)}{log.note.length > 60 ? "…" : ""}
-                  </p>
-                )}
-              </div>
-              {completionMap[log.date] != null && (
-                <span className="badge badge-accent">{completionMap[log.date]}%</span>
-              )}
-            </button>
-          ))}
-        </section>
-      )}
-    </div>
-  );
-}
-
-function Stat({ label, value }: { label: string; value: string | number }) {
-  return (
-    <div style={{ textAlign: "center" }}>
-      <div style={{ fontWeight: 700, fontSize: "1.5rem", color: "var(--accent)" }}>{value}</div>
-      <div style={{ fontSize: "0.75rem", color: "var(--text-3)", marginTop: "0.125rem" }}>{label}</div>
     </div>
   );
 }
