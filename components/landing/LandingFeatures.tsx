@@ -1,0 +1,138 @@
+import { ClockIcon, CheckSquareIcon, Link2Icon, BarChart3Icon, ShieldIcon } from "lucide-react";
+
+export function LandingFeatures() {
+  return (
+    <section id="features" className="py-20 md:py-28 border-t border-border/60 relative">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6">
+        {/* Header */}
+        <div className="max-w-2xl mb-16">
+          <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-md border border-border bg-surface-muted text-[11px] font-mono uppercase tracking-wider text-muted-foreground mb-4">
+            <span>Core Capabilities</span>
+          </div>
+          <h2 className="text-3xl sm:text-5xl font-bold tracking-tight text-foreground mb-4">
+            Designed for truth, not vanity metrics.
+          </h2>
+          <p className="text-base sm:text-lg text-muted-foreground leading-relaxed">
+            Every feature protects your attention and your privacy. No bloatware, no dark patterns.
+          </p>
+        </div>
+
+        {/* Asymmetric 5-Feature Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+          {/* Feature 1: Workday Cutoff (Spans 2 cols on lg) */}
+          <div className="lg:col-span-2 rounded-2xl border border-border/80 bg-surface/60 p-6 flex flex-col justify-between gap-6 hover:border-border-strong transition-all">
+            <div>
+              <div className="size-9 rounded-lg bg-surface-muted border border-border flex items-center justify-center text-accent mb-4">
+                <ClockIcon className="size-4" />
+              </div>
+              <h3 className="text-lg font-semibold text-foreground tracking-tight mb-2">
+                Your day, on your clock
+              </h3>
+              <p className="text-sm text-muted-foreground leading-relaxed max-w-lg">
+                Work past midnight? Configure a custom workday cutoff such as 6:00 AM. Tasks completed during late-night sessions belong to that workday instead of prematurely rolling over at calendar midnight.
+              </p>
+            </div>
+
+            {/* Micro visual: Cutoff badge & time simulation */}
+            <div className="p-3.5 rounded-xl border border-border/60 bg-surface-muted/50 flex flex-wrap items-center justify-between gap-3 text-xs font-mono">
+              <span className="text-muted-foreground">Local workday cutoff:</span>
+              <div className="flex items-center gap-2">
+                <span className="px-2 py-0.5 rounded bg-surface border border-border text-foreground font-semibold">
+                  06:00 AM (Night Shift)
+                </span>
+                <span className="text-[11px] text-accent">&bull; Operational date preserved</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Feature 2: Dual Task Progress */}
+          <div className="rounded-2xl border border-border/80 bg-surface/60 p-6 flex flex-col justify-between gap-6 hover:border-border-strong transition-all">
+            <div>
+              <div className="size-9 rounded-lg bg-surface-muted border border-border flex items-center justify-center text-accent mb-4">
+                <CheckSquareIcon className="size-4" />
+              </div>
+              <h3 className="text-lg font-semibold text-foreground tracking-tight mb-2">
+                Tasks with real progress
+              </h3>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                Planned tasks and quantitative targets are separate measures. Finishing 8 of 10 pages is meaningful progress, not an arbitrary binary failure.
+              </p>
+            </div>
+
+            {/* Micro visual: Dual bar */}
+            <div className="space-y-2 p-3 rounded-xl border border-border/60 bg-surface-muted/50 text-[11px] font-mono">
+              <div className="flex justify-between text-muted-foreground">
+                <span>Task completion:</span>
+                <span className="text-foreground font-bold">50% (3/6)</span>
+              </div>
+              <div className="flex justify-between text-muted-foreground">
+                <span>Target progress:</span>
+                <span className="text-accent font-bold">75% (15/20)</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Feature 3: Connect What Matters */}
+          <div className="rounded-2xl border border-border/80 bg-surface/60 p-6 flex flex-col justify-between gap-6 hover:border-border-strong transition-all">
+            <div>
+              <div className="size-9 rounded-lg bg-surface-muted border border-border flex items-center justify-center text-accent mb-4">
+                <Link2Icon className="size-4" />
+              </div>
+              <h3 className="text-lg font-semibold text-foreground tracking-tight mb-2">
+                Connect what matters
+              </h3>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                Connect supported services like GitHub and LeetCode. Activity turns into visible, daily observations alongside your habits.
+              </p>
+            </div>
+
+            <div className="flex items-center gap-2 p-3 rounded-xl border border-border/60 bg-surface-muted/50 text-xs font-mono text-muted-foreground">
+              <span className="size-2 rounded-full bg-emerald-400" />
+              <span>GitHub GraphQL + LeetCode</span>
+            </div>
+          </div>
+
+          {/* Feature 4: Charts You Control */}
+          <div className="rounded-2xl border border-border/80 bg-surface/60 p-6 flex flex-col justify-between gap-6 hover:border-border-strong transition-all">
+            <div>
+              <div className="size-9 rounded-lg bg-surface-muted border border-border flex items-center justify-center text-accent mb-4">
+                <BarChart3Icon className="size-4" />
+              </div>
+              <h3 className="text-lg font-semibold text-foreground tracking-tight mb-2">
+                Charts you control
+              </h3>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                Switch between Line, Bar, Area, and Calendar Heatmap views. Set custom goal lines, rolling averages, and custom habits like water intake.
+              </p>
+            </div>
+
+            <div className="flex items-center justify-between p-3 rounded-xl border border-border/60 bg-surface-muted/50 text-xs font-mono">
+              <span className="text-muted-foreground">View:</span>
+              <span className="text-foreground">Bar &middot; 30d &middot; 7d avg</span>
+            </div>
+          </div>
+
+          {/* Feature 5: Data You Can Take With You */}
+          <div className="rounded-2xl border border-border/80 bg-surface/60 p-6 flex flex-col justify-between gap-6 hover:border-border-strong transition-all">
+            <div>
+              <div className="size-9 rounded-lg bg-surface-muted border border-border flex items-center justify-center text-accent mb-4">
+                <ShieldIcon className="size-4" />
+              </div>
+              <h3 className="text-lg font-semibold text-foreground tracking-tight mb-2">
+                Data you can take with you
+              </h3>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                100% on-device IndexedDB storage. Export human-readable JSON, CSV, or passphrase-encrypted AES-GCM backup files anytime.
+              </p>
+            </div>
+
+            <div className="flex items-center justify-between p-3 rounded-xl border border-border/60 bg-surface-muted/50 text-xs font-mono">
+              <span className="text-muted-foreground">Export:</span>
+              <span className="text-accent font-semibold">.panal-backup (AES-GCM)</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}

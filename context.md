@@ -391,6 +391,26 @@ None in application code yet. Process note: running `git` from `panal` initially
 - Imported in a dedicated commit per `personal-landing-auth.md`.
 - Verified type safety and clean responsive styling.
 
+---
+
+### 2026-10-01 — Import Watermelon Feature-3 and Adapt Scroll Story & Feature Grid
+
+**What:**
+- Installed `https://registry.watermelon.sh/r/feature-3.json` via shadcn CLI.
+- Created `components/landing/LandingStory.tsx`:
+  - 3-chapter sticky scroll-driven product story: (1) Plan the day with honest progress, (2) Turn activity into inspectable daily metrics, (3) See the pattern through calm analytics.
+  - Transforming visual frame responding to scroll checkpoints via IntersectionObserver (stacked on mobile/reduced-motion).
+- Created `components/landing/LandingEditorial.tsx`:
+  - Added high-resolution dark editorial visual (`public/images/landing/editorial-desk.jpg`) with soft edge fade and vignette.
+  - Emotional message: "A record of your days, for you."
+- Created `components/landing/LandingFeatures.tsx`:
+  - 5 truthful capabilities: Configurable workday cutoff past midnight, Dual task/target progress, Connector integrations, Controllable charts, and Local data export with AES-GCM encryption.
+
+**How:**
+- Replaced all template placeholders with real Personal Analytics concepts and data models.
+- Verified compilation and types with `npm run typecheck`.
+
+
 
 
 
