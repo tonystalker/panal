@@ -26,7 +26,7 @@ This file tracks **progress**. `context.md` tracks **how it was done** (changelo
 - [x] Adapt app shell & sidebar navigation with typographic PA monogram
 - [x] Refactor Dashboard with Capitalio data-first composition
 - [x] Import and adapt `integrations-2` for Connectors
-- [ ] Refactor Today, Calendar, and Settings pages
+- [x] Refactor Today, Calendar, and Settings pages
 - [ ] Import and adapt `landing-01` & `hero-8` (Landing hero & showcase)
 - [ ] Import and adapt `feature-3` & scroll-driven product story
 - [ ] Import and adapt `cta-4`, privacy section, and footer

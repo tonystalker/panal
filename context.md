@@ -360,6 +360,20 @@ None in application code yet. Process note: running `git` from `panal` initially
 - Imported in a dedicated commit per `personal-ui-refactor.md`.
 - Verified type safety with `npm run typecheck`.
 
+---
+
+### 2026-10-01 — Refactor Today, Calendar, and Settings Pages for Swiss Editorial Consistency
+
+**What:**
+- `app/today/page.tsx`: Polished day-progress summary, integrated date navigator into `PageHeader`, responsive two-column layout on desktop, clean task rows with monospace tabular numbers, unified check-in inputs with custom metrics, and quiet reflection area.
+- `app/calendar/page.tsx`: Restrained grayscale month grid with acid-lime accent reserved for active/selected day and completion, compact month navigation, and desktop side panel for day inspection.
+- `app/settings/page.tsx`: Grouped settings rows (Timezone, Workday Cutoff), AES-GCM encrypted backup export/import, readable JSON/CSV export, and confirmation-protected data wipe.
+
+**How:**
+- Adheres strictly to `UI.md` and `personal-ui-refactor.md` design principles: deep near-black canvas, hairline borders, no floating card clutter, and high contrast typography.
+- Verified test suite and type checking.
+
+
 
 
 
