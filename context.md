@@ -459,13 +459,16 @@ None in application code yet. Process note: running `git` from `panal` initially
 
 ---
 
-### 2026-10-01 — Fix TanStack Query Undefined Return in Previous Workday DailyLog Query
+### 2026-10-01 — Refine Custom Metric Collision Check, Widget Cleanup & Dashboard Cache Invalidation
 
 **What:**
-- Fixed runtime console error `Query data cannot be undefined. Affected query key: ["dailyLog", "<date>"]`.
-- `lib/repositories.ts`: Updated `getDailyLogByDate(dateKey)` to return `Promise<DailyLog | null>` instead of `undefined` when no record matches.
-- `app/today/page.tsx`: Updated `prevLog` `queryFn` to return `(await getDailyLogByDate(prevWorkdayKey)) ?? null`.
+- `lib/repositories.ts`:
+  - `addCustomMetric`: Included built-in `manualMetricKey`s (`exercise_minutes`, `dsa_problems`, etc.) in `existingKeys` set so custom metrics with labels like "Exercise Minutes" do not collide with built-in manual metrics.
+  - `deleteCustomMetric`: Removed bare-key matching `w.metricKeys.includes(key)` from widget cleanup and restricted to `w.metricKeys.includes("manual.${key}")` to prevent accidental deletion of unrelated widgets.
+- `app/today/page.tsx`:
+  - Corrected query cache invalidation on custom metric add and delete from `["dashboardWidgets"]` to `["widgets"]` matching the dashboard's `useQuery` key.
+- `tests/unit/metrics.test.ts`:
+  - Added unit tests verifying built-in manual key collision avoidance and targeted `manual.${key}` widget cleanup.
 
 **How:**
-- Replaced `undefined` resolution with explicit `null` to comply with TanStack Query v5 requirements.
-- Validated with `npm run typecheck` and `npm test` (all 91 tests passing).
+- Verified with strict TypeScript `npm run typecheck` and full unit test suite `npm test` (all 93 tests passing).
