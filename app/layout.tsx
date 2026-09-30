@@ -21,12 +21,16 @@ export const viewport: Viewport = {
   initialScale: 1,
   viewportFit: "cover",
 };
+import { TooltipProvider } from "@/components/ui/tooltip";
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={inter.variable} suppressHydrationWarning>
       <body suppressHydrationWarning>
         <Providers>
-          <AppShell>{children}</AppShell>
+          <TooltipProvider>
+            <AppShell>{children}</AppShell>
+          </TooltipProvider>
         </Providers>
       </body>
     </html>

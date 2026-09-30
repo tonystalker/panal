@@ -318,6 +318,21 @@ None in application code yet. Process note: running `git` from `panal` initially
 - Imported in a dedicated, isolated commit prior to adaptation per `personal-ui-refactor.md`.
 - Verified compilation and types with `npm run typecheck`.
 
+---
+
+### 2026-10-01 — Adapt App Shell, Collapsible Navigation & Design Tokens
+
+**What:**
+- `components/AppShell.tsx`: Configured route-aware shell rendering that isolates public routes (`/`, `/login`, `/signup`, `/privacy`) from the internal application sidebar.
+- `app/layout.tsx`: Integrated `TooltipProvider` for accessible navigation tooltips and dark theme tokens.
+- `app/app/page.tsx`: Created `/app` redirect to `/today` to support both `/app` and `/today` entry points.
+- `components/Sidebar.tsx` & `components/ui/AppMonogram.tsx`: Preserved collapsible desktop navigation (64px to 248px), typographic `PA` monogram, accessible mobile drawer with keyboard escape trap, active route indicators, and offline privacy indicator.
+
+**How:**
+- Reuses semantic dark tokens (`#09090b` canvas, `#111113` surface, `#a3ff12` acid-lime signal color).
+- Tested typecheck and layout rendering.
+
+
 
 
 

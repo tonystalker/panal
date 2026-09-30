@@ -45,6 +45,21 @@ export function AppShell({ children }: AppShellProps) {
   );
   const currentTitle = currentItem?.label ?? "Personal Analytics";
 
+  // Public landing, auth, and legal routes render directly without dashboard sidebar
+  const isPublicRoute =
+    pathname === "/" ||
+    pathname === "/login" ||
+    pathname === "/signup" ||
+    pathname === "/privacy";
+
+  if (isPublicRoute) {
+    return (
+      <div className="min-h-screen bg-background text-foreground antialiased selection:bg-accent/20 selection:text-accent">
+        {children}
+      </div>
+    );
+  }
+
   return (
     <div className="flex min-h-screen bg-background text-foreground antialiased">
       {/* Desktop Collapsible Sidebar */}
