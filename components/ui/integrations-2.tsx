@@ -379,7 +379,7 @@ export default function Integrations2() {
                 key={i + 4}
                 className={`bg-background hover:bg-background/50 dark:bg-background/50 dark:hover:bg-background/20 flex h-24 items-center justify-center gap-2 transition-colors duration-200 ease-out sm:h-28`}
               >
-                <Icon className="size-8 text-white" />
+                <Icon className="text-muted-foreground size-8" />
                 <span className="text-muted-foreground text-lg">
                   {item.name}
                 </span>

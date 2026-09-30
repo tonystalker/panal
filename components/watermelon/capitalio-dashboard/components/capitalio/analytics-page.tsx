@@ -343,7 +343,7 @@ function IncomeChart({ income }: { income: AnalyticsData['income'] }) {
           axisLine={false}
           domain={[0, yMax]}
           tick={{ fill: 'var(--muted-foreground)', fontSize: '0.75rem' }}
-          tickFormatter={(value) => `${value}.0K`}
+          tickFormatter={(value) => `${Number(value).toFixed(1)}K`}
           tickLine={false}
           width={48}
         />

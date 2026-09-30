@@ -162,6 +162,7 @@ export function DashboardSidebar() {
             size="icon"
             variant="destructive"
             className="bg-transparent! group"
+            aria-label="Log out"
           >
             <SidebarLogoutIcon className="size-4 opacity-70 group-hover:opacity-100 transition-colors" />
           </Button>
