@@ -33,7 +33,6 @@ import {
   ArrowRightIcon,
   CheckIcon,
   ClockIcon,
-  AlertCircleIcon,
 } from "lucide-react";
 
 type ManualMetricKey = "exercise_minutes" | "mobile_usage_minutes" | "dsa_problems";
@@ -251,124 +250,108 @@ function TodayContent() {
 
   return (
     <div className="page fade-in flex flex-col gap-4">
-      {/* Editorial Page Header */}
+      {/* Editorial Page Header with Integrated Date Navigator */}
       <PageHeader
         title={isCurrentOperationalToday ? "Today" : dateLabel(dateKey, tz, cutoff)}
         badge={
           !isCurrentOperationalToday ? (
-            <span className="badge badge-accent text-[11px] font-mono">
+            <span className="badge badge-secondary font-mono text-[10px] text-muted-foreground uppercase tracking-wider">
               Historical Workday
             </span>
           ) : cutoff !== "00:00" ? (
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-mono bg-surface-muted text-muted-foreground border border-border">
-              <ClockIcon className="size-3 text-accent" />
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-mono bg-surface-muted text-subtle-foreground border border-border">
+              <ClockIcon className="size-2.5 text-accent" />
               <span>{cutoff} cutoff</span>
             </span>
           ) : undefined
         }
         description={
           <span className="flex items-center gap-1.5 font-medium text-muted-foreground">
-            <CalendarIcon className="size-3.5 text-zinc-400" />
+            <CalendarIcon className="size-3.5 text-subtle-foreground" />
             {format(parseISO(dateKey), "EEEE, MMMM d, yyyy")}
           </span>
         }
-      />
+        action={
+          <div className="flex items-center gap-2 flex-wrap">
+            {/* Segmented Day Pager */}
+            <div className="flex items-center rounded-lg border border-border bg-surface-muted/40 p-0.5">
+              <button
+                id="prev-day-btn"
+                type="button"
+                className="btn-icon size-7 border-0 rounded-md text-muted-foreground hover:text-foreground hover:bg-surface-muted"
+                onClick={goToPrevDay}
+                title="Previous workday"
+                aria-label="Previous workday"
+              >
+                <ChevronLeftIcon className="size-3.5" />
+              </button>
 
-      {/* Date Navigation & Quick Actions Bar */}
-      <div className="flex items-center justify-between gap-3 flex-wrap bg-surface-muted/20 border border-border/60 rounded-xl px-3.5 py-2.5">
-        <div className="flex items-center gap-1.5 sm:gap-2">
-          <button
-            id="prev-day-btn"
-            type="button"
-            className="btn btn-ghost btn-sm text-xs flex items-center gap-1 px-2.5"
-            onClick={goToPrevDay}
-            title="Go to previous workday"
-          >
-            <ChevronLeftIcon className="size-3.5" />
-            <span className="hidden sm:inline">Prev day</span>
-          </button>
+              <div className="relative flex items-center px-1">
+                <input
+                  id="date-picker-input"
+                  type="date"
+                  className="bg-transparent text-xs font-mono text-foreground cursor-pointer outline-none border-0 py-0.5 px-1.5 rounded hover:bg-surface-muted transition-colors w-[124px]"
+                  value={dateKey}
+                  onChange={(e) => e.target.value && navigateToDate(e.target.value)}
+                  title="Jump to date"
+                  aria-label="Choose workday date"
+                />
+              </div>
 
-          <div className="relative flex items-center">
-            <input
-              id="date-picker-input"
-              type="date"
-              className="input input-sm text-xs font-mono h-8 cursor-pointer pl-7 pr-2 w-32 sm:w-36"
-              value={dateKey}
-              onChange={(e) => e.target.value && navigateToDate(e.target.value)}
-              title="Jump to date"
-            />
-            <CalendarIcon className="size-3 text-muted-foreground absolute left-2 pointer-events-none" />
-          </div>
+              <button
+                id="next-day-btn"
+                type="button"
+                className="btn-icon size-7 border-0 rounded-md text-muted-foreground hover:text-foreground hover:bg-surface-muted"
+                onClick={goToNextDay}
+                title="Next workday"
+                aria-label="Next workday"
+              >
+                <ChevronRightIcon className="size-3.5" />
+              </button>
+            </div>
 
-          <button
-            id="next-day-btn"
-            type="button"
-            className="btn btn-ghost btn-sm text-xs flex items-center gap-1 px-2.5"
-            onClick={goToNextDay}
-            title="Go to next workday"
-          >
-            <span className="hidden sm:inline">Next day</span>
-            <ChevronRightIcon className="size-3.5" />
-          </button>
-        </div>
+            {!isCurrentOperationalToday && (
+              <button
+                id="jump-today-btn"
+                type="button"
+                className="btn btn-ghost btn-sm text-xs font-mono h-8 text-foreground"
+                onClick={goToToday}
+              >
+                Jump to Today
+              </button>
+            )}
 
-        <div className="flex items-center gap-2">
-          {!isCurrentOperationalToday && (
             <button
-              id="jump-today-btn"
-              type="button"
-              className="btn btn-secondary btn-sm text-xs font-medium"
-              onClick={goToToday}
+              id="add-task-btn"
+              className="btn btn-primary btn-sm flex items-center gap-1.5 font-semibold text-xs h-8"
+              onClick={() => setShowAddTask((v) => !v)}
             >
-              Jump to Today
+              <PlusIcon className="size-3.5 stroke-[2.5]" />
+              <span>Add task</span>
             </button>
-          )}
-          <button
-            id="add-task-btn"
-            className="btn btn-primary btn-sm flex items-center gap-1.5 font-semibold text-xs"
-            onClick={() => setShowAddTask((v) => !v)}
-          >
-            <PlusIcon className="size-3.5 stroke-[2.5]" />
-            <span>Add task</span>
-          </button>
-        </div>
-      </div>
-
-      {/* Historical Workday Banner */}
-      {!isCurrentOperationalToday && (
-        <div className="rounded-xl border border-border/80 bg-surface-muted/40 p-3 sm:p-3.5 flex items-center justify-between gap-3 flex-wrap">
-          <div className="flex items-center gap-2 text-xs text-muted-foreground">
-            <AlertCircleIcon className="size-4 text-accent shrink-0" />
-            <span>
-              Editing historical workday: <strong className="text-foreground">{format(parseISO(dateKey), "EEEE, MMM d, yyyy")}</strong>.
-              All task updates, completions, and check-ins are preserved on this workday date.
-            </span>
           </div>
-          <button
-            className="btn btn-ghost btn-sm text-xs font-semibold text-foreground underline underline-offset-2"
-            onClick={goToToday}
-          >
-            Return to Current Day
-          </button>
-        </div>
-      )}
+        }
+      />
 
       {/* Previous Workday Unfinished Tasks Shortcut Banner */}
       {isCurrentOperationalToday && unfinishedPrevTasks.length > 0 && (
         <div
           id="prev-workday-banner"
-          className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-3.5 sm:p-4 flex flex-col gap-3 transition-all"
+          className="rounded-xl border border-border/80 bg-surface/80 p-3 sm:px-4 sm:py-3 flex flex-col gap-2.5 transition-all"
         >
           <div className="flex items-center justify-between gap-3 flex-wrap">
             <div className="flex items-center gap-2.5 min-w-0">
-              <ClockIcon className="size-4 text-amber-400 shrink-0" />
-              <div>
-                <span className="text-xs sm:text-sm font-semibold text-amber-200">
-                  Previous workday · {unfinishedPrevTasks.length} unfinished {unfinishedPrevTasks.length === 1 ? "task" : "tasks"}
+              <span className="size-2 rounded-full bg-warning shrink-0" />
+              <div className="flex items-baseline gap-2 flex-wrap">
+                <span className="text-xs font-semibold text-foreground">
+                  Previous workday
                 </span>
-                <p className="text-[11px] text-amber-300/80">
-                  From {format(parseISO(prevWorkdayKey), "EEEE, MMM d")}
-                </p>
+                <span className="text-xs text-muted-foreground">
+                  · <span className="font-mono tabular-nums text-foreground">{unfinishedPrevTasks.length}</span> unfinished {unfinishedPrevTasks.length === 1 ? "task" : "tasks"}
+                </span>
+                <span className="text-[11px] text-subtle-foreground font-mono">
+                  ({format(parseISO(prevWorkdayKey), "MMM d")})
+                </span>
               </div>
             </div>
 
@@ -376,61 +359,62 @@ function TodayContent() {
               <button
                 id="toggle-prev-tasks-btn"
                 type="button"
-                className="btn btn-ghost btn-sm text-xs text-amber-200 hover:text-amber-100 hover:bg-amber-500/20"
+                className="btn btn-ghost btn-sm text-xs h-7 px-2.5"
                 onClick={() => setShowPrevTasks((v) => !v)}
               >
-                {showPrevTasks ? "Hide items" : "Mark items complete"}
+                {showPrevTasks ? "Hide items" : "Quick complete"}
               </button>
               <button
                 id="open-prev-workday-btn"
                 type="button"
-                className="btn btn-secondary btn-sm text-xs flex items-center gap-1.5 border-amber-500/40 text-amber-200 hover:bg-amber-500/20"
+                className="btn btn-ghost btn-sm text-xs h-7 px-2.5 flex items-center gap-1 text-foreground"
                 onClick={() => navigateToDate(prevWorkdayKey)}
               >
-                <span>Open that day</span>
-                <ArrowRightIcon className="size-3" />
+                <span>Open day</span>
+                <ArrowRightIcon className="size-3 text-muted-foreground" />
               </button>
             </div>
           </div>
 
           {/* Expandable tasks list to mark items complete directly */}
           {showPrevTasks && (
-            <div className="pt-2 border-t border-amber-500/20 flex flex-col gap-2">
-              <div className="flex items-center justify-between text-[11px] text-amber-300/80 font-mono">
-                <span>Incomplete items from {prevWorkdayKey}:</span>
+            <div className="pt-2 border-t border-border/50 flex flex-col gap-1">
+              <div className="flex items-center justify-between pb-1 text-[11px] text-subtle-foreground font-mono">
+                <span>Incomplete from {prevWorkdayKey}:</span>
                 <button
                   type="button"
-                  className="hover:underline text-amber-300 font-medium"
+                  className="hover:text-foreground text-accent text-[11px] font-mono transition-colors"
                   onClick={() => completeAllPrevTasks.mutate()}
                 >
                   Mark all complete
                 </button>
               </div>
-              <div className="flex flex-col gap-1.5">
+              <div className="flex flex-col divide-y divide-border/30">
                 {unfinishedPrevTasks.map((t) => (
                   <div
                     key={t.id}
-                    className="flex items-center justify-between gap-2.5 p-2 rounded-lg bg-surface/70 border border-amber-500/25 text-xs"
+                    className="flex items-center justify-between gap-3 py-2 px-1 hover:bg-surface-muted/20 transition-colors rounded"
                   >
                     <div className="flex items-center gap-2.5 min-w-0">
                       <button
                         type="button"
+                        id={`complete-prev-${t.id}`}
                         aria-label={`Complete task ${t.title}`}
-                        className="size-5 rounded border border-border flex items-center justify-center hover:border-accent hover:bg-accent/10 transition-colors shrink-0"
+                        className="checkbox size-4 shrink-0"
                         onClick={() => completePrevTask.mutate(t.id)}
                       >
-                        <CheckIcon className="size-3 text-muted-foreground opacity-50 hover:opacity-100" />
+                        <CheckIcon className="size-2.5 text-background stroke-[2.5]" />
                       </button>
-                      <span className="text-foreground truncate font-medium">{t.title}</span>
+                      <span className="text-xs text-foreground truncate">{t.title}</span>
                       {t.targetValue != null && (
-                        <span className="text-[11px] text-muted-foreground font-mono shrink-0">
+                        <span className="text-[11px] text-subtle-foreground font-mono tabular-nums shrink-0">
                           ({t.completedValue}/{t.targetValue} {t.unit ?? ""})
                         </span>
                       )}
                     </div>
                     <button
                       type="button"
-                      className="btn btn-ghost btn-sm text-[11px] h-6 px-2 text-accent hover:bg-accent/15"
+                      className="btn btn-ghost btn-sm text-[11px] h-6 px-2 font-mono text-muted-foreground hover:text-foreground shrink-0"
                       onClick={() => completePrevTask.mutate(t.id)}
                     >
                       Done

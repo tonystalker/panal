@@ -343,13 +343,13 @@ export default function SettingsPage() {
                     Workday Cutoff
                   </label>
                   <span className="text-xs text-muted-foreground">
-                    Tasks logged before this time belong to the previous day. Default: 12:00 AM (Midnight).
+                    Tasks logged before this time resolve to the previous workday. Default: 12:00 AM.
                   </span>
                 </div>
               </div>
               <select
                 id="workday-cutoff-select"
-                className="input input-sm w-56 text-xs cursor-pointer"
+                className="input input-sm w-56 text-xs cursor-pointer font-mono"
                 value={profile?.preferences?.workdayCutoff ?? "00:00"}
                 onChange={(e) => updateCutoff.mutate(e.target.value)}
               >
