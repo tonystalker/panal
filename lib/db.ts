@@ -26,6 +26,7 @@ export const UserProfileSchema = z.object({
   preferences: z.object({
     firstDayOfWeek: z.number().int().min(0).max(6).default(1), // 0=Sun, 1=Mon
     theme: z.enum(["system", "light", "dark"]).default("system"),
+    workdayCutoff: z.string().regex(/^\d{2}:\d{2}$/).default("00:00"), // Local cutoff time "HH:mm", defaults to "00:00"
   }),
 });
 

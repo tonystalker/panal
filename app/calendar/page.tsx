@@ -3,8 +3,8 @@
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
-import { getDailyLogsInRange, getTasksForLog, taskCompletionPercent } from "@/lib/repositories";
-import { todayKey, dateRange } from "@/lib/date";
+import { getDailyLogsInRange, getTasksForLog, taskCompletionPercent, getOrCreateProfile } from "@/lib/repositories";
+import { operationalDate, dateRange } from "@/lib/date";
 import { format, parseISO, startOfMonth, endOfMonth, getDay, subDays, addDays } from "date-fns";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { MetricValue } from "@/components/ui/MetricValue";
@@ -45,8 +45,14 @@ export default function CalendarPage() {
     enabled: logs.length > 0,
   });
 
-  // Streak calculation (from today backwards)
-  const today = todayKey(timezone);
+  // Streak calculation (from operational today backwards)
+  const { data: profile } = useQuery({
+    queryKey: ["profile"],
+    queryFn: () => getOrCreateProfile(),
+  });
+  const tz = profile?.timezone ?? timezone;
+  const cutoff = profile?.preferences?.workdayCutoff ?? "00:00";
+  const today = operationalDate(new Date(), tz, cutoff);
   const logDates = new Set(logs.map((l) => l.date));
   let streak = 0;
   for (let i = 0; ; i++) {

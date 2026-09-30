@@ -252,3 +252,27 @@ None in application code yet. Process note: running `git` from `panal` initially
 
 **Follow-up:** ✅ Milestone 3 complete. Next: Milestone 4 — personal-use evaluation (go/no-go for V2 sync).
 
+---
+
+### 2026-10-01 — Configurable Workday Cutoff and Previous Day Task Shortcut
+
+**What:**
+- `lib/db.ts`: Added `workdayCutoff: z.string().regex(/^\d{2}:\d{2}$/).default("00:00")` to `UserProfileSchema.preferences`. Defaulting to `"00:00"` (12:00 AM midnight) preserves full backwards compatibility for existing profiles and fixtures without requiring migration.
+- `lib/date.ts`: Implemented `operationalDate(now, timezone, cutoffTime)`. For example, with a 6:00 AM cutoff (`"06:00"`), 2026-10-01 01:00 resolves to 2026-09-30, and 2026-10-01 06:00 resolves to 2026-10-01. DST-safe via calendar day subtraction (`subDays`). Updated `todayKey` and `dateLabel` to use `operationalDate`.
+- `lib/repositories.ts`: Initialized `workdayCutoff: "00:00"` on new profiles; added `getDailyLogByDate(dateKey)` query helper; ensured `UserProfileSchema.parse` hydrates missing cutoff on existing DB records.
+- `app/settings/page.tsx`: Added Workday Cutoff selection under Preferences with options from 12:00 AM to 12:00 PM (e.g. 6:00 AM for night shift workers).
+- `app/today/page.tsx`:
+  - Added URL date parameter support (`?date=YYYY-MM-DD`) and full date navigation controls: Prev Day, Next Day, Today jump button, and date picker input.
+  - Resolved `dateKey` via `operationalDate(new Date(), tz, cutoff)` when no query param is provided.
+  - Added visible shortcut banner on Today when the previous operational day has unfinished tasks: “Previous workday · X unfinished tasks” with actions to “Open that day” and “Mark items complete” directly inline.
+  - Completing tasks from the shortcut updates the original `TaskInstance`, preserves its original `DailyLog` date, and sets `completedAt` to the real timestamp.
+  - Added historical workday badge and editing notice when viewing/adjusting past days.
+  - Wrapped `TodayPage` in `<Suspense>` for clean Next.js 15 App Router client search param hydration.
+- `app/dashboard/page.tsx` & `app/calendar/page.tsx`: Replaced calendar midnight date resolution with `operationalDate(new Date(), tz, cutoff)`.
+- `tests/unit/date.test.ts`: Added 14 unit test cases for `operationalDate`, default midnight cutoff, 6:00 AM cutoff, before/after cutoff boundaries, timezone offsets, DST transitions, and month/year boundaries. All 84 tests pass.
+
+**How:**
+- Day boundary logic: checks if local wall-clock minutes `(hour * 60 + min) < cutoffMinutes`. If so, decrements calendar day via `subDays(zoned, 1)`.
+- Existing daily logs and tasks are never moved or auto-failed when cutoff passes.
+- Direct date navigation and calendar links (`/today?date=...`) allow editing tasks, check-in metrics, and reflections on any past workday.
+

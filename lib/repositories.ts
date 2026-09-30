@@ -30,15 +30,25 @@ import { nowISO } from "./date";
 export async function getOrCreateProfile(timezone?: string): Promise<UserProfile> {
   const tz = timezone ?? Intl.DateTimeFormat().resolvedOptions().timeZone;
   const existing = await db.userProfile.toCollection().first();
-  if (existing) return existing;
+  if (existing) {
+    const parsed = UserProfileSchema.parse(existing);
+    if (!existing.preferences?.workdayCutoff) {
+      await db.userProfile.update(existing.id, { preferences: parsed.preferences });
+    }
+    return parsed;
+  }
   const profile = UserProfileSchema.parse({
     id: generateId(),
     timezone: tz,
     createdAt: nowISO(),
-    preferences: { firstDayOfWeek: 1, theme: "system" },
+    preferences: { firstDayOfWeek: 1, theme: "system", workdayCutoff: "00:00" },
   });
   await db.userProfile.add(profile);
   return profile;
+}
+
+export async function getDailyLogByDate(dateKey: string): Promise<DailyLog | undefined> {
+  return db.dailyLogs.where("date").equals(dateKey).and((l) => l.deletedAt === null).first();
 }
 
 export async function updateProfile(patch: Partial<UserProfile>): Promise<void> {

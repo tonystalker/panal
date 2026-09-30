@@ -18,9 +18,26 @@ import {
   Trash2Icon,
   KeyRoundIcon,
   GlobeIcon,
+  ClockIcon,
   CheckIcon,
   AlertTriangleIcon,
 } from "lucide-react";
+
+const WORKDAY_CUTOFF_OPTIONS = [
+  { value: "00:00", label: "12:00 AM (Midnight — Default)" },
+  { value: "01:00", label: "1:00 AM" },
+  { value: "02:00", label: "2:00 AM" },
+  { value: "03:00", label: "3:00 AM" },
+  { value: "04:00", label: "4:00 AM" },
+  { value: "05:00", label: "5:00 AM" },
+  { value: "06:00", label: "6:00 AM (Night Shift)" },
+  { value: "07:00", label: "7:00 AM" },
+  { value: "08:00", label: "8:00 AM" },
+  { value: "09:00", label: "9:00 AM" },
+  { value: "10:00", label: "10:00 AM" },
+  { value: "11:00", label: "11:00 AM" },
+  { value: "12:00", label: "12:00 PM (Noon)" },
+];
 
 const TIMEZONES = [
   "UTC",
@@ -63,6 +80,21 @@ export default function SettingsPage() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["profile"] });
       showStatus("success", "Timezone updated.");
+    },
+  });
+
+  // Workday cutoff update
+  const updateCutoff = useMutation({
+    mutationFn: (cutoff: string) =>
+      updateProfile({
+        preferences: {
+          ...(profile?.preferences ?? { firstDayOfWeek: 1, theme: "system", workdayCutoff: "00:00" }),
+          workdayCutoff: cutoff,
+        },
+      }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["profile"] });
+      showStatus("success", "Workday cutoff time updated.");
     },
   });
 
@@ -274,9 +306,9 @@ export default function SettingsPage() {
         <section className="flex flex-col gap-3">
           <SectionHeading
             title="Preferences"
-            description="Adjust your local timezone for day boundary calculations."
+            description="Adjust your local timezone and workday cutoff for day boundary calculations."
           />
-          <div className="card p-4">
+          <div className="card p-4 flex flex-col gap-4">
             <div className="flex items-center justify-between gap-4 flex-wrap">
               <div className="flex items-center gap-2.5">
                 <GlobeIcon className="size-4 text-muted-foreground" />
@@ -297,6 +329,34 @@ export default function SettingsPage() {
               >
                 {TIMEZONES.map((tz) => (
                   <option key={tz} value={tz}>{tz}</option>
+                ))}
+              </select>
+            </div>
+
+            <hr className="border-border/50" />
+
+            <div className="flex items-center justify-between gap-4 flex-wrap">
+              <div className="flex items-center gap-2.5">
+                <ClockIcon className="size-4 text-muted-foreground" />
+                <div>
+                  <label htmlFor="workday-cutoff-select" className="text-sm font-medium text-foreground block">
+                    Workday Cutoff
+                  </label>
+                  <span className="text-xs text-muted-foreground">
+                    Tasks logged before this time belong to the previous day. Default: 12:00 AM (Midnight).
+                  </span>
+                </div>
+              </div>
+              <select
+                id="workday-cutoff-select"
+                className="input input-sm w-56 text-xs cursor-pointer"
+                value={profile?.preferences?.workdayCutoff ?? "00:00"}
+                onChange={(e) => updateCutoff.mutate(e.target.value)}
+              >
+                {WORKDAY_CUTOFF_OPTIONS.map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </option>
                 ))}
               </select>
             </div>

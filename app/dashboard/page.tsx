@@ -24,9 +24,9 @@ import type { DashboardWidget } from "@/lib/db";
 import {
   getDashboardWidgets, upsertDashboardWidget, deleteWidget,
   reorderWidgets, seedDefaultWidgets,
-  getDailyLogsInRange, getTasksForLog,
+  getDailyLogsInRange, getTasksForLog, getOrCreateProfile,
 } from "@/lib/repositories";
-import { todayKey } from "@/lib/date";
+import { operationalDate } from "@/lib/date";
 import { generateId } from "@/lib/uuid";
 import { resolveMetricData, applyRollingAverage, type DataPoint } from "@/lib/metrics/resolver";
 import {
@@ -66,7 +66,14 @@ export default function DashboardPage() {
     setTimezone(Intl.DateTimeFormat().resolvedOptions().timeZone);
   }, []);
 
-  const today = todayKey(timezone);
+  const { data: profile } = useQuery({
+    queryKey: ["profile"],
+    queryFn: () => getOrCreateProfile(),
+  });
+
+  const tz = profile?.timezone ?? timezone;
+  const cutoff = profile?.preferences?.workdayCutoff ?? "00:00";
+  const today = operationalDate(new Date(), tz, cutoff);
 
   // Seed default widgets on first load
   useEffect(() => {

@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, Suspense } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { db, TaskInstance } from "@/lib/db";
 import {
@@ -16,12 +17,24 @@ import {
   upsertManualMetric,
   taskCompletionPercent,
   targetProgressPercent,
+  getOrCreateProfile,
+  getDailyLogByDate,
 } from "@/lib/repositories";
-import { todayKey } from "@/lib/date";
+import { operationalDate, dateLabel, isValidDateKey } from "@/lib/date";
+import { format, parseISO, subDays, addDays } from "date-fns";
 import { TaskRow } from "@/components/TaskRow";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { SectionHeading } from "@/components/ui/SectionHeading";
-import { PlusIcon, CalendarIcon } from "lucide-react";
+import {
+  PlusIcon,
+  CalendarIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  ArrowRightIcon,
+  CheckIcon,
+  ClockIcon,
+  AlertCircleIcon,
+} from "lucide-react";
 
 type ManualMetricKey = "exercise_minutes" | "mobile_usage_minutes" | "dsa_problems";
 
@@ -32,11 +45,15 @@ const MANUAL_METRICS: { key: ManualMetricKey; label: string; unit: string; place
     { key: "mobile_usage_minutes", label: "Mobile usage", unit: "min", placeholder: "0" },
   ];
 
-export default function TodayPage() {
+function TodayContent() {
   const qc = useQueryClient();
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const queryDate = searchParams.get("date");
+
   const [timezone, setTimezone] = useState("UTC");
-  const [dateKey, setDateKey] = useState("");
   const [showAddTask, setShowAddTask] = useState(false);
+  const [showPrevTasks, setShowPrevTasks] = useState(false);
   const [newTitle, setNewTitle] = useState("");
   const [newTarget, setNewTarget] = useState("");
   const [newUnit, setNewUnit] = useState("");
@@ -44,30 +61,57 @@ export default function TodayPage() {
   const addInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
-    setTimezone(tz);
-    setDateKey(todayKey(tz));
+    setTimezone(Intl.DateTimeFormat().resolvedOptions().timeZone);
   }, []);
+
+  const { data: profile } = useQuery({
+    queryKey: ["profile"],
+    queryFn: () => getOrCreateProfile(),
+  });
+
+  const tz = profile?.timezone ?? timezone;
+  const cutoff = profile?.preferences?.workdayCutoff ?? "00:00";
+  const operationalToday = operationalDate(new Date(), tz, cutoff);
+
+  // If query param ?date=YYYY-MM-DD is present and valid, use it; otherwise default to operational today
+  const dateKey = queryDate && isValidDateKey(queryDate) ? queryDate : operationalToday;
+  const isCurrentOperationalToday = dateKey === operationalToday;
+  const prevWorkdayKey = format(subDays(parseISO(operationalToday), 1), "yyyy-MM-dd");
 
   const { data: log } = useQuery({
     queryKey: ["dailyLog", dateKey],
-    queryFn: () => getOrCreateDailyLog(dateKey, timezone),
-    enabled: !!dateKey && !!timezone,
+    queryFn: () => getOrCreateDailyLog(dateKey, tz),
+    enabled: !!dateKey && !!tz,
   });
 
-  // Tasks
+  // Current day tasks
   const { data: tasks = [] } = useQuery({
     queryKey: ["tasks", log?.id],
     queryFn: () => getTasksForLog(log!.id),
     enabled: !!log?.id,
   });
 
-  // Manual metrics
+  // Current day manual metrics
   const { data: metrics = [] } = useQuery({
     queryKey: ["manualMetrics", log?.id],
     queryFn: () => getManualMetricsForLog(log!.id),
     enabled: !!log?.id,
   });
+
+  // Previous operational day query (for unfinished task shortcut banner on Today)
+  const { data: prevLog } = useQuery({
+    queryKey: ["dailyLog", prevWorkdayKey],
+    queryFn: () => getDailyLogByDate(prevWorkdayKey),
+    enabled: isCurrentOperationalToday && !!prevWorkdayKey,
+  });
+
+  const { data: prevTasks = [] } = useQuery({
+    queryKey: ["tasks", prevLog?.id],
+    queryFn: () => getTasksForLog(prevLog!.id),
+    enabled: isCurrentOperationalToday && !!prevLog?.id,
+  });
+
+  const unfinishedPrevTasks = prevTasks.filter((t) => t.status === "todo");
 
   // Derived state
   const completion = taskCompletionPercent(tasks);
@@ -77,11 +121,36 @@ export default function TodayPage() {
 
   const getMetricValue = (key: string) => metrics.find((m) => m.metricKey === key)?.value ?? 0;
 
+  // Navigation handlers
+  const navigateToDate = (targetDate: string) => {
+    if (targetDate === operationalToday) {
+      router.push("/today");
+    } else {
+      router.push(`/today?date=${targetDate}`);
+    }
+  };
+
+  const goToPrevDay = () => {
+    const prev = format(subDays(parseISO(dateKey), 1), "yyyy-MM-dd");
+    navigateToDate(prev);
+  };
+
+  const goToNextDay = () => {
+    const next = format(addDays(parseISO(dateKey), 1), "yyyy-MM-dd");
+    navigateToDate(next);
+  };
+
+  const goToToday = () => {
+    navigateToDate(operationalToday);
+  };
+
   // Mutations
   const invalidate = () => {
     qc.invalidateQueries({ queryKey: ["tasks", log?.id] });
     qc.invalidateQueries({ queryKey: ["manualMetrics", log?.id] });
     qc.invalidateQueries({ queryKey: ["dailyLog", dateKey] });
+    qc.invalidateQueries({ queryKey: ["calendar-completion"] });
+    qc.invalidateQueries({ queryKey: ["logs-recent"] });
   };
 
   const addTask = useMutation({
@@ -112,6 +181,34 @@ export default function TodayPage() {
       else await completeTask(task.id);
     },
     onSuccess: invalidate,
+  });
+
+  const completePrevTask = useMutation({
+    mutationFn: async (taskId: string) => {
+      await completeTask(taskId);
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["tasks", prevLog?.id] });
+      qc.invalidateQueries({ queryKey: ["tasks", log?.id] });
+      qc.invalidateQueries({ queryKey: ["dailyLog", prevWorkdayKey] });
+      qc.invalidateQueries({ queryKey: ["calendar-completion"] });
+      qc.invalidateQueries({ queryKey: ["logs-recent"] });
+    },
+  });
+
+  const completeAllPrevTasks = useMutation({
+    mutationFn: async () => {
+      for (const t of unfinishedPrevTasks) {
+        await completeTask(t.id);
+      }
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["tasks", prevLog?.id] });
+      qc.invalidateQueries({ queryKey: ["tasks", log?.id] });
+      qc.invalidateQueries({ queryKey: ["dailyLog", prevWorkdayKey] });
+      qc.invalidateQueries({ queryKey: ["calendar-completion"] });
+      qc.invalidateQueries({ queryKey: ["logs-recent"] });
+    },
   });
 
   const skipTaskMut = useMutation({
@@ -152,34 +249,199 @@ export default function TodayPage() {
 
   if (!dateKey) return null;
 
-  const todayFormatted = new Date().toLocaleDateString("en-US", {
-    weekday: "long",
-    month: "long",
-    day: "numeric",
-  });
-
   return (
-    <div className="page fade-in">
+    <div className="page fade-in flex flex-col gap-4">
       {/* Editorial Page Header */}
       <PageHeader
-        title="Today"
+        title={isCurrentOperationalToday ? "Today" : dateLabel(dateKey, tz, cutoff)}
+        badge={
+          !isCurrentOperationalToday ? (
+            <span className="badge badge-accent text-[11px] font-mono">
+              Historical Workday
+            </span>
+          ) : cutoff !== "00:00" ? (
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-mono bg-surface-muted text-muted-foreground border border-border">
+              <ClockIcon className="size-3 text-accent" />
+              <span>{cutoff} cutoff</span>
+            </span>
+          ) : undefined
+        }
         description={
           <span className="flex items-center gap-1.5 font-medium text-muted-foreground">
             <CalendarIcon className="size-3.5 text-zinc-400" />
-            {todayFormatted}
+            {format(parseISO(dateKey), "EEEE, MMMM d, yyyy")}
           </span>
         }
-        action={
+      />
+
+      {/* Date Navigation & Quick Actions Bar */}
+      <div className="flex items-center justify-between gap-3 flex-wrap bg-surface-muted/20 border border-border/60 rounded-xl px-3.5 py-2.5">
+        <div className="flex items-center gap-1.5 sm:gap-2">
+          <button
+            id="prev-day-btn"
+            type="button"
+            className="btn btn-ghost btn-sm text-xs flex items-center gap-1 px-2.5"
+            onClick={goToPrevDay}
+            title="Go to previous workday"
+          >
+            <ChevronLeftIcon className="size-3.5" />
+            <span className="hidden sm:inline">Prev day</span>
+          </button>
+
+          <div className="relative flex items-center">
+            <input
+              id="date-picker-input"
+              type="date"
+              className="input input-sm text-xs font-mono h-8 cursor-pointer pl-7 pr-2 w-32 sm:w-36"
+              value={dateKey}
+              onChange={(e) => e.target.value && navigateToDate(e.target.value)}
+              title="Jump to date"
+            />
+            <CalendarIcon className="size-3 text-muted-foreground absolute left-2 pointer-events-none" />
+          </div>
+
+          <button
+            id="next-day-btn"
+            type="button"
+            className="btn btn-ghost btn-sm text-xs flex items-center gap-1 px-2.5"
+            onClick={goToNextDay}
+            title="Go to next workday"
+          >
+            <span className="hidden sm:inline">Next day</span>
+            <ChevronRightIcon className="size-3.5" />
+          </button>
+        </div>
+
+        <div className="flex items-center gap-2">
+          {!isCurrentOperationalToday && (
+            <button
+              id="jump-today-btn"
+              type="button"
+              className="btn btn-secondary btn-sm text-xs font-medium"
+              onClick={goToToday}
+            >
+              Jump to Today
+            </button>
+          )}
           <button
             id="add-task-btn"
-            className="btn btn-primary btn-sm flex items-center gap-1.5 font-semibold"
+            className="btn btn-primary btn-sm flex items-center gap-1.5 font-semibold text-xs"
             onClick={() => setShowAddTask((v) => !v)}
           >
             <PlusIcon className="size-3.5 stroke-[2.5]" />
             <span>Add task</span>
           </button>
-        }
-      />
+        </div>
+      </div>
+
+      {/* Historical Workday Banner */}
+      {!isCurrentOperationalToday && (
+        <div className="rounded-xl border border-border/80 bg-surface-muted/40 p-3 sm:p-3.5 flex items-center justify-between gap-3 flex-wrap">
+          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+            <AlertCircleIcon className="size-4 text-accent shrink-0" />
+            <span>
+              Editing historical workday: <strong className="text-foreground">{format(parseISO(dateKey), "EEEE, MMM d, yyyy")}</strong>.
+              All task updates, completions, and check-ins are preserved on this workday date.
+            </span>
+          </div>
+          <button
+            className="btn btn-ghost btn-sm text-xs font-semibold text-foreground underline underline-offset-2"
+            onClick={goToToday}
+          >
+            Return to Current Day
+          </button>
+        </div>
+      )}
+
+      {/* Previous Workday Unfinished Tasks Shortcut Banner */}
+      {isCurrentOperationalToday && unfinishedPrevTasks.length > 0 && (
+        <div
+          id="prev-workday-banner"
+          className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-3.5 sm:p-4 flex flex-col gap-3 transition-all"
+        >
+          <div className="flex items-center justify-between gap-3 flex-wrap">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <ClockIcon className="size-4 text-amber-400 shrink-0" />
+              <div>
+                <span className="text-xs sm:text-sm font-semibold text-amber-200">
+                  Previous workday · {unfinishedPrevTasks.length} unfinished {unfinishedPrevTasks.length === 1 ? "task" : "tasks"}
+                </span>
+                <p className="text-[11px] text-amber-300/80">
+                  From {format(parseISO(prevWorkdayKey), "EEEE, MMM d")}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <button
+                id="toggle-prev-tasks-btn"
+                type="button"
+                className="btn btn-ghost btn-sm text-xs text-amber-200 hover:text-amber-100 hover:bg-amber-500/20"
+                onClick={() => setShowPrevTasks((v) => !v)}
+              >
+                {showPrevTasks ? "Hide items" : "Mark items complete"}
+              </button>
+              <button
+                id="open-prev-workday-btn"
+                type="button"
+                className="btn btn-secondary btn-sm text-xs flex items-center gap-1.5 border-amber-500/40 text-amber-200 hover:bg-amber-500/20"
+                onClick={() => navigateToDate(prevWorkdayKey)}
+              >
+                <span>Open that day</span>
+                <ArrowRightIcon className="size-3" />
+              </button>
+            </div>
+          </div>
+
+          {/* Expandable tasks list to mark items complete directly */}
+          {showPrevTasks && (
+            <div className="pt-2 border-t border-amber-500/20 flex flex-col gap-2">
+              <div className="flex items-center justify-between text-[11px] text-amber-300/80 font-mono">
+                <span>Incomplete items from {prevWorkdayKey}:</span>
+                <button
+                  type="button"
+                  className="hover:underline text-amber-300 font-medium"
+                  onClick={() => completeAllPrevTasks.mutate()}
+                >
+                  Mark all complete
+                </button>
+              </div>
+              <div className="flex flex-col gap-1.5">
+                {unfinishedPrevTasks.map((t) => (
+                  <div
+                    key={t.id}
+                    className="flex items-center justify-between gap-2.5 p-2 rounded-lg bg-surface/70 border border-amber-500/25 text-xs"
+                  >
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <button
+                        type="button"
+                        aria-label={`Complete task ${t.title}`}
+                        className="size-5 rounded border border-border flex items-center justify-center hover:border-accent hover:bg-accent/10 transition-colors shrink-0"
+                        onClick={() => completePrevTask.mutate(t.id)}
+                      >
+                        <CheckIcon className="size-3 text-muted-foreground opacity-50 hover:opacity-100" />
+                      </button>
+                      <span className="text-foreground truncate font-medium">{t.title}</span>
+                      {t.targetValue != null && (
+                        <span className="text-[11px] text-muted-foreground font-mono shrink-0">
+                          ({t.completedValue}/{t.targetValue} {t.unit ?? ""})
+                        </span>
+                      )}
+                    </div>
+                    <button
+                      type="button"
+                      className="btn btn-ghost btn-sm text-[11px] h-6 px-2 text-accent hover:bg-accent/15"
+                      onClick={() => completePrevTask.mutate(t.id)}
+                    >
+                      Done
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Main 2-column Layout on Desktop */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
@@ -222,7 +484,11 @@ export default function TodayPage() {
                   ref={addInputRef}
                   id="new-task-title"
                   className="input input-sm"
-                  placeholder="What needs to be done today?"
+                  placeholder={
+                    isCurrentOperationalToday
+                      ? "What needs to be done today?"
+                      : `Add task for ${dateKey}`
+                  }
                   value={newTitle}
                   onChange={(e) => setNewTitle(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && addTask.mutate()}
@@ -266,16 +532,20 @@ export default function TodayPage() {
             {tasks.length === 0 ? (
               <div className="py-7 px-4 flex flex-col items-center justify-center text-center">
                 <p className="text-sm font-medium text-foreground tracking-tight">
-                  Plan one thing worth finishing today.
+                  {isCurrentOperationalToday
+                    ? "Plan one thing worth finishing today."
+                    : `No tasks logged for ${format(parseISO(dateKey), "MMM d")}.`}
                 </p>
                 <p className="text-xs text-muted-foreground mt-0.5 max-w-sm leading-relaxed">
-                  A clear, quiet day begins with a single focused task.
+                  {isCurrentOperationalToday
+                    ? "A clear, quiet day begins with a single focused task."
+                    : "You can add tasks retroactively to this workday."}
                 </p>
                 <button
                   className="btn btn-secondary btn-sm mt-3 text-xs"
                   onClick={() => setShowAddTask(true)}
                 >
-                  + Create first task
+                  + Add task to this day
                 </button>
               </div>
             ) : (
@@ -303,7 +573,7 @@ export default function TodayPage() {
           <section className="flex flex-col gap-2">
             <SectionHeading
               title="Manual Check-ins"
-              description="Daily habits & quantitative logs"
+              description={`Habits & metrics for ${format(parseISO(dateKey), "MMM d")}`}
             />
             <div className="rounded-xl border border-border/80 divide-y divide-border/60 bg-surface/50 overflow-hidden">
               {MANUAL_METRICS.map((m) => (
@@ -316,6 +586,7 @@ export default function TodayPage() {
                     <span className="text-[11px] text-muted-foreground whitespace-nowrap">({m.unit})</span>
                   </div>
                   <input
+                    key={`${dateKey}-${m.key}`}
                     id={`metric-${m.key}`}
                     type="text"
                     inputMode="numeric"
@@ -344,13 +615,14 @@ export default function TodayPage() {
           <section className="flex flex-col gap-2">
             <SectionHeading
               title="Daily Reflection"
-              description="Capture context, energy, or thoughts"
+              description={`Context & thoughts for ${format(parseISO(dateKey), "MMM d")}`}
             />
             <div className="rounded-xl border border-border/80 bg-surface/50 p-2.5">
               <textarea
+                key={`note-${dateKey}`}
                 id="daily-note"
                 className="w-full bg-transparent resize-y text-xs text-foreground placeholder:text-muted-foreground focus:outline-none min-h-[76px] leading-relaxed p-1"
-                placeholder="How's today going? Any key reflections…"
+                placeholder="How did this workday go? Any key reflections…"
                 defaultValue={log?.note ?? ""}
                 rows={3}
                 onBlur={(e) => updateNote.mutate(e.target.value)}
@@ -360,5 +632,19 @@ export default function TodayPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function TodayPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="page p-8 text-center text-xs text-muted-foreground">
+          Loading workday...
+        </div>
+      }
+    >
+      <TodayContent />
+    </Suspense>
   );
 }
