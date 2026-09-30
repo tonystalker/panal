@@ -277,4 +277,31 @@ None in application code yet. Process note: running `git` from `panal` initially
 - Direct date navigation and calendar links (`/today?date=...`) allow editing tasks, check-in metrics, and reflections on any past workday.
 - UI.md alignment: integrated the date navigator directly into the quiet `PageHeader` action slot, eliminated floating card chrome, used hairline-bordered surfaces with subtle warning dot indicator for previous workday shortcut, and styled task completion buttons with standard `.checkbox` and monospace tabular figures.
 
+---
+
+### 2026-10-01 — Custom Metric Tracking and Dashboard Widget Removal
+
+**What:**
+- `lib/db.ts`: Added `CustomMetricSchema` (`key`, `label`, `unit`, `defaultGoalLine`, `defaultChart`, `createdAt`) and added `customMetrics: z.array(CustomMetricSchema).default([])` to `UserProfileSchema.preferences`.
+- `lib/repositories.ts`: Added `addCustomMetric(data)` (with `addToDashboard?: boolean` option to create a linked `DashboardWidget`) and `deleteCustomMetric(key)` (cleans up metric and associated widgets).
+- `lib/metrics/definitions.ts`: Added `customMetricToDefinition(cm)`, `getAllMetricDefinitions(customMetrics)`, and enhanced `metricLabel` to format and resolve custom metrics.
+- `lib/metrics/resolver.ts`: Added dynamic fallback in `resolveMetricData` for any metric starting with `manual.` via `resolveManualMetric` from `db.manualMetrics`.
+- `components/ChartWidget.tsx`: Exposed `onDelete?: () => void` and added `#widget-delete-${id}` trash icon button to widget controls header.
+- `app/dashboard/page.tsx`:
+  - Connected `onDelete` to `removeWidget.mutate(w.id)` on visible widgets.
+  - Added delete button with `Trash2Icon` on hidden widgets to permanently remove them.
+  - Added "Remove" button with `Trash2Icon` in `WidgetConfigDialog` for existing widgets.
+  - Populated `<select id="widget-metric-select">` with `getAllMetricDefinitions(customMetrics)` so custom metrics appear in the widget picker.
+- `app/today/page.tsx`:
+  - Added `+ Add` button (`#add-custom-metric-btn`) to `SectionHeading` under Manual Check-ins.
+  - Added inline form to create custom metrics (Name, Unit, Goal, "Add to Dashboard widgets" checkbox).
+  - Rendered custom metrics in check-in list with numeric input, and trash icon button to remove custom metrics.
+- `tests/unit/metrics.test.ts`: Added unit tests for `customMetricToDefinition`, `getAllMetricDefinitions`, and `metricLabel`. All 87 unit tests pass.
+
+**How:**
+- Reuses `db.manualMetrics` store with dynamic metric keys, avoiding complex database schema migrations while giving full custom tracking capabilities.
+- Custom metrics immediately integrate with Recharts visualizations and are selectable in dashboard widget creation and configuration dialogs.
+- Adheres strictly to `UI.md`: hairline borders, near-black dark surfaces, acid-lime accent, tabular numbers, and clean micro-interactions.
+
+
 

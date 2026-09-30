@@ -17,6 +17,7 @@ import {
   ManualMetricSchema,
   UserProfile,
   UserProfileSchema,
+  CustomMetric,
   DashboardWidget,
   DashboardWidgetSchema,
 } from "./db";
@@ -32,7 +33,7 @@ export async function getOrCreateProfile(timezone?: string): Promise<UserProfile
   const existing = await db.userProfile.toCollection().first();
   if (existing) {
     const parsed = UserProfileSchema.parse(existing);
-    if (!existing.preferences?.workdayCutoff) {
+    if (!existing.preferences?.workdayCutoff || !existing.preferences?.customMetrics) {
       await db.userProfile.update(existing.id, { preferences: parsed.preferences });
     }
     return parsed;
@@ -41,7 +42,7 @@ export async function getOrCreateProfile(timezone?: string): Promise<UserProfile
     id: generateId(),
     timezone: tz,
     createdAt: nowISO(),
-    preferences: { firstDayOfWeek: 1, theme: "system", workdayCutoff: "00:00" },
+    preferences: { firstDayOfWeek: 1, theme: "system", workdayCutoff: "00:00", customMetrics: [] },
   });
   await db.userProfile.add(profile);
   return profile;
@@ -55,6 +56,87 @@ export async function updateProfile(patch: Partial<UserProfile>): Promise<void> 
   const profile = await db.userProfile.toCollection().first();
   if (!profile) return;
   await db.userProfile.update(profile.id, patch);
+}
+
+export async function addCustomMetric(data: {
+  label: string;
+  unit: string;
+  goalLine?: number | null;
+  defaultChart?: "line" | "bar" | "area";
+  addToDashboard?: boolean;
+}): Promise<CustomMetric> {
+  const profile = await getOrCreateProfile();
+  const slug =
+    data.label
+      .toLowerCase()
+      .trim()
+      .replace(/[^a-z0-9]+/g, "_")
+      .replace(/^_+|_+$/g, "") || `metric_${Date.now()}`;
+
+  let key = slug;
+  let counter = 1;
+  const existingKeys = new Set((profile.preferences.customMetrics ?? []).map((m) => m.key));
+  while (existingKeys.has(key)) {
+    key = `${slug}_${counter++}`;
+  }
+
+  const metric: CustomMetric = {
+    key,
+    label: data.label.trim(),
+    unit: data.unit.trim() || "",
+    defaultGoalLine: data.goalLine ?? null,
+    defaultChart: data.defaultChart ?? "bar",
+    createdAt: nowISO(),
+  };
+
+  const updatedCustom = [...(profile.preferences.customMetrics ?? []), metric];
+  await updateProfile({
+    preferences: {
+      ...profile.preferences,
+      customMetrics: updatedCustom,
+    },
+  });
+
+  if (data.addToDashboard) {
+    const currentWidgets = await getDashboardWidgets();
+    const newWidget = DashboardWidgetSchema.parse({
+      id: generateId(),
+      metricKeys: [`manual.${metric.key}`],
+      chartType: metric.defaultChart ?? "bar",
+      range: "30d",
+      aggregation: "daily",
+      config: {
+        goalLine: metric.defaultGoalLine ?? null,
+        rollingAverage: null,
+        title: metric.label,
+        color: "#00d2ff",
+        visible: true,
+      },
+      position: currentWidgets.length,
+    });
+    await db.dashboardWidgets.add(newWidget);
+  }
+
+  return metric;
+}
+
+export async function deleteCustomMetric(key: string): Promise<void> {
+  const profile = await getOrCreateProfile();
+  const updatedCustom = (profile.preferences.customMetrics ?? []).filter((m) => m.key !== key);
+  await updateProfile({
+    preferences: {
+      ...profile.preferences,
+      customMetrics: updatedCustom,
+    },
+  });
+
+  // Also clean up widgets tracking this metric
+  const widgets = await getDashboardWidgets();
+  for (const w of widgets) {
+    if (w.metricKeys.includes(`manual.${key}`) || w.metricKeys.includes(key)) {
+      await deleteWidget(w.id);
+    }
+  }
 }
 
 // ---------------------------------------------------------------------------

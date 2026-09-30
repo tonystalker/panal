@@ -8,6 +8,7 @@ import {
   Settings2Icon,
   EyeOffIcon,
   TableIcon,
+  Trash2Icon,
 } from "lucide-react";
 
 export interface ChartWidgetProps {
@@ -39,6 +40,7 @@ export function ChartWidget({
   isFirst,
   isLast,
   onEdit,
+  onDelete,
   onToggleVisible,
   onMoveUp,
   onMoveDown,
@@ -123,6 +125,18 @@ export function ChartWidget({
           >
             <EyeOffIcon className="size-3.5" />
           </button>
+          {onDelete && (
+            <button
+              type="button"
+              id={`widget-delete-${id}`}
+              aria-label="Remove widget"
+              title="Remove widget"
+              className="btn-icon size-7 text-muted-foreground hover:text-destructive hover:border-destructive/30"
+              onClick={onDelete}
+            >
+              <Trash2Icon className="size-3.5" />
+            </button>
+          )}
         </div>
       </div>
 

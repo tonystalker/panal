@@ -30,14 +30,15 @@ import { operationalDate } from "@/lib/date";
 import { generateId } from "@/lib/uuid";
 import { resolveMetricData, applyRollingAverage, type DataPoint } from "@/lib/metrics/resolver";
 import {
-  METRIC_DEFINITIONS, METRIC_BY_KEY, metricLabel,
+  METRIC_DEFINITIONS, METRIC_BY_KEY, metricLabel, getAllMetricDefinitions,
   type ChartType, type MetricDefinition,
 } from "@/lib/metrics/definitions";
+import { type CustomMetric } from "@/lib/db";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { ChartWidget } from "@/components/ChartWidget";
 import { MetricValue } from "@/components/ui/MetricValue";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { PlusIcon, RotateCcwIcon, FlameIcon, XIcon } from "lucide-react";
+import { PlusIcon, RotateCcwIcon, FlameIcon, XIcon, Trash2Icon } from "lucide-react";
 import Link from "next/link";
 
 function computeFrom(range: string, today: string): string {
@@ -241,6 +242,7 @@ export default function DashboardPage() {
               onMoveDown={() => moveWidget(widget.id, "down")}
               onSelectDate={setSelectedDate}
               selectedDate={selectedDate}
+              customMetrics={profile?.preferences?.customMetrics}
             />
           ))}
         </div>
@@ -256,14 +258,26 @@ export default function DashboardPage() {
             {widgets.filter((w) => !w.config.visible).map((w) => (
               <div key={w.id} className="flex items-center justify-between py-2 text-sm">
                 <span className="text-muted-foreground font-mono text-xs">
-                  {w.config.title || metricLabel(w.metricKeys[0])}
+                  {w.config.title || metricLabel(w.metricKeys[0], profile?.preferences?.customMetrics)}
                 </span>
-                <button
-                  className="btn btn-ghost btn-sm text-xs h-7"
-                  onClick={() => toggleVisibility(w)}
-                >
-                  Show widget
-                </button>
+                <div className="flex items-center gap-1.5">
+                  <button
+                    className="btn btn-ghost btn-sm text-xs h-7"
+                    onClick={() => toggleVisibility(w)}
+                  >
+                    Show widget
+                  </button>
+                  <button
+                    id={`widget-hidden-delete-${w.id}`}
+                    type="button"
+                    className="btn-icon size-7 text-muted-foreground hover:text-destructive hover:border-destructive/30"
+                    onClick={() => removeWidget.mutate(w.id)}
+                    title="Remove widget"
+                    aria-label="Remove widget"
+                  >
+                    <Trash2Icon className="size-3.5" />
+                  </button>
+                </div>
               </div>
             ))}
           </div>
@@ -332,8 +346,11 @@ export default function DashboardPage() {
       {editingWidget && (
         <WidgetConfigDialog
           widget={editingWidget}
+          isNew={!widgets.some((w) => w.id === editingWidget.id)}
           onSave={(w) => { saveWidget.mutate(w); setEditingWidget(null); }}
+          onDelete={() => { removeWidget.mutate(editingWidget.id); setEditingWidget(null); }}
           onCancel={() => setEditingWidget(null)}
+          customMetrics={profile?.preferences?.customMetrics}
         />
       )}
     </div>
@@ -356,19 +373,21 @@ interface MetricWidgetProps {
   onMoveDown: () => void;
   onSelectDate: (d: string) => void;
   selectedDate: string | null;
+  customMetrics?: CustomMetric[];
 }
 
 function MetricWidget({
   widget, today, isFirst, isLast,
   onEdit, onDelete, onToggleVisible, onMoveUp, onMoveDown,
-  onSelectDate, selectedDate,
+  onSelectDate, selectedDate, customMetrics,
 }: MetricWidgetProps) {
   const metricKey = widget.metricKeys[0];
-  const def = METRIC_BY_KEY[metricKey];
+  const allMetricDefs = getAllMetricDefinitions(customMetrics);
+  const def = allMetricDefs.find((d) => d.key === metricKey) ?? METRIC_BY_KEY[metricKey];
   const rangeStr = typeof widget.range === "string" ? widget.range : "30d";
   const from = computeFrom(rangeStr, today);
   const color = widget.config.color ?? def?.defaultColor ?? "var(--accent)";
-  const title = widget.config.title || metricLabel(metricKey);
+  const title = widget.config.title || metricLabel(metricKey, customMetrics);
 
   const { data: rawData, isLoading } = useQuery({
     queryKey: ["metric", metricKey, from, today],
@@ -688,18 +707,30 @@ const ROLLING_AVG_OPTIONS = [
 
 interface WidgetConfigDialogProps {
   widget: DashboardWidget;
+  isNew?: boolean;
   onSave: (w: DashboardWidget) => void;
+  onDelete?: () => void;
   onCancel: () => void;
+  customMetrics?: CustomMetric[];
 }
 
-function WidgetConfigDialog({ widget, onSave, onCancel }: WidgetConfigDialogProps) {
+function WidgetConfigDialog({
+  widget,
+  isNew,
+  onSave,
+  onDelete,
+  onCancel,
+  customMetrics,
+}: WidgetConfigDialogProps) {
+  const allDefs = getAllMetricDefinitions(customMetrics);
   const [metricKey, setMetricKey] = useState(widget.metricKeys[0]);
   const [chartType, setChartType] = useState<ChartType>(widget.chartType);
   const [range, setRange] = useState(typeof widget.range === "string" ? widget.range : "30d");
   const [goalLine, setGoalLine] = useState(widget.config.goalLine?.toString() ?? "");
   const [rollingAvg, setRollingAvg] = useState(widget.config.rollingAverage?.toString() ?? "");
   const [title, setTitle] = useState(widget.config.title ?? "");
-  const [color, setColor] = useState(widget.config.color ?? METRIC_BY_KEY[widget.metricKeys[0]]?.defaultColor ?? "#a3ff12");
+  const initialDef = allDefs.find((d) => d.key === widget.metricKeys[0]) || METRIC_BY_KEY[widget.metricKeys[0]];
+  const [color, setColor] = useState(widget.config.color ?? initialDef?.defaultColor ?? "#a3ff12");
 
   const handleSave = () => {
     onSave({
@@ -720,7 +751,7 @@ function WidgetConfigDialog({ widget, onSave, onCancel }: WidgetConfigDialogProp
 
   const handleMetricChange = (key: string) => {
     setMetricKey(key);
-    const def = METRIC_BY_KEY[key];
+    const def = allDefs.find((d) => d.key === key) || METRIC_BY_KEY[key];
     if (def) setColor(def.defaultColor);
   };
 
@@ -737,7 +768,7 @@ function WidgetConfigDialog({ widget, onSave, onCancel }: WidgetConfigDialogProp
       >
         <div className="flex items-center justify-between pb-3 mb-4 border-b border-border/60">
           <h2 id="widget-config-title" className="text-base font-semibold text-foreground">
-            Configure Widget
+            {isNew ? "Add Widget" : "Configure Widget"}
           </h2>
           <button
             type="button"
@@ -759,7 +790,7 @@ function WidgetConfigDialog({ widget, onSave, onCancel }: WidgetConfigDialogProp
               onChange={(e) => handleMetricChange(e.target.value)}
               className="input text-sm cursor-pointer"
             >
-              {METRIC_DEFINITIONS.map((d) => (
+              {allDefs.map((d) => (
                 <option key={d.key} value={d.key}>{d.label}</option>
               ))}
             </select>
@@ -839,7 +870,7 @@ function WidgetConfigDialog({ widget, onSave, onCancel }: WidgetConfigDialogProp
             <input
               id="widget-title"
               type="text"
-              placeholder={metricLabel(metricKey)}
+              placeholder={metricLabel(metricKey, customMetrics)}
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               className="input input-sm"
@@ -863,21 +894,36 @@ function WidgetConfigDialog({ widget, onSave, onCancel }: WidgetConfigDialogProp
           </div>
         </div>
 
-        <div className="flex gap-2.5 mt-6 pt-4 border-t border-border/60">
-          <button
-            id="widget-save-btn"
-            className="btn btn-primary flex-1"
-            onClick={handleSave}
-          >
-            Save Widget
-          </button>
-          <button
-            type="button"
-            className="btn btn-ghost flex-1"
-            onClick={onCancel}
-          >
-            Cancel
-          </button>
+        <div className="flex items-center justify-between gap-2.5 mt-6 pt-4 border-t border-border/60">
+          <div>
+            {!isNew && onDelete && (
+              <button
+                id="widget-dialog-delete-btn"
+                type="button"
+                className="btn btn-ghost text-destructive hover:bg-destructive/10 hover:text-destructive border border-destructive/20 text-xs px-3 h-8"
+                onClick={onDelete}
+              >
+                <Trash2Icon className="size-3.5 mr-1.5" />
+                Remove
+              </button>
+            )}
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              className="btn btn-ghost text-xs px-3 h-8"
+              onClick={onCancel}
+            >
+              Cancel
+            </button>
+            <button
+              id="widget-save-btn"
+              className="btn btn-primary text-xs px-4 h-8"
+              onClick={handleSave}
+            >
+              {isNew ? "Add Widget" : "Save Changes"}
+            </button>
+          </div>
         </div>
       </div>
     </div>

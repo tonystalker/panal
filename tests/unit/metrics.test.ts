@@ -14,7 +14,10 @@ import {
   METRIC_BY_KEY,
   metricLabel,
   DEFAULT_WIDGETS,
+  customMetricToDefinition,
+  getAllMetricDefinitions,
 } from "@/lib/metrics/definitions";
+import type { CustomMetric } from "@/lib/db";
 import { applyRollingAverage } from "@/lib/metrics/resolver";
 import type { DataPoint } from "@/lib/metrics/resolver";
 
@@ -186,5 +189,48 @@ describe("applyRollingAverage", () => {
     expect(result[0].value).toBe(5);
     expect(result[1].value).toBe(10);
     expect(result[2].value).toBe(15);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Custom metric registration and helpers
+// ---------------------------------------------------------------------------
+
+describe("Custom metrics registry and formatting", () => {
+  const sampleCustomMetric: CustomMetric = {
+    key: "water_intake",
+    label: "Water Intake",
+    unit: "glasses",
+    defaultGoalLine: 8,
+    defaultChart: "bar",
+    createdAt: "2026-10-01T00:00:00Z",
+  };
+
+  it("customMetricToDefinition converts a CustomMetric correctly", () => {
+    const def = customMetricToDefinition(sampleCustomMetric);
+    expect(def.key).toBe("manual.water_intake");
+    expect(def.label).toBe("Water Intake");
+    expect(def.unit).toBe("glasses");
+    expect(def.defaultGoalLine).toBe(8);
+    expect(def.defaultChart).toBe("bar");
+    expect(def.source).toBe("manual");
+    expect(def.manualMetricKey).toBe("water_intake");
+  });
+
+  it("getAllMetricDefinitions merges default and custom definitions", () => {
+    const all = getAllMetricDefinitions([sampleCustomMetric]);
+    expect(all.length).toBe(METRIC_DEFINITIONS.length + 1);
+    const found = all.find((d) => d.key === "manual.water_intake");
+    expect(found).toBeDefined();
+    expect(found?.label).toBe("Water Intake");
+  });
+
+  it("metricLabel resolves custom metrics and fallback titles", () => {
+    expect(metricLabel("manual.water_intake", [sampleCustomMetric])).toBe("Water Intake");
+    expect(metricLabel("water_intake", [sampleCustomMetric])).toBe("Water Intake");
+    // Fallback when not in custom list but has manual prefix
+    expect(metricLabel("manual.sleep_hours")).toBe("Sleep Hours");
+    // Default metrics still resolve
+    expect(metricLabel("task.completion_percent")).toBe("Task Completion");
   });
 });

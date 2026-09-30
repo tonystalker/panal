@@ -189,17 +189,49 @@ export const METRIC_DEFINITIONS: MetricDefinition[] = [
   },
 ];
 
+import type { CustomMetric } from "@/lib/db";
+
 /** Fast lookup by key */
 export const METRIC_BY_KEY: Record<string, MetricDefinition> = Object.fromEntries(
   METRIC_DEFINITIONS.map((d) => [d.key, d]),
 );
 
+export function customMetricToDefinition(cm: CustomMetric): MetricDefinition {
+  return {
+    key: `manual.${cm.key}`,
+    label: cm.label,
+    unit: cm.unit,
+    aggregation: "sum",
+    defaultChart: cm.defaultChart ?? "bar",
+    defaultGoalLine: cm.defaultGoalLine ?? null,
+    defaultColor: "#a3ff12",
+    missingDataPolicy: "zero",
+    source: "manual",
+    manualMetricKey: cm.key,
+  };
+}
+
+export function getAllMetricDefinitions(customMetrics: CustomMetric[] = []): MetricDefinition[] {
+  const customDefs = customMetrics.map(customMetricToDefinition);
+  return [...METRIC_DEFINITIONS, ...customDefs];
+}
+
 /**
  * Returns human-readable label for a metric key.
- * Falls back to the raw key if the metric isn't in the registry.
+ * Falls back to custom metrics, formatted key, or raw key.
  */
-export function metricLabel(key: string): string {
-  return METRIC_BY_KEY[key]?.label ?? key;
+export function metricLabel(key: string, customMetrics?: CustomMetric[]): string {
+  if (METRIC_BY_KEY[key]) return METRIC_BY_KEY[key].label;
+  if (customMetrics) {
+    const rawKey = key.startsWith("manual.") ? key.replace(/^manual\./, "") : key;
+    const match = customMetrics.find((m) => m.key === rawKey || `manual.${m.key}` === key);
+    if (match) return match.label;
+  }
+  if (key.startsWith("manual.")) {
+    const raw = key.replace(/^manual\./, "");
+    return raw.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+  }
+  return key;
 }
 
 // ---------------------------------------------------------------------------

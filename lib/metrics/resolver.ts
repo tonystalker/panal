@@ -27,13 +27,29 @@ export async function resolveMetricData(
   from: string,
   to: string,
 ): Promise<DataPoint[]> {
-  const def = METRIC_BY_KEY[metricKey];
-  if (!def) {
-    // Unknown metric — return empty
-    return dateRange(from, to).map((date) => ({ date, value: null }));
-  }
-
   const allDates = dateRange(from, to);
+  let def = METRIC_BY_KEY[metricKey];
+
+  if (!def) {
+    if (metricKey.startsWith("manual.")) {
+      const rawKey = metricKey.replace(/^manual\./, "");
+      def = {
+        key: metricKey,
+        label: rawKey,
+        unit: "",
+        aggregation: "sum",
+        defaultChart: "bar",
+        defaultGoalLine: null,
+        defaultColor: "#a3ff12",
+        missingDataPolicy: "zero",
+        source: "manual",
+        manualMetricKey: rawKey,
+      };
+      return resolveManualMetric(def, from, to, allDates);
+    }
+    // Unknown metric — return empty
+    return allDates.map((date) => ({ date, value: null }));
+  }
 
   if (def.source === "computed") {
     return resolveComputedMetric(def, from, to, allDates);

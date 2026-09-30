@@ -19,6 +19,8 @@ import {
   targetProgressPercent,
   getOrCreateProfile,
   getDailyLogByDate,
+  addCustomMetric,
+  deleteCustomMetric,
 } from "@/lib/repositories";
 import { operationalDate, dateLabel, isValidDateKey } from "@/lib/date";
 import { format, parseISO, subDays, addDays } from "date-fns";
@@ -33,6 +35,8 @@ import {
   ArrowRightIcon,
   CheckIcon,
   ClockIcon,
+  Trash2Icon,
+  XIcon,
 } from "lucide-react";
 
 type ManualMetricKey = "exercise_minutes" | "mobile_usage_minutes" | "dsa_problems";
@@ -58,6 +62,13 @@ function TodayContent() {
   const [newUnit, setNewUnit] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
   const addInputRef = useRef<HTMLInputElement>(null);
+
+  // Custom metric creation state
+  const [showAddMetric, setShowAddMetric] = useState(false);
+  const [metricName, setMetricName] = useState("");
+  const [metricUnit, setMetricUnit] = useState("");
+  const [metricGoal, setMetricGoal] = useState("");
+  const [metricAddToDashboard, setMetricAddToDashboard] = useState(true);
 
   useEffect(() => {
     setTimezone(Intl.DateTimeFormat().resolvedOptions().timeZone);
@@ -240,6 +251,37 @@ function TodayContent() {
       await updateTask(id, { completedValue });
     },
     onSuccess: invalidate,
+  });
+
+  const addCustomMetricMut = useMutation({
+    mutationFn: async () => {
+      if (!metricName.trim()) return;
+      await addCustomMetric({
+        label: metricName.trim(),
+        unit: metricUnit.trim(),
+        goalLine: metricGoal ? parseFloat(metricGoal) : null,
+        addToDashboard: metricAddToDashboard,
+      });
+    },
+    onSuccess: () => {
+      setMetricName("");
+      setMetricUnit("");
+      setMetricGoal("");
+      setMetricAddToDashboard(true);
+      setShowAddMetric(false);
+      qc.invalidateQueries({ queryKey: ["profile"] });
+      qc.invalidateQueries({ queryKey: ["dashboardWidgets"] });
+    },
+  });
+
+  const deleteCustomMetricMut = useMutation({
+    mutationFn: async (key: string) => {
+      await deleteCustomMetric(key);
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["profile"] });
+      qc.invalidateQueries({ queryKey: ["dashboardWidgets"] });
+    },
   });
 
   useEffect(() => {
@@ -558,7 +600,119 @@ function TodayContent() {
             <SectionHeading
               title="Manual Check-ins"
               description={`Habits & metrics for ${format(parseISO(dateKey), "MMM d")}`}
+              action={
+                <button
+                  id="add-custom-metric-btn"
+                  type="button"
+                  className="btn btn-ghost btn-sm h-7 px-2 text-xs flex items-center gap-1 text-muted-foreground hover:text-foreground"
+                  onClick={() => setShowAddMetric((prev) => !prev)}
+                  title="Add metric to track"
+                  aria-label="Add metric to track"
+                >
+                  <PlusIcon className="size-3.5" />
+                  <span>Add</span>
+                </button>
+              }
             />
+
+            {showAddMetric && (
+              <div className="rounded-xl border border-border/80 bg-surface/80 p-3.5 flex flex-col gap-3 animate-in fade-in duration-150">
+                <div className="flex items-center justify-between pb-1.5 border-b border-border/40">
+                  <span className="text-xs font-semibold text-foreground">Add Custom Metric</span>
+                  <button
+                    type="button"
+                    className="btn-icon size-6 text-muted-foreground hover:text-foreground"
+                    onClick={() => setShowAddMetric(false)}
+                    aria-label="Close"
+                  >
+                    <XIcon className="size-3.5" />
+                  </button>
+                </div>
+
+                <div className="space-y-2.5">
+                  <div>
+                    <label className="block text-[11px] font-medium text-muted-foreground mb-1">
+                      Metric Name
+                    </label>
+                    <input
+                      id="custom-metric-name"
+                      type="text"
+                      placeholder="e.g. Water intake, Push-ups, Reading"
+                      value={metricName}
+                      onChange={(e) => setMetricName(e.target.value)}
+                      className="input input-sm text-xs w-full"
+                      autoFocus
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" && metricName.trim()) {
+                          e.preventDefault();
+                          addCustomMetricMut.mutate();
+                        }
+                      }}
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="block text-[11px] font-medium text-muted-foreground mb-1">
+                        Unit
+                      </label>
+                      <input
+                        id="custom-metric-unit"
+                        type="text"
+                        placeholder="e.g. glasses, ml, pages"
+                        value={metricUnit}
+                        onChange={(e) => setMetricUnit(e.target.value)}
+                        className="input input-sm text-xs w-full"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-medium text-muted-foreground mb-1">
+                        Daily Goal (optional)
+                      </label>
+                      <input
+                        id="custom-metric-goal"
+                        type="number"
+                        placeholder="e.g. 8"
+                        value={metricGoal}
+                        onChange={(e) => setMetricGoal(e.target.value)}
+                        className="input input-sm text-xs w-full font-mono tabular-nums"
+                      />
+                    </div>
+                  </div>
+
+                  <label className="flex items-center gap-2 cursor-pointer select-none pt-1">
+                    <input
+                      id="custom-metric-add-widget"
+                      type="checkbox"
+                      checked={metricAddToDashboard}
+                      onChange={(e) => setMetricAddToDashboard(e.target.checked)}
+                      className="rounded border-border text-accent focus:ring-accent bg-surface-muted size-3.5"
+                    />
+                    <span className="text-xs text-foreground">Add to Dashboard widgets</span>
+                  </label>
+                </div>
+
+                <div className="flex items-center justify-end gap-2 pt-2 border-t border-border/40">
+                  <button
+                    type="button"
+                    className="btn btn-ghost btn-sm text-xs h-7 px-2.5"
+                    onClick={() => setShowAddMetric(false)}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    id="save-custom-metric-btn"
+                    type="button"
+                    className="btn btn-primary btn-sm text-xs h-7 px-3"
+                    disabled={!metricName.trim() || addCustomMetricMut.isPending}
+                    onClick={() => addCustomMetricMut.mutate()}
+                  >
+                    {addCustomMetricMut.isPending ? "Adding…" : "Add Metric"}
+                  </button>
+                </div>
+              </div>
+            )}
+
             <div className="rounded-xl border border-border/80 divide-y divide-border/60 bg-surface/50 overflow-hidden">
               {MANUAL_METRICS.map((m) => (
                 <div
@@ -590,6 +744,53 @@ function TodayContent() {
                       }
                     }}
                   />
+                </div>
+              ))}
+
+              {(profile?.preferences?.customMetrics ?? []).map((cm) => (
+                <div
+                  key={cm.key}
+                  className="group flex items-center justify-between gap-4 px-3.5 py-2.5 hover:bg-surface-muted/20 transition-colors"
+                >
+                  <div className="flex items-baseline gap-1.5 shrink-0 select-none">
+                    <span className="text-xs font-medium text-foreground whitespace-nowrap">{cm.label}</span>
+                    {cm.unit && (
+                      <span className="text-[11px] text-muted-foreground whitespace-nowrap">({cm.unit})</span>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <input
+                      key={`${dateKey}-${cm.key}`}
+                      id={`metric-${cm.key}`}
+                      type="text"
+                      inputMode="numeric"
+                      style={{ width: "4rem" }}
+                      className="h-7 w-16 shrink-0 rounded-md border border-border/80 bg-surface-muted/60 px-2 text-right font-mono text-xs tabular-nums text-foreground outline-none transition-colors hover:border-border-strong focus:border-border-strong focus:bg-surface-muted focus:ring-1 focus:ring-border-strong"
+                      defaultValue={getMetricValue(cm.key) || ""}
+                      placeholder="0"
+                      onBlur={(e) => {
+                        const val = parseFloat(e.target.value);
+                        if (!isNaN(val) && val >= 0) {
+                          updateMetric.mutate({ key: cm.key, value: val, unit: cm.unit });
+                        }
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          (e.target as HTMLInputElement).blur();
+                        }
+                      }}
+                    />
+                    <button
+                      id={`delete-custom-metric-${cm.key}`}
+                      type="button"
+                      className="btn-icon size-7 text-muted-foreground hover:text-destructive opacity-40 hover:opacity-100 transition-opacity"
+                      onClick={() => deleteCustomMetricMut.mutate(cm.key)}
+                      title={`Remove ${cm.label}`}
+                      aria-label={`Remove ${cm.label}`}
+                    >
+                      <Trash2Icon className="size-3" />
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>

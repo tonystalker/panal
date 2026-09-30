@@ -19,6 +19,17 @@ import { z } from "zod";
 // Zod schemas — used at write/import boundaries to validate data integrity
 // ---------------------------------------------------------------------------
 
+export const CustomMetricSchema = z.object({
+  key: z.string().min(1).max(100), // e.g. "water_intake"
+  label: z.string().min(1).max(100), // e.g. "Water Intake"
+  unit: z.string().max(50), // e.g. "glasses", "ml"
+  defaultGoalLine: z.number().nullable().default(null),
+  defaultChart: z.enum(["line", "bar", "area"]).default("bar"),
+  createdAt: z.string().datetime(),
+});
+
+export type CustomMetric = z.infer<typeof CustomMetricSchema>;
+
 export const UserProfileSchema = z.object({
   id: z.string().uuid(),
   timezone: z.string().min(1), // IANA timezone string, e.g. "Asia/Kolkata"
@@ -27,6 +38,7 @@ export const UserProfileSchema = z.object({
     firstDayOfWeek: z.number().int().min(0).max(6).default(1), // 0=Sun, 1=Mon
     theme: z.enum(["system", "light", "dark"]).default("system"),
     workdayCutoff: z.string().regex(/^\d{2}:\d{2}$/).default("00:00"), // Local cutoff time "HH:mm", defaults to "00:00"
+    customMetrics: z.array(CustomMetricSchema).default([]),
   }),
 });
 
