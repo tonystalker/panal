@@ -59,8 +59,8 @@ export default function LoginPage() {
         <div className="flex items-center justify-between mb-8">
           <Link href="/" className="flex items-center gap-3 group">
             <AppMonogram size="sm" />
-            <span className="text-sm font-semibold tracking-tight text-white group-hover:text-[#a3ff12] transition-colors">
-              Personal Analytics
+            <span className="text-base font-bold tracking-tight text-white group-hover:text-[#a3ff12] transition-colors">
+              Panal
             </span>
           </Link>
           <span className="text-[11px] font-mono tracking-widest text-[#a1a1aa] uppercase px-2 py-0.5 rounded border border-white/10 bg-[#121214]">
@@ -76,7 +76,7 @@ export default function LoginPage() {
               Account Sync Preview
             </div>
             <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight text-white mb-2">
-              Log in to Personal Analytics
+              Log in to Panal
             </h1>
             <p className="text-sm text-[#a1a1aa] leading-relaxed">
               Personal logs live on your device by default. Remote accounts are currently in preview for early-access testing.

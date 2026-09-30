@@ -79,10 +79,10 @@ export function Sidebar({
           <AppMonogram size={collapsed ? "sm" : "md"} />
           {!collapsed && (
             <div className="flex flex-col min-w-0">
-              <span className="text-sm font-semibold text-foreground tracking-tight leading-none group-hover:text-accent transition-colors">
-                Personal Analytics
+              <span className="text-base font-bold text-foreground tracking-tight leading-none group-hover:text-accent transition-colors">
+                Panal
               </span>
-              <span className="text-[11px] text-muted-foreground mt-0.5 flex items-center gap-1.5">
+              <span className="text-[11px] text-muted-foreground mt-1 flex items-center gap-1.5 font-mono">
                 <span className="size-1.5 rounded-full bg-emerald-400/80" />
                 Local & Private
               </span>
@@ -212,8 +212,8 @@ export function MobileDrawer({
         <div className="flex items-center justify-between pb-4 border-b border-border/60">
           <div className="flex items-center gap-2.5">
             <AppMonogram size="sm" />
-            <span className="text-sm font-semibold text-foreground tracking-tight">
-              Personal Analytics
+            <span className="text-base font-bold text-foreground tracking-tight">
+              Panal
             </span>
           </div>
           <button

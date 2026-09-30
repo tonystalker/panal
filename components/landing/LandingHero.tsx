@@ -52,7 +52,7 @@ export function LandingHero() {
         {/* Eyebrow badge */}
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-border bg-surface-muted/60 text-[11px] font-mono uppercase tracking-wider text-muted-foreground mb-6">
           <span className="size-1.5 rounded-full bg-accent animate-pulse" />
-          <span>Private, Local-First Personal Analytics</span>
+          <span>Private, Local-First &middot; Panal</span>
         </div>
 
         {/* Main Headline */}

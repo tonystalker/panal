@@ -68,8 +68,8 @@ export default function SignupPage() {
         <div className="flex items-center justify-between mb-8">
           <Link href="/" className="flex items-center gap-3 group">
             <AppMonogram size="sm" />
-            <span className="text-sm font-semibold tracking-tight text-white group-hover:text-[#a3ff12] transition-colors">
-              Personal Analytics
+            <span className="text-base font-bold tracking-tight text-white group-hover:text-[#a3ff12] transition-colors">
+              Panal
             </span>
           </Link>
           <span className="text-[11px] font-mono tracking-widest text-[#a1a1aa] uppercase px-2 py-0.5 rounded border border-white/10 bg-[#121214]">
@@ -88,7 +88,7 @@ export default function SignupPage() {
               Create your account
             </h1>
             <p className="text-sm text-[#a1a1aa] leading-relaxed">
-              Personal Analytics works completely offline without an account. Registering prepares your identity for future encrypted sync early access.
+              Panal works completely offline without an account. Registering prepares your identity for future encrypted sync early access.
             </p>
           </div>
 

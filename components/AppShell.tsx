@@ -43,7 +43,7 @@ export function AppShell({ children }: AppShellProps) {
   const currentItem = NAV_ITEMS.find(
     (item) => item.href === pathname || (pathname === "/" && item.href === "/today")
   );
-  const currentTitle = currentItem?.label ?? "Personal Analytics";
+  const currentTitle = currentItem?.label ?? "Panal";
 
   // Public landing, auth, legal, and error routes render directly without dashboard sidebar
   const DASHBOARD_ROUTES = ["/today", "/calendar", "/dashboard", "/connectors", "/settings"];

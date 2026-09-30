@@ -79,7 +79,7 @@ const backgroundVariants: Variants = {
 
 export function Hero8({
   logo,
-  logoText = 'Watermelon',
+  logoText = 'Panal',
   navItems = navItemsDefault,
   loginText = 'Login',
   loginHref = '#',

@@ -1,11 +1,11 @@
 {
-  "name": "Personal Analytics",
+  "name": "Panal",
   "short_name": "Panal",
   "description": "Local-first personal productivity tracker. Tasks, metrics, GitHub and LeetCode connectors. No account needed.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#0f0f11",
-  "theme_color": "#7c3aed",
+  "background_color": "#09090b",
+  "theme_color": "#09090b",
   "orientation": "portrait-primary",
   "icons": [
     {

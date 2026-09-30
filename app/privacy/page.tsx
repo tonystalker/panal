@@ -3,8 +3,8 @@ import { AppMonogram } from "@/components/ui/AppMonogram";
 import { ArrowLeftIcon, ShieldCheckIcon, LockIcon, DatabaseIcon, TerminalIcon } from "lucide-react";
 
 export const metadata = {
-  title: "Privacy Promise — Personal Analytics",
-  description: "Learn how Personal Analytics protects your privacy through local-first architecture and client-side encryption.",
+  title: "Privacy Promise — Panal",
+  description: "Learn how Panal protects your privacy through local-first architecture and client-side encryption.",
 };
 
 export default function PrivacyPage() {
@@ -19,7 +19,7 @@ export default function PrivacyPage() {
           </Link>
           <div className="flex items-center gap-2">
             <AppMonogram size="sm" />
-            <span className="text-sm font-semibold text-foreground">Personal Analytics</span>
+            <span className="text-base font-bold text-foreground">Panal</span>
           </div>
           <Link href="/today" className="btn btn-primary btn-sm text-xs h-7 px-3">
             Open App
@@ -39,7 +39,7 @@ export default function PrivacyPage() {
         </h1>
 
         <p className="text-base sm:text-lg text-muted-foreground leading-relaxed mb-12">
-          Personal Analytics was built on a foundational principle: your private daily logs, habits, and productivity patterns belong exclusively to you.
+          Panal was built on a foundational principle: your private daily logs, habits, and productivity patterns belong exclusively to you.
         </p>
 
         <div className="space-y-10 text-sm leading-relaxed text-zinc-300">
@@ -50,7 +50,7 @@ export default function PrivacyPage() {
               <h2>1. On-Device Storage Only (IndexedDB)</h2>
             </div>
             <p>
-              In Version 1 of Personal Analytics, 100% of your personal logs, tasks, check-in values, reflection notes, and custom metrics are stored locally in your browser using IndexedDB via Dexie.js. We run no remote user database, no central telemetry servers, and no tracking scripts.
+              In Version 1 of Panal, 100% of your personal logs, tasks, check-in values, reflection notes, and custom metrics are stored locally in your browser using IndexedDB via Dexie.js. We run no remote user database, no central telemetry servers, and no tracking scripts.
             </p>
           </section>
 
@@ -99,7 +99,7 @@ export default function PrivacyPage() {
             Version 1.0 &middot; Updated October 2026
           </span>
           <Link href="/today" className="btn btn-primary btn-sm text-xs font-semibold px-4 h-8">
-            Open Personal Analytics
+            Open Panal
           </Link>
         </div>
       </main>

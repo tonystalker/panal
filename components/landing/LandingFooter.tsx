@@ -10,8 +10,8 @@ export function LandingFooter() {
         <div className="flex items-center gap-3">
           <AppMonogram size="sm" />
           <div className="flex flex-col">
-            <span className="font-semibold text-foreground tracking-tight text-sm">
-              Personal Analytics
+            <span className="font-bold text-foreground tracking-tight text-base">
+              Panal
             </span>
             <span className="text-[11px] text-muted-foreground">
               Local-first personal daily operating system
@@ -37,7 +37,7 @@ export function LandingFooter() {
 
         {/* Copyright & Local storage note */}
         <div className="text-center md:text-right font-mono text-[11px] text-subtle-foreground">
-          <p>&copy; {currentYear} Personal Analytics. Private by default.</p>
+          <p>&copy; {currentYear} Panal. Private by default.</p>
           <p className="mt-0.5">All personal data stored locally in your browser.</p>
         </div>
       </div>

@@ -230,8 +230,8 @@ const Zoom = (props: SVGProps<SVGSVGElement>) => (
 export { Zoom };
 
 const Vercel = (props: SVGProps<SVGSVGElement>) => (
-  <svg {...props} viewBox="0 0 256 222" preserveAspectRatio="xMidYMid">
-    <path fill="currentColor" d="m128 0 128 221.705H0z" />
+  <svg {...props} viewBox="0 0 179 196" fill="none">
+    <image href="/panal-mark-white.png" width="179" height="196" />
   </svg>
 );
 
@@ -336,7 +336,7 @@ const integrations = [
   { name: 'Slack', icon: Slack },
   { name: 'Figma', icon: Figma },
   { name: 'Zoom', icon: Zoom },
-  { name: 'Vercel', icon: Vercel },
+  { name: 'Panal', icon: Vercel },
   { name: 'Asana', icon: Asana },
   { name: 'Google Meet', icon: GoogleMeet },
   { name: 'Paper', icon: Paper },

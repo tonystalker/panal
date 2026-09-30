@@ -12,8 +12,8 @@ export default function NotFound() {
       <header className="flex items-center justify-between">
         <Link href="/" className="flex items-center gap-3 group">
           <AppMonogram size="sm" />
-          <span className="text-sm font-semibold tracking-tight text-white group-hover:text-[#a3ff12] transition-colors">
-            Personal Analytics
+          <span className="text-base font-bold tracking-tight text-white group-hover:text-[#a3ff12] transition-colors">
+            Panal
           </span>
         </Link>
         <span className="text-[11px] font-mono tracking-widest text-[#a1a1aa] uppercase px-2 py-0.5 rounded border border-white/10 bg-[#121214]">
@@ -71,7 +71,7 @@ export default function NotFound() {
 
       {/* Footer */}
       <footer className="text-center text-xs text-[#71717a] font-mono border-t border-white/5 pt-4">
-        Personal Analytics · Local-first daily operating system
+        Panal &middot; Local-first daily operating system
       </footer>
     </div>
   );

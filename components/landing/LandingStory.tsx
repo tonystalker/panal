@@ -65,7 +65,7 @@ export function LandingStory() {
             <span>Scroll Showcase</span>
           </div>
           <h2 className="text-3xl sm:text-5xl font-bold tracking-tight text-foreground mb-4">
-            How Personal Analytics operates.
+            How Panal operates.
           </h2>
           <p className="text-base sm:text-lg text-muted-foreground leading-relaxed">
             Three disciplined rhythms that turn your daily efforts into clarity without distraction.

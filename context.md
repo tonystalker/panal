@@ -513,4 +513,39 @@ None in application code yet. Process note: running `git` from `panal` initially
 - **Hero Page Spacing & Layout Check**:
   - Verified visual layout across desktop (1440x900) and mobile (375x812) using browser automation screenshots. Confirmed clean margins, no overflow, balanced typography, and properly contained preview components.
 
+---
+
+### 2026-10-01 — Panal Logo & Brand Identity Replacement
+
+**What:**
+- **Logo Assets Extracted & Generated**:
+  - Extracted transparent high-resolution mark (`public/panal-mark.png`, `public/panal-mark-white.png`) and full logo (`public/panal-logo.png`, `public/panal-logo-white.png`) from user-provided brand asset.
+  - Acid-lime card (`#abf903`) with crisp white adaptive cards for optimal contrast on dark surfaces (`#09090b`).
+  - Created standalone vector SVGs: `public/panal-mark.svg`, `public/panal-logo.svg`, and `public/logo.svg`.
+  - Replaced `public/vercel.svg` with the Panal logo mark.
+  - Generated multi-size `app/favicon.ico` (16px, 32px, 48px), `public/icon-192.png`, and `public/icon-512.png` for browser tab and PWA icon manifest.
+  - Updated `public/manifest.json` with `name: "Panal"`, `short_name: "Panal"`.
+- **Reusable Components Created/Updated**:
+  - `components/ui/PanalLogo.tsx`: Created brand logo component with `mark` and `full` variants, responsive sizes (`sm`, `md`, `lg`).
+  - `components/ui/AppMonogram.tsx`: Updated to render the high-resolution Panal 3-card mark instead of text monogram, preserving compatibility across all layouts.
+  - `components/ui/integrations-2.tsx`: Replaced default Vercel icon and entry with Panal.
+- **Brand Name Migration from "Personal Analytics" to "Panal"**:
+  - `components/landing/LandingNav.tsx`: Brand text set to **Panal**.
+  - `components/Sidebar.tsx`: Desktop and mobile navigation headers updated to **Panal**.
+  - `components/AppShell.tsx`: Fallback title updated to **Panal**.
+  - `components/landing/LandingFooter.tsx`: Brand name and copyright updated to **Panal**.
+  - `components/landing/LandingHero.tsx`: Eyebrow badge updated to `Private, Local-First · Panal`.
+  - `components/landing/LandingCTA.tsx`: CTA updated to `Open Panal`.
+  - `components/landing/LandingStory.tsx`: Story section updated to `How Panal operates.`
+  - `app/layout.tsx`: Page metadata title set to `Panal — Local-first daily tracker`.
+  - `app/login/page.tsx` & `app/signup/page.tsx`: Brand headers, page titles, and explanatory copy updated to **Panal**.
+  - `app/privacy/page.tsx`: Title, headers, and privacy promise updated to **Panal**.
+  - `app/not-found.tsx`: Header and footer updated to **Panal**.
+- **Verification**:
+  - `npm run typecheck` passed (0 errors).
+  - `npm run lint` passed (0 errors).
+  - `npm test` passed (93/93 tests passing).
+  - Browser subagent visual inspection confirmed clean, high-resolution rendering of Panal logo and brand across Landing, Today, and Login pages.
+
+
 

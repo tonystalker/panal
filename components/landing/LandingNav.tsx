@@ -27,10 +27,10 @@ export function LandingNav() {
     >
       <div className="max-w-6xl mx-auto px-4 sm:px-6 flex items-center justify-between">
         {/* Brand */}
-        <Link href="/" className="flex items-center gap-2.5 group outline-none">
+        <Link href="/" className="flex items-center gap-2 group outline-none">
           <AppMonogram size="sm" />
-          <span className="text-sm font-semibold tracking-tight text-foreground group-hover:text-accent transition-colors">
-            Personal Analytics
+          <span className="text-base font-bold tracking-tight text-foreground group-hover:text-accent transition-colors">
+            Panal
           </span>
           <span className="text-[10px] uppercase font-mono tracking-widest text-muted-foreground px-1.5 py-0.5 rounded border border-border/60 bg-surface/50 hidden sm:inline-block">
             Local-First

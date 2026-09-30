@@ -1,4 +1,5 @@
 import * as React from "react";
+import Image from "next/image";
 import { cn } from "@/lib/utils";
 
 interface AppMonogramProps extends React.HTMLAttributes<HTMLDivElement> {
@@ -6,24 +7,39 @@ interface AppMonogramProps extends React.HTMLAttributes<HTMLDivElement> {
 }
 
 const sizeClasses = {
-  sm: "size-6 text-[10px] rounded-md",
-  md: "size-8 text-xs rounded-lg",
-  lg: "size-10 text-sm rounded-lg",
+  sm: "size-6",
+  md: "size-8",
+  lg: "size-10",
+};
+
+const pixelSizes = {
+  sm: 24,
+  md: 32,
+  lg: 40,
 };
 
 export function AppMonogram({ size = "md", className, ...props }: AppMonogramProps) {
+  const px = pixelSizes[size];
+
   return (
     <div
       data-slot="app-monogram"
       aria-hidden="true"
       className={cn(
-        "inline-flex items-center justify-center font-bold tracking-tight bg-surface-muted text-foreground border border-border-strong select-none font-mono relative",
+        "inline-flex items-center justify-center select-none relative shrink-0",
         sizeClasses[size],
         className
       )}
       {...props}
     >
-      <span>PA</span>
+      <Image
+        src="/panal-mark-white.png"
+        alt="Panal"
+        width={px}
+        height={px}
+        className="w-full h-full object-contain"
+        priority
+      />
     </div>
   );
 }
