@@ -459,16 +459,19 @@ None in application code yet. Process note: running `git` from `panal` initially
 
 ---
 
-### 2026-10-01 — Refine Custom Metric Collision Check, Widget Cleanup & Dashboard Cache Invalidation
+### 2026-10-01 — Stabilize Today Log Query, Strict Dashboard Routing & Component Accessibility
 
 **What:**
-- `lib/repositories.ts`:
-  - `addCustomMetric`: Included built-in `manualMetricKey`s (`exercise_minutes`, `dsa_problems`, etc.) in `existingKeys` set so custom metrics with labels like "Exercise Minutes" do not collide with built-in manual metrics.
-  - `deleteCustomMetric`: Removed bare-key matching `w.metricKeys.includes(key)` from widget cleanup and restricted to `w.metricKeys.includes("manual.${key}")` to prevent accidental deletion of unrelated widgets.
 - `app/today/page.tsx`:
-  - Corrected query cache invalidation on custom metric add and delete from `["dashboardWidgets"]` to `["widgets"]` matching the dashboard's `useQuery` key.
-- `tests/unit/metrics.test.ts`:
-  - Added unit tests verifying built-in manual key collision avoidance and targeted `manual.${key}` widget cleanup.
+  - Added `!!profile` check to `dailyLog` query `enabled` option (`enabled: !!profile && !!dateKey && !!tz`) so the query waits for the user profile (and its custom workday cutoff) before creating or fetching a log, preventing creation of an incorrect calendar-day log during late-night shifts before profile loads.
+- `components/AppShell.tsx`:
+  - Updated `isDashboardRoute` to check `DASHBOARD_ROUTES.some((r) => pathname === r || pathname.startsWith(`${r}/`))` instead of loose `startsWith`, preventing false positives like `/todayfoo` from rendering inside the dashboard shell.
+- `components/ui/hero-8.tsx`:
+  - Added `"use client";` as the first line since the component uses hooks (`useState`) and `motion`.
+- `components/ui/auth-01.tsx`:
+  - Added `aria-label={provider.name}` to icon-only social provider buttons for screen reader accessibility.
+- `components/ui/error-3.tsx`:
+  - Converted the three decorative copies of "404" from `<h1>` to `aria-hidden="true"` spans (`motion.span` / `span`), keeping a single semantic `<h1>` element for screen readers.
 
 **How:**
-- Verified with strict TypeScript `npm run typecheck` and full unit test suite `npm test` (all 93 tests passing).
+- Verified with `npm run typecheck`, `npm run lint`, and `npm test` (all 93 tests passing).
