@@ -62,7 +62,7 @@ export function LandingHero() {
 
         {/* Supporting description */}
         <p className="text-base sm:text-lg md:text-xl text-muted-foreground max-w-2xl leading-relaxed mb-8">
-          Plan what matters. Track the work. See the patterns—without handing your life to another dashboard.
+          Plan what matters. Track the work. See the patterns, without handing your life to another dashboard.
         </p>
 
         {/* Primary and secondary CTAs */}
@@ -72,7 +72,7 @@ export function LandingHero() {
             id="hero-primary-cta"
             className="btn btn-primary h-11 px-6 text-sm font-semibold flex items-center justify-center gap-2 w-full sm:w-auto shadow-lg shadow-accent/10"
           >
-            <span>Start locally — it’s free</span>
+            <span>Start locally, it’s free</span>
             <ArrowRightIcon className="size-4" />
           </Link>
           <a
@@ -85,7 +85,7 @@ export function LandingHero() {
         </div>
 
         {/* Truthful microcopy */}
-        <p className="text-xs text-subtle-foreground font-mono mb-14">
+        <p className="text-xs text-subtle-foreground font-mono mb-10 sm:mb-14">
           No account required. Your data stays on your device.
         </p>
 
@@ -95,7 +95,7 @@ export function LandingHero() {
           onMouseMove={handleMouseMove}
           onMouseLeave={handleMouseLeave}
           style={{ perspective: 1200 }}
-          className="w-full max-w-5xl relative cursor-default"
+          className="w-full max-w-5xl relative cursor-default px-2 sm:px-4"
         >
           <div
             style={{
@@ -164,12 +164,12 @@ export function LandingHero() {
                 <div className="h-28 flex items-end gap-1.5 pt-4">
                   {[65, 80, 100, 70, 90, 85, 100, 75, 95, 88, 100, 90, 80, 85, 100, 70, 92, 100, 85, 90, 100].map(
                     (val, i) => (
-                      <div key={i} className="flex-1 flex flex-col items-center gap-1 group">
+                      <div key={i} className="h-full flex-1 flex items-end justify-center group">
                         <div
                           style={{ height: `${val}%` }}
                           className={`w-full rounded-t-sm transition-all ${
                             val === 100
-                              ? "bg-accent"
+                              ? "bg-accent shadow-[0_0_8px_rgba(163,255,18,0.4)]"
                               : val >= 80
                               ? "bg-white/40 group-hover:bg-white/60"
                               : "bg-white/20 group-hover:bg-white/40"
@@ -192,7 +192,7 @@ export function LandingHero() {
             </div>
 
             {/* Floating Plane 1: Connector Badge */}
-            <div className="absolute -top-3 -right-3 hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg border border-border-strong bg-surface-raised shadow-xl backdrop-blur-md">
+            <div className="absolute -top-3 right-4 sm:right-6 hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg border border-border-strong bg-surface-raised shadow-xl backdrop-blur-md">
               <GitCommitIcon className="size-3.5 text-accent" />
               <span className="text-xs font-mono text-foreground font-medium">
                 GitHub sync &middot; 7 commits
@@ -200,7 +200,7 @@ export function LandingHero() {
             </div>
 
             {/* Floating Plane 2: Privacy Guarantee Badge */}
-            <div className="absolute -bottom-3 -left-3 hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg border border-border-strong bg-surface-raised shadow-xl backdrop-blur-md">
+            <div className="absolute -bottom-3 left-4 sm:left-6 hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg border border-border-strong bg-surface-raised shadow-xl backdrop-blur-md">
               <LockIcon className="size-3.5 text-accent" />
               <span className="text-xs font-mono text-foreground font-medium">
                 Local-only vault &middot; AES-GCM

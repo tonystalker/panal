@@ -488,6 +488,29 @@ None in application code yet. Process note: running `git` from `panal` initially
 - `components/ui/integrations-2.tsx`:
   - Replaced hard-coded `text-white` with `text-muted-foreground` in the second logo loop so `currentColor` SVGs remain visible in both dark and light modes.
 
-**How:**
-- Verified with `npm run typecheck`, `npm run lint`, and `npm test` (all 93 tests passing).
+---
+
+### 2026-10-01 — Remove Em Dashes, Personal UI Refactor Audit & Hero Spacing / Layout Polish
+
+**What:**
+- `components/landing/LandingHero.tsx`:
+  - Removed em dashes (`—`) in description (`"Plan what matters. Track the work. See the patterns, without handing your life to another dashboard."`) and primary CTA button (`"Start locally, it’s free"`).
+  - Fixed 0px bar chart height bug by adding `h-full` to flex column containers so percentage bar heights resolve against `h-28`.
+  - Added subtle acid-lime glow to 100% bars (`shadow-[0_0_8px_rgba(163,255,18,0.4)]`).
+  - Positioned floating badges cleanly: `GitHub sync` at `right-4 sm:right-6 -top-3` (top-right) and `Local-only vault` at `left-4 sm:left-6 -bottom-3` (bottom-left).
+  - Adjusted microcopy margin (`mb-10 sm:mb-14`) and preview container padding (`px-2 sm:px-4`) for mobile viewport breathing room.
+- `components/landing/LandingNav.tsx`:
+  - Removed em dash in mobile CTA (`"Start locally, it’s free"`).
+  - Fixed mobile menu toggle button appearing on desktop by removing `.btn-icon` (whose CSS `display: inline-flex` overrode `md:hidden`) and applying `md:!hidden` with standard Tailwind classes.
+- `components/landing/LandingStory.tsx`:
+  - Replaced em dash with comma in Chapter 2 description.
+- `components/landing/LandingEditorial.tsx`:
+  - Removed unconfigured `quality={85}` to prevent Next.js image warnings.
+- **Audit of `personal-ui-refractor.md`**:
+  - Verified all 10 required components: `AppShell`, `AppMonogram`, `PageHeader`, `MetricValue`, `SectionHeading`, `TaskRow`, `ChartWidget`, `ConnectorPanel`, `StatusBadge`, `EmptyState`.
+  - Verified color tokens, typography (`tabular-nums`, `Inter`), responsive app shell, Today page workflow, Dashboard overview strip and configurable widgets, Calendar/History, Connectors vault, and Settings data management.
+  - Verified 0 type errors, 0 lint errors, and all 93 unit tests passing.
+- **Hero Page Spacing & Layout Check**:
+  - Verified visual layout across desktop (1440x900) and mobile (375x812) using browser automation screenshots. Confirmed clean margins, no overflow, balanced typography, and properly contained preview components.
+
 

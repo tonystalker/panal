@@ -13,7 +13,6 @@ export function LandingEditorial() {
               fill
               className="object-cover object-center filter brightness-90 contrast-105"
               sizes="(max-width: 768px) 100vw, 1200px"
-              quality={85}
             />
             {/* Soft dark vignette and edge fade */}
             <div className="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-transparent" />

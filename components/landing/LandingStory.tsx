@@ -17,7 +17,7 @@ const CHAPTERS = [
     eyebrow: "CONNECTED WORK",
     title: "Turn activity into inspectable daily metrics.",
     description:
-      "Connect developer services like GitHub and LeetCode. Activity transforms into normalized observations with exact dates and counts—stored in your browser, not on external tracking servers.",
+      "Connect developer services like GitHub and LeetCode. Activity transforms into normalized observations with exact dates and counts, stored in your browser, not on external tracking servers.",
     detail: "AES-GCM encrypted local vault for all credentials.",
   },
   {

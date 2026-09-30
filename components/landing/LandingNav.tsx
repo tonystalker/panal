@@ -75,7 +75,7 @@ export function LandingNav() {
         <button
           type="button"
           onClick={() => setMobileMenuOpen((o) => !o)}
-          className="md:hidden btn-icon size-8 text-muted-foreground hover:text-foreground"
+          className="md:!hidden flex items-center justify-center size-8 rounded-md border border-border bg-transparent text-muted-foreground hover:text-foreground hover:bg-surface-muted transition-colors cursor-pointer"
           aria-label="Toggle mobile menu"
         >
           {mobileMenuOpen ? <XIcon className="size-4" /> : <MenuIcon className="size-4" />}
@@ -128,7 +128,7 @@ export function LandingNav() {
               onClick={() => setMobileMenuOpen(false)}
               className="btn btn-primary btn-sm text-xs justify-center"
             >
-              Start locally — it’s free
+              Start locally, it’s free
             </Link>
           </div>
         </div>
