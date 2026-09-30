@@ -275,4 +275,6 @@ None in application code yet. Process note: running `git` from `panal` initially
 - Day boundary logic: checks if local wall-clock minutes `(hour * 60 + min) < cutoffMinutes`. If so, decrements calendar day via `subDays(zoned, 1)`.
 - Existing daily logs and tasks are never moved or auto-failed when cutoff passes.
 - Direct date navigation and calendar links (`/today?date=...`) allow editing tasks, check-in metrics, and reflections on any past workday.
+- UI.md alignment: integrated the date navigator directly into the quiet `PageHeader` action slot, eliminated floating card chrome, used hairline-bordered surfaces with subtle warning dot indicator for previous workday shortcut, and styled task completion buttons with standard `.checkbox` and monospace tabular figures.
+
 
