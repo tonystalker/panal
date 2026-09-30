@@ -428,17 +428,31 @@ None in application code yet. Process note: running `git` from `panal` initially
 - Created `app/privacy/page.tsx`:
   - Detailed, truthful privacy page documenting client-side IndexedDB, Web Crypto AES-GCM backup encryption, direct connector API communication, and zero telemetry.
 
+---
+
+### 2026-10-01 — Import Watermelon Auth-01 & Error-3, Add Local-First Auth Boundary & 404 Route
+
+**What:**
+- Installed Watermelon Auth 01 (`https://registry.watermelon.sh/r/auth-01.json`) -> `components/ui/auth-01.tsx`.
+- Installed Watermelon Error 3 (`https://registry.watermelon.sh/r/error-3.json`) -> `components/ui/error-3.tsx`.
+- Created `lib/auth.tsx`:
+  - `AuthAdapter` interface supporting `signUp`, `login`, `logout`, `getSession`, and `requestPasswordReset`.
+  - `AuthProvider` and `useAuth` hook wrapped in `app/providers.tsx`.
+  - Truthful local-first handling: registers early access for sync without claiming false remote authentication or uploading private local logs.
+- Created `app/login/page.tsx`:
+  - Focused auth layout with prominent "Continue locally without an account" bypass button.
+  - Email/password validation, password reveal toggle, loading state, and informational feedback.
+  - Wide-screen split layout featuring dark editorial workspace visual and local privacy badges.
+- Created `app/signup/page.tsx`:
+  - Mirrored split layout with "Use locally" bypass, password confirmation, and link to privacy promise.
+  - Honest "Join sync early access" action.
+- Created `app/not-found.tsx`:
+  - Restrained Swiss-style 404 route adapted from Watermelon Error-3.
+  - Truthful explanation: unmapped route, notes that local data is safe, and provides recovery routes to `/today` and `/`.
+- Updated `components/AppShell.tsx`:
+  - Isolated dashboard sidebar strictly to internal app routes (`/today`, `/calendar`, `/dashboard`, `/connectors`, `/settings`).
+  - Landing, auth, legal, and error routes render cleanly full-screen.
+
 **How:**
-- Replaced template generic marketing claims with truthful local-first architecture details.
-- Verified type safety with `npm run typecheck`.
-
-
-
-
-
-
-
-
-
-
-
+- Replaced all template social login placeholders and generic claims with honest local-first copy.
+- Validated types with `npm run typecheck`.

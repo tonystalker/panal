@@ -246,3 +246,7 @@ If no: keep improving V1 daily loop. Do not start Milestone 5.
 | 2026-09-29 | Offline tracker PWA + shadcn/ui + Dexie | Milestone 1 — complete |
 | 2026-09-29 | GitHub connector: vault, GraphQL, sync engine, dashboard widget | Milestone 2 — complete |
 | 2026-09-30 | LeetCode adapter + widget config system + data-driven dashboard | Milestone 3 — complete |
+| 2026-10-01 | Capitalio dashboard shell, metrics strip, primary chart, connectors | UI Refactor: Capitalio & Integrations-2 |
+| 2026-10-01 | Watermelon Hero-8, Feature-3, CTA-4, editorial visual, privacy promise | UI Refactor: Landing 01 & Privacy |
+| 2026-10-01 | Watermelon Auth-01, Error-3, lib/auth adapter, /login, /signup, /not-found | UI Refactor: Auth & Error boundary |
+

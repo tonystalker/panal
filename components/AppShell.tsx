@@ -45,14 +45,15 @@ export function AppShell({ children }: AppShellProps) {
   );
   const currentTitle = currentItem?.label ?? "Personal Analytics";
 
-  // Public landing, auth, and legal routes render directly without dashboard sidebar
-  const isPublicRoute =
-    pathname === "/" ||
-    pathname === "/login" ||
-    pathname === "/signup" ||
-    pathname === "/privacy";
+  // Public landing, auth, legal, and error routes render directly without dashboard sidebar
+  const isDashboardRoute =
+    pathname.startsWith("/today") ||
+    pathname.startsWith("/calendar") ||
+    pathname.startsWith("/dashboard") ||
+    pathname.startsWith("/connectors") ||
+    pathname.startsWith("/settings");
 
-  if (isPublicRoute) {
+  if (!isDashboardRoute) {
     return (
       <div className="min-h-screen bg-background text-foreground antialiased selection:bg-accent/20 selection:text-accent">
         {children}
