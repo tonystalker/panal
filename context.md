@@ -456,3 +456,16 @@ None in application code yet. Process note: running `git` from `panal` initially
 **How:**
 - Replaced all template social login placeholders and generic claims with honest local-first copy.
 - Validated types with `npm run typecheck`.
+
+---
+
+### 2026-10-01 — Fix TanStack Query Undefined Return in Previous Workday DailyLog Query
+
+**What:**
+- Fixed runtime console error `Query data cannot be undefined. Affected query key: ["dailyLog", "<date>"]`.
+- `lib/repositories.ts`: Updated `getDailyLogByDate(dateKey)` to return `Promise<DailyLog | null>` instead of `undefined` when no record matches.
+- `app/today/page.tsx`: Updated `prevLog` `queryFn` to return `(await getDailyLogByDate(prevWorkdayKey)) ?? null`.
+
+**How:**
+- Replaced `undefined` resolution with explicit `null` to comply with TanStack Query v5 requirements.
+- Validated with `npm run typecheck` and `npm test` (all 91 tests passing).
