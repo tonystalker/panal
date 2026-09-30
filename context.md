@@ -410,6 +410,29 @@ None in application code yet. Process note: running `git` from `panal` initially
 - Replaced all template placeholders with real Personal Analytics concepts and data models.
 - Verified compilation and types with `npm run typecheck`.
 
+---
+
+### 2026-10-01 — Import Watermelon CTA-4 and Adapt Privacy, Final CTA & Footer
+
+**What:**
+- Installed `https://registry.watermelon.sh/r/cta-4.json` via shadcn CLI.
+- Created `components/landing/LandingPrivacy.tsx`:
+  - Concrete local data diagram: `Your browser -> IndexedDB on your device -> Encrypted export`.
+  - Plain-language explanation of local-only storage and link to full privacy promise.
+- Created `components/landing/LandingCTA.tsx`:
+  - Adapted high-contrast CTA container from Watermelon CTA-4.
+  - Headline: "Start with one honest day."
+  - Action buttons: "Open Personal Analytics" and "Read the privacy promise".
+- Created `components/landing/LandingFooter.tsx`:
+  - Monogram, dynamic copyright year, local-first note, and clean app navigation links.
+- Created `app/privacy/page.tsx`:
+  - Detailed, truthful privacy page documenting client-side IndexedDB, Web Crypto AES-GCM backup encryption, direct connector API communication, and zero telemetry.
+
+**How:**
+- Replaced template generic marketing claims with truthful local-first architecture details.
+- Verified type safety with `npm run typecheck`.
+
+
 
 
 

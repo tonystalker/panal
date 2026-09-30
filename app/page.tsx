@@ -3,6 +3,9 @@ import { LandingHero } from "@/components/landing/LandingHero";
 import { LandingStory } from "@/components/landing/LandingStory";
 import { LandingEditorial } from "@/components/landing/LandingEditorial";
 import { LandingFeatures } from "@/components/landing/LandingFeatures";
+import { LandingPrivacy } from "@/components/landing/LandingPrivacy";
+import { LandingCTA } from "@/components/landing/LandingCTA";
+import { LandingFooter } from "@/components/landing/LandingFooter";
 
 export default function LandingPage() {
   return (
@@ -13,7 +16,10 @@ export default function LandingPage() {
         <LandingStory />
         <LandingEditorial />
         <LandingFeatures />
+        <LandingPrivacy />
+        <LandingCTA />
       </main>
+      <LandingFooter />
     </div>
   );
 }

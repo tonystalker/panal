@@ -29,7 +29,7 @@ This file tracks **progress**. `context.md` tracks **how it was done** (changelo
 - [x] Refactor Today, Calendar, and Settings pages
 - [x] Import and adapt `landing-01` & `hero-8` (Landing hero & showcase)
 - [x] Import and adapt `feature-3` & scroll-driven product story
-- [ ] Import and adapt `cta-4`, privacy section, and footer
+- [x] Import and adapt `cta-4`, privacy section, and footer
 - [ ] Import and adapt `auth-01` & `error-3` (Auth shell + error page)
 - [ ] Responsive polish, accessibility, unit tests, and documentation
 
