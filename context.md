@@ -346,6 +346,21 @@ None in application code yet. Process note: running `git` from `panal` initially
 - Translated Watermelon Capitalio composition into truthful personal analytics workspace (no fabricated financial terms).
 - Tested responsive behavior and ran vitest suite (87 tests passed).
 
+---
+
+### 2026-10-01 — Import and Adapt Watermelon Integrations-2 Registry Item
+
+**What:**
+- Installed `https://registry.watermelon.sh/r/integrations-2.json` via shadcn CLI.
+- Inspected the imported component diff: verified that marketplace placeholders (Slack, Notion, Stripe, Cloudflare, etc.) are kept isolated from the real app.
+- Preserved focused GitHub and LeetCode integration panels in `app/connectors/page.tsx` and `components/ConnectorPanel.tsx` without marketing fluff or unsupported provider connections.
+- Retained calm status indicators, on-device AES-GCM credential vault storage, direct API queries, and clear disconnect/delete-history flows.
+
+**How:**
+- Imported in a dedicated commit per `personal-ui-refactor.md`.
+- Verified type safety with `npm run typecheck`.
+
+
 
 
 
