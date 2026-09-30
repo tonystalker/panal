@@ -2,7 +2,7 @@ import { ClockIcon, CheckSquareIcon, Link2Icon, BarChart3Icon, ShieldIcon } from
 
 export function LandingFeatures() {
   return (
-    <section id="features" className="py-20 md:py-28 border-t border-border/60 relative">
+    <section id="features" className="py-20 md:py-28 border-t border-border/60 relative scroll-mt-24">
       <div className="max-w-6xl mx-auto px-4 sm:px-6">
         {/* Header */}
         <div className="max-w-2xl mb-16">
@@ -17,7 +17,7 @@ export function LandingFeatures() {
           </p>
         </div>
 
-        {/* Asymmetric 5-Feature Grid */}
+        {/* Asymmetric Feature Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
           {/* Feature 1: Workday Cutoff (Spans 2 cols on lg) */}
           <div className="lg:col-span-2 rounded-2xl border border-border/80 bg-surface/60 p-6 flex flex-col justify-between gap-6 hover:border-border-strong transition-all">
@@ -45,7 +45,7 @@ export function LandingFeatures() {
             </div>
           </div>
 
-          {/* Feature 2: Dual Task Progress */}
+          {/* Feature 2: Dual Task Progress (1 col) */}
           <div className="rounded-2xl border border-border/80 bg-surface/60 p-6 flex flex-col justify-between gap-6 hover:border-border-strong transition-all">
             <div>
               <div className="size-9 rounded-lg bg-surface-muted border border-border flex items-center justify-center text-accent mb-4">
@@ -72,7 +72,7 @@ export function LandingFeatures() {
             </div>
           </div>
 
-          {/* Feature 3: Connect What Matters */}
+          {/* Feature 3: Connect What Matters (1 col) */}
           <div className="rounded-2xl border border-border/80 bg-surface/60 p-6 flex flex-col justify-between gap-6 hover:border-border-strong transition-all">
             <div>
               <div className="size-9 rounded-lg bg-surface-muted border border-border flex items-center justify-center text-accent mb-4">
@@ -82,18 +82,18 @@ export function LandingFeatures() {
                 Connect what matters
               </h3>
               <p className="text-sm text-muted-foreground leading-relaxed">
-                Connect supported services like GitHub and LeetCode. Activity turns into visible, daily observations alongside your habits.
+                Connect supported services such as GitHub and LeetCode. Their activity becomes clear, date-based metrics alongside the work you log yourself.
               </p>
             </div>
 
             <div className="flex items-center gap-2 p-3 rounded-xl border border-border/60 bg-surface-muted/50 text-xs font-mono text-muted-foreground">
-              <span className="size-2 rounded-full bg-emerald-400" />
-              <span>GitHub GraphQL + LeetCode</span>
+              <span className="size-2 rounded-full bg-accent" />
+              <span>GitHub + LeetCode connectors</span>
             </div>
           </div>
 
-          {/* Feature 4: Charts You Control */}
-          <div className="rounded-2xl border border-border/80 bg-surface/60 p-6 flex flex-col justify-between gap-6 hover:border-border-strong transition-all">
+          {/* Feature 4: Charts You Control (Spans 2 cols on lg) */}
+          <div className="lg:col-span-2 rounded-2xl border border-border/80 bg-surface/60 p-6 flex flex-col justify-between gap-6 hover:border-border-strong transition-all">
             <div>
               <div className="size-9 rounded-lg bg-surface-muted border border-border flex items-center justify-center text-accent mb-4">
                 <BarChart3Icon className="size-4" />
@@ -101,34 +101,53 @@ export function LandingFeatures() {
               <h3 className="text-lg font-semibold text-foreground tracking-tight mb-2">
                 Charts you control
               </h3>
-              <p className="text-sm text-muted-foreground leading-relaxed">
-                Switch between Line, Bar, Area, and Calendar Heatmap views. Set custom goal lines, rolling averages, and custom habits like water intake.
+              <p className="text-sm text-muted-foreground leading-relaxed max-w-lg">
+                Switch between Line, Bar, Area, and Calendar Heatmap views. Set custom goal lines, rolling averages, and inspect your habits without noisy external tracking.
               </p>
             </div>
 
-            <div className="flex items-center justify-between p-3 rounded-xl border border-border/60 bg-surface-muted/50 text-xs font-mono">
-              <span className="text-muted-foreground">View:</span>
-              <span className="text-foreground">Bar &middot; 30d &middot; 7d avg</span>
+            <div className="p-3.5 rounded-xl border border-border/60 bg-surface-muted/50 flex flex-wrap items-center justify-between gap-3 text-xs font-mono">
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <span>View Modes:</span>
+                <span className="px-2 py-0.5 rounded bg-surface border border-border text-foreground font-semibold">
+                  Bar &middot; Line &middot; Heatmap
+                </span>
+              </div>
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <span>Rolling Window:</span>
+                <span className="text-foreground font-semibold">7-day &amp; 30-day</span>
+              </div>
             </div>
           </div>
 
-          {/* Feature 5: Data You Can Take With You */}
-          <div className="rounded-2xl border border-border/80 bg-surface/60 p-6 flex flex-col justify-between gap-6 hover:border-border-strong transition-all">
-            <div>
+          {/* Feature 5: Open Architectural Flow (Spans full width 3 cols) */}
+          <div className="md:col-span-2 lg:col-span-3 rounded-2xl border border-border/70 bg-surface/40 p-6 sm:p-8 flex flex-col lg:flex-row lg:items-center justify-between gap-6 hover:border-border-strong transition-all">
+            <div className="max-w-xl">
               <div className="size-9 rounded-lg bg-surface-muted border border-border flex items-center justify-center text-accent mb-4">
                 <ShieldIcon className="size-4" />
               </div>
-              <h3 className="text-lg font-semibold text-foreground tracking-tight mb-2">
-                Data you can take with you
+              <h3 className="text-lg sm:text-xl font-semibold text-foreground tracking-tight mb-2">
+                Data you own and export anytime
               </h3>
               <p className="text-sm text-muted-foreground leading-relaxed">
-                100% on-device IndexedDB storage. Export human-readable JSON, CSV, or passphrase-encrypted AES-GCM backup files anytime.
+                Everything stays on your local device. No central telemetry server, no advertising trackers, and no proprietary lock-in. Export clean JSON, CSV, or passphrase-encrypted backup files whenever you wish.
               </p>
             </div>
 
-            <div className="flex items-center justify-between p-3 rounded-xl border border-border/60 bg-surface-muted/50 text-xs font-mono">
-              <span className="text-muted-foreground">Export:</span>
-              <span className="text-accent font-semibold">.panal-backup (AES-GCM)</span>
+            {/* Architecture Flow Micro-Diagram */}
+            <div className="flex flex-col sm:flex-row items-center gap-3 text-xs font-mono text-muted-foreground shrink-0 bg-surface-muted/50 p-4 rounded-xl border border-border/60">
+              <div className="flex items-center gap-2">
+                <span className="size-2 rounded-full bg-accent" />
+                <span className="text-foreground font-semibold">On-Device Storage</span>
+              </div>
+              <span className="text-border-strong hidden sm:inline">&rarr;</span>
+              <div className="flex items-center gap-2">
+                <span className="text-muted-foreground">Local Encryption</span>
+              </div>
+              <span className="text-border-strong hidden sm:inline">&rarr;</span>
+              <div className="px-2.5 py-1 rounded bg-surface border border-accent/30 text-accent font-semibold">
+                .panal-backup (AES-GCM)
+              </div>
             </div>
           </div>
         </div>

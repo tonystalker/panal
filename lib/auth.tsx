@@ -73,7 +73,7 @@ class LocalFirstAuthAdapter implements AuthAdapter {
     return {
       success: true,
       message:
-        "Remote sync accounts are in preview. You can continue using Personal Analytics locally with complete privacy.",
+        "Remote sync accounts are in preview. You can continue using Panal locally with complete privacy.",
       session: null,
     };
   }

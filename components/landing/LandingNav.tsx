@@ -26,15 +26,17 @@ export function LandingNav() {
       }`}
     >
       <div className="max-w-6xl mx-auto px-4 sm:px-6 flex items-center justify-between">
-        {/* Brand */}
-        <Link href="/" className="flex items-center gap-2 group outline-none">
+        {/* Brand Lockup */}
+        <Link href="/" className="flex items-center gap-2.5 group outline-none">
           <AppMonogram size="sm" />
-          <span className="text-base font-bold tracking-tight text-foreground group-hover:text-accent transition-colors">
-            Panal
-          </span>
-          <span className="text-[10px] uppercase font-mono tracking-widest text-muted-foreground px-1.5 py-0.5 rounded border border-border/60 bg-surface/50 hidden sm:inline-block">
-            Local-First
-          </span>
+          <div className="flex flex-col text-left">
+            <span className="text-sm font-bold tracking-tight text-foreground leading-none group-hover:text-accent transition-colors">
+              Panal
+            </span>
+            <span className="text-[10px] text-muted-foreground tracking-tight leading-tight mt-0.5">
+              Personal analytics, local-first
+            </span>
+          </div>
         </Link>
 
         {/* Desktop Nav Items */}

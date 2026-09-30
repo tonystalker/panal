@@ -13,7 +13,7 @@ export function LandingCTA() {
         <div className="rounded-3xl border border-border-strong bg-surface/90 p-8 sm:p-14 text-center shadow-2xl backdrop-blur-md relative overflow-hidden">
           {/* Accent hairline accent pill */}
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-accent/30 bg-accent/10 text-[11px] font-mono uppercase tracking-wider text-accent mb-6 font-semibold">
-            <span>Ready in 10 seconds</span>
+            <span>No account required</span>
           </div>
 
           <h2 className="text-3xl sm:text-5xl font-bold tracking-tight text-foreground mb-4">

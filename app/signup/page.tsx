@@ -233,7 +233,7 @@ export default function SignupPage() {
           <Link href="/privacy" className="hover:text-[#a1a1aa] transition-colors">
             Privacy promise
           </Link>
-          <span>Offline-ready · Dexie IndexedDB</span>
+          <span>Offline-ready · On-device storage</span>
         </div>
       </div>
 

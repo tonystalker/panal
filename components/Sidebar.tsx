@@ -254,7 +254,7 @@ export function MobileDrawer({
 
         <div className="pt-4 border-t border-border/60">
           <div className="px-3 py-2 rounded-lg bg-surface-muted/60 border border-border/60 text-xs text-muted-foreground flex items-center justify-between">
-            <span>Local IndexedDB</span>
+            <span>On-Device Storage</span>
             <span className="size-1.5 rounded-full bg-emerald-400/80" />
           </div>
         </div>

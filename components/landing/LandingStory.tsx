@@ -17,7 +17,7 @@ const CHAPTERS = [
     eyebrow: "CONNECTED WORK",
     title: "Turn activity into inspectable daily metrics.",
     description:
-      "Connect developer services like GitHub and LeetCode. Activity transforms into normalized observations with exact dates and counts, stored in your browser, not on external tracking servers.",
+      "Connect supported services such as GitHub and LeetCode. Their activity becomes clear, date-based metrics alongside the work you log yourself.",
     detail: "AES-GCM encrypted local vault for all credentials.",
   },
   {
@@ -57,7 +57,7 @@ export function LandingStory() {
   }, []);
 
   return (
-    <section id="story" className="py-20 md:py-32 border-t border-border/60 relative">
+    <section id="story" className="py-20 md:py-32 border-t border-border/60 relative scroll-mt-24">
       <div className="max-w-6xl mx-auto px-4 sm:px-6">
         {/* Section Header */}
         <div className="max-w-2xl mb-16">
@@ -82,25 +82,45 @@ export function LandingStory() {
                 ref={(el) => {
                   chapterRefs.current[idx] = el;
                 }}
-                className={`transition-opacity duration-300 ${
-                  activeChapter === idx ? "opacity-100" : "opacity-40 hover:opacity-70"
+                className={`scroll-mt-36 transition-all duration-300 ${
+                  activeChapter === idx
+                    ? "opacity-100"
+                    : "opacity-75 hover:opacity-100"
                 }`}
               >
                 <div className="flex items-center gap-3 mb-2 font-mono text-xs">
-                  <span className="text-accent font-bold">{ch.step}</span>
+                  <span
+                    className={
+                      activeChapter === idx ? "text-accent font-bold" : "text-zinc-500 font-bold"
+                    }
+                  >
+                    {ch.step}
+                  </span>
                   <span className="text-border-strong">&mdash;</span>
                   <span className="text-muted-foreground uppercase tracking-widest text-[10px]">
                     {ch.eyebrow}
                   </span>
                 </div>
-                <h3 className="text-xl sm:text-2xl font-semibold text-foreground tracking-tight mb-3">
+                <h3
+                  className={`text-xl sm:text-2xl font-semibold tracking-tight mb-3 transition-colors ${
+                    activeChapter === idx ? "text-foreground" : "text-zinc-200"
+                  }`}
+                >
                   {ch.title}
                 </h3>
-                <p className="text-sm text-muted-foreground leading-relaxed mb-4">
+                <p
+                  className={`text-sm leading-relaxed mb-4 transition-colors ${
+                    activeChapter === idx ? "text-muted-foreground" : "text-zinc-400"
+                  }`}
+                >
                   {ch.description}
                 </p>
                 <div className="inline-flex items-center gap-1.5 text-xs font-mono text-subtle-foreground bg-surface-muted/60 px-2.5 py-1 rounded border border-border/40">
-                  <span className="size-1.5 rounded-full bg-accent" />
+                  <span
+                    className={`size-1.5 rounded-full ${
+                      activeChapter === idx ? "bg-accent" : "bg-zinc-600"
+                    }`}
+                  />
                   <span>{ch.detail}</span>
                 </div>
               </div>

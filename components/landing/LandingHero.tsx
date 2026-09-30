@@ -15,34 +15,50 @@ import {
 export function LandingHero() {
   const containerRef = useRef<HTMLDivElement>(null);
   const [rotate, setRotate] = useState({ x: 0, y: 0 });
+  const [translate, setTranslate] = useState({ x: 0, y: 0 });
+  const [hasFinePointer, setHasFinePointer] = useState(false);
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
 
   useEffect(() => {
-    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
-    setPrefersReducedMotion(mq.matches);
-    const handler = (e: MediaQueryListEvent) => setPrefersReducedMotion(e.matches);
-    mq.addEventListener("change", handler);
-    return () => mq.removeEventListener("change", handler);
+    const mqMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const mqPointer = window.matchMedia("(pointer: fine)");
+    setPrefersReducedMotion(mqMotion.matches);
+    setHasFinePointer(mqPointer.matches);
+
+    const motionHandler = (e: MediaQueryListEvent) => setPrefersReducedMotion(e.matches);
+    const pointerHandler = (e: MediaQueryListEvent) => setHasFinePointer(e.matches);
+
+    mqMotion.addEventListener("change", motionHandler);
+    mqPointer.addEventListener("change", pointerHandler);
+    return () => {
+      mqMotion.removeEventListener("change", motionHandler);
+      mqPointer.removeEventListener("change", pointerHandler);
+    };
   }, []);
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (prefersReducedMotion || !containerRef.current) return;
+    if (prefersReducedMotion || !hasFinePointer || !containerRef.current) return;
     const rect = containerRef.current.getBoundingClientRect();
     const x = e.clientX - rect.left - rect.width / 2;
     const y = e.clientY - rect.top - rect.height / 2;
-    // Limit to max 2.5 degrees tilt
-    setRotate({
-      x: -(y / (rect.height / 2)) * 2.5,
-      y: (x / (rect.width / 2)) * 2.5,
-    });
+    // Restrained tilt: maximum 2.2 degrees
+    const rotX = -(y / (rect.height / 2)) * 2.2;
+    const rotY = (x / (rect.width / 2)) * 2.2;
+    // Bounded parallax translation: 8-10px
+    const transX = (x / (rect.width / 2)) * 9;
+    const transY = (y / (rect.height / 2)) * 9;
+
+    setRotate({ x: rotX, y: rotY });
+    setTranslate({ x: transX, y: transY });
   };
 
   const handleMouseLeave = () => {
     setRotate({ x: 0, y: 0 });
+    setTranslate({ x: 0, y: 0 });
   };
 
   return (
-    <section className="relative pt-28 pb-16 md:pt-36 md:pb-24 overflow-hidden">
+    <section id="product" className="relative pt-28 pb-16 md:pt-36 md:pb-24 overflow-hidden scroll-mt-20">
       {/* Background glow and subtle grid */}
       <div className="absolute inset-0 pointer-events-none -z-10 flex items-center justify-center">
         <div className="w-[600px] h-[350px] bg-accent/5 blur-[120px] rounded-full" />
@@ -99,8 +115,12 @@ export function LandingHero() {
         >
           <div
             style={{
-              transform: `rotateX(${rotate.x}deg) rotateY(${rotate.y}deg)`,
-              transition: "transform 0.2s cubic-bezier(0.16, 1, 0.3, 1)",
+              transform:
+                hasFinePointer && !prefersReducedMotion
+                  ? `rotateX(${rotate.x}deg) rotateY(${rotate.y}deg) translate3d(${translate.x}px, ${translate.y}px, 0)`
+                  : "none",
+              transformStyle: "preserve-3d",
+              transition: "transform 0.25s cubic-bezier(0.16, 1, 0.3, 1)",
             }}
             className="rounded-2xl border border-border-strong bg-surface/90 shadow-2xl p-4 sm:p-6 backdrop-blur-md relative"
           >
@@ -110,11 +130,11 @@ export function LandingHero() {
                 <span className="size-2.5 rounded-full bg-border-strong" />
                 <span className="size-2.5 rounded-full bg-border-strong" />
                 <span className="size-2.5 rounded-full bg-border-strong" />
-                <span className="text-[11px] font-mono text-muted-foreground ml-2">personal-analytics.local/dashboard</span>
+                <span className="text-[11px] font-mono text-muted-foreground ml-2">panal.local/dashboard</span>
               </div>
               <div className="flex items-center gap-2">
                 <span className="size-1.5 rounded-full bg-accent" />
-                <span className="text-[11px] font-mono text-muted-foreground">IndexedDB connected</span>
+                <span className="text-[11px] font-mono text-muted-foreground">Local storage active</span>
               </div>
             </div>
 
@@ -191,19 +211,31 @@ export function LandingHero() {
               </div>
             </div>
 
-            {/* Floating Plane 1: Connector Badge */}
-            <div className="absolute -top-3 right-4 sm:right-6 hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg border border-border-strong bg-surface-raised shadow-xl backdrop-blur-md">
+            {/* Floating Plane 1: Connector Badge with foreground translateZ */}
+            <div
+              style={{
+                transform: hasFinePointer && !prefersReducedMotion ? "translateZ(26px)" : "none",
+                transition: "transform 0.25s cubic-bezier(0.16, 1, 0.3, 1)",
+              }}
+              className="absolute -top-3 right-4 sm:right-6 hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg border border-border-strong bg-surface-raised shadow-md backdrop-blur-md z-10"
+            >
               <GitCommitIcon className="size-3.5 text-accent" />
               <span className="text-xs font-mono text-foreground font-medium">
                 GitHub sync &middot; 7 commits
               </span>
             </div>
 
-            {/* Floating Plane 2: Privacy Guarantee Badge */}
-            <div className="absolute -bottom-3 left-4 sm:left-6 hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg border border-border-strong bg-surface-raised shadow-xl backdrop-blur-md">
+            {/* Floating Plane 2: Privacy Guarantee Badge with foreground translateZ */}
+            <div
+              style={{
+                transform: hasFinePointer && !prefersReducedMotion ? "translateZ(26px)" : "none",
+                transition: "transform 0.25s cubic-bezier(0.16, 1, 0.3, 1)",
+              }}
+              className="absolute -bottom-3 left-4 sm:left-6 hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg border border-border-strong bg-surface-raised shadow-md backdrop-blur-md z-10"
+            >
               <LockIcon className="size-3.5 text-accent" />
               <span className="text-xs font-mono text-foreground font-medium">
-                Local-only vault &middot; AES-GCM
+                Local vault &middot; AES-GCM
               </span>
             </div>
           </div>
@@ -220,7 +252,7 @@ export function LandingHero() {
                 Local-first by default
               </span>
               <span className="text-[11px] text-muted-foreground block">
-                Zero remote tracking
+                No product analytics or advertising trackers
               </span>
             </div>
           </div>
@@ -248,7 +280,7 @@ export function LandingHero() {
                 Connector-ready by design
               </span>
               <span className="text-[11px] text-muted-foreground block">
-                GitHub, LeetCode & more
+                GitHub + LeetCode connectors
               </span>
             </div>
           </div>

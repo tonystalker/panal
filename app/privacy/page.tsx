@@ -47,10 +47,10 @@ export default function PrivacyPage() {
           <section className="space-y-3">
             <div className="flex items-center gap-2.5 text-foreground font-semibold text-base">
               <DatabaseIcon className="size-4 text-accent" />
-              <h2>1. On-Device Storage Only (IndexedDB)</h2>
+              <h2>1. On-Device Storage Only</h2>
             </div>
             <p>
-              In Version 1 of Panal, 100% of your personal logs, tasks, check-in values, reflection notes, and custom metrics are stored locally in your browser using IndexedDB via Dexie.js. We run no remote user database, no central telemetry servers, and no tracking scripts.
+              In Version 1 of Panal, 100% of your personal logs, tasks, check-in values, reflection notes, and custom metrics are stored locally on your device in your browser&apos;s persistent local storage. We run no remote user database, no central telemetry servers, and no advertising trackers.
             </p>
           </section>
 
@@ -86,7 +86,7 @@ export default function PrivacyPage() {
           <section className="space-y-3">
             <div className="flex items-center gap-2.5 text-foreground font-semibold text-base">
               <ShieldCheckIcon className="size-4 text-accent" />
-              <h2>4. Zero Telemetry &amp; Transparent Exports</h2>
+              <h2>4. No Product Analytics or Tracking Scripts</h2>
             </div>
             <p>
               You can export all your data anytime in human-readable JSON or CSV format, or wipe all local data instantly from the Settings page. We believe in total data portability and complete user sovereignty.

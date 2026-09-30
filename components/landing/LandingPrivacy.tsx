@@ -3,7 +3,7 @@ import { ArrowRightIcon, MonitorIcon, HardDriveIcon, FileKeyIcon, ShieldCheckIco
 
 export function LandingPrivacy() {
   return (
-    <section id="privacy" className="py-20 md:py-28 border-t border-border/60 relative">
+    <section id="privacy" className="py-20 md:py-28 border-t border-border/60 relative scroll-mt-24">
       <div className="max-w-6xl mx-auto px-4 sm:px-6">
         <div className="max-w-3xl mx-auto text-center flex flex-col items-center">
           <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-md border border-border bg-surface-muted text-[11px] font-mono uppercase tracking-wider text-muted-foreground mb-4">
@@ -39,7 +39,7 @@ export function LandingPrivacy() {
                   <HardDriveIcon className="size-6" />
                 </div>
                 <div>
-                  <span className="text-sm font-semibold text-foreground block">Local IndexedDB</span>
+                  <span className="text-sm font-semibold text-foreground block">On-Device Storage</span>
                   <span className="text-xs text-muted-foreground font-mono">Stored on your device</span>
                 </div>
               </div>
@@ -59,7 +59,7 @@ export function LandingPrivacy() {
             {/* Micro verification line */}
             <div className="mt-8 pt-4 border-t border-border/40 text-[11px] font-mono text-subtle-foreground flex items-center justify-center gap-2">
               <span className="size-1.5 rounded-full bg-accent" />
-              <span>Zero server telemetry &middot; Zero third-party trackers &middot; Fully offline capable</span>
+              <span>No product analytics &middot; No advertising trackers &middot; Fully offline capable</span>
             </div>
           </div>
 

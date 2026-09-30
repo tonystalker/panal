@@ -375,7 +375,7 @@ export default function SettingsPage() {
               <span>Local-only storage</span>
             </div>
             <p className="text-xs text-muted-foreground leading-relaxed">
-              All personal metrics, logs, and connector tokens are kept solely inside your browser&apos;s local IndexedDB. No analytics tracking, telemetry, or remote user accounts are utilized.
+              All personal metrics, logs, and connector tokens are kept solely inside your browser&apos;s local storage. No product analytics, telemetry, or remote user accounts are utilized.
             </p>
           </div>
         </section>
@@ -553,7 +553,7 @@ export default function SettingsPage() {
           />
           <div className="card p-4 border-rose-500/30 bg-rose-500/5 flex flex-col gap-3">
             <p className="text-xs text-muted-foreground">
-              Permanently wipe all IndexedDB database tables on this device. This action cannot be reversed.
+              Permanently wipe all local database tables on this device. This action cannot be reversed.
             </p>
             {showDeleteConfirm ? (
               <div className="flex flex-col gap-2.5 p-3 rounded-lg bg-rose-500/10 border border-rose-500/30">

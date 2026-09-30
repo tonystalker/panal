@@ -14,7 +14,7 @@ export function LandingFooter() {
               Panal
             </span>
             <span className="text-[11px] text-muted-foreground">
-              Local-first personal daily operating system
+              Personal analytics, local-first
             </span>
           </div>
         </div>

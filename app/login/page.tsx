@@ -214,7 +214,7 @@ export default function LoginPage() {
           <Link href="/privacy" className="hover:text-[#a1a1aa] transition-colors">
             Privacy promise
           </Link>
-          <span>Offline-ready · Dexie IndexedDB</span>
+          <span>Offline-ready · On-device storage</span>
         </div>
       </div>
 
@@ -249,7 +249,7 @@ export default function LoginPage() {
           <div className="space-y-3 pt-2">
             <div className="flex items-center gap-3 text-xs text-zinc-300 font-mono">
               <HardDrive className="size-4 text-[#a3ff12] shrink-0" />
-              <span>100% on-device storage in browser IndexedDB</span>
+              <span>100% on-device local storage</span>
             </div>
             <div className="flex items-center gap-3 text-xs text-zinc-300 font-mono">
               <ShieldCheck className="size-4 text-[#a3ff12] shrink-0" />
