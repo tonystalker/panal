@@ -23,6 +23,7 @@ import {
 } from "./db";
 import { generateId } from "./uuid";
 import { nowISO } from "./date";
+import { METRIC_DEFINITIONS } from "./metrics/definitions";
 
 // ---------------------------------------------------------------------------
 // UserProfile
@@ -76,7 +77,10 @@ export async function addCustomMetric(data: {
 
   let key = slug;
   let counter = 1;
-  const existingKeys = new Set((profile.preferences.customMetrics ?? []).map((m) => m.key));
+  const existingKeys = new Set([
+    ...(profile.preferences.customMetrics ?? []).map((m) => m.key),
+    ...METRIC_DEFINITIONS.flatMap((d) => (d.manualMetricKey ? [d.manualMetricKey] : [])),
+  ]);
   while (existingKeys.has(key)) {
     key = `${slug}_${counter++}`;
   }
@@ -134,7 +138,7 @@ export async function deleteCustomMetric(key: string): Promise<void> {
   // Also clean up widgets tracking this metric
   const widgets = await getDashboardWidgets();
   for (const w of widgets) {
-    if (w.metricKeys.includes(`manual.${key}`) || w.metricKeys.includes(key)) {
+    if (w.metricKeys.includes(`manual.${key}`)) {
       await deleteWidget(w.id);
     }
   }

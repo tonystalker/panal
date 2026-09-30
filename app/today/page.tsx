@@ -270,7 +270,7 @@ function TodayContent() {
       setMetricAddToDashboard(true);
       setShowAddMetric(false);
       qc.invalidateQueries({ queryKey: ["profile"] });
-      qc.invalidateQueries({ queryKey: ["dashboardWidgets"] });
+      qc.invalidateQueries({ queryKey: ["widgets"] });
     },
   });
 
@@ -280,7 +280,7 @@ function TodayContent() {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["profile"] });
-      qc.invalidateQueries({ queryKey: ["dashboardWidgets"] });
+      qc.invalidateQueries({ queryKey: ["widgets"] });
     },
   });
 

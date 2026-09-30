@@ -233,4 +233,66 @@ describe("Custom metrics registry and formatting", () => {
     // Default metrics still resolve
     expect(metricLabel("task.completion_percent")).toBe("Task Completion");
   });
+
+  it("addCustomMetric avoids colliding with built-in manualMetricKey", async () => {
+    const { addCustomMetric } = await import("@/lib/repositories");
+    // "Exercise Minutes" would slugify to "exercise_minutes", which collides with built-in manualMetricKey
+    const metric = await addCustomMetric({
+      label: "Exercise Minutes",
+      unit: "min",
+      addToDashboard: false,
+    });
+    expect(metric.key).toBe("exercise_minutes_1");
+  });
+
+  it("deleteCustomMetric only removes widgets matching manual.${key}", async () => {
+    const { deleteCustomMetric, getDashboardWidgets, upsertDashboardWidget } = await import("@/lib/repositories");
+    const { generateId } = await import("@/lib/uuid");
+    
+    // Add a widget using manual.water_intake and another using bare water_intake
+    const widget1Id = generateId();
+    const widget2Id = generateId();
+
+    const widget1 = {
+      id: widget1Id,
+      metricKeys: ["manual.water_intake"],
+      chartType: "bar" as const,
+      range: "30d" as const,
+      aggregation: "daily" as const,
+      config: {
+        goalLine: null,
+        rollingAverage: null,
+        title: "Water Intake",
+        color: null,
+        visible: true,
+      },
+      position: 0,
+    };
+
+    const widget2 = {
+      id: widget2Id,
+      metricKeys: ["water_intake"], // unrelated bare key
+      chartType: "bar" as const,
+      range: "30d" as const,
+      aggregation: "daily" as const,
+      config: {
+        goalLine: null,
+        rollingAverage: null,
+        title: "Bare Key",
+        color: null,
+        visible: true,
+      },
+      position: 1,
+    };
+
+    await upsertDashboardWidget(widget1);
+    await upsertDashboardWidget(widget2);
+
+    await deleteCustomMetric("water_intake");
+
+    const remaining = await getDashboardWidgets();
+    const ids = remaining.map((w) => w.id);
+    expect(ids).not.toContain(widget1Id);
+    expect(ids).toContain(widget2Id);
+  });
 });
