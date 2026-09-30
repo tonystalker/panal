@@ -373,6 +373,25 @@ None in application code yet. Process note: running `git` from `panal` initially
 - Adheres strictly to `UI.md` and `personal-ui-refactor.md` design principles: deep near-black canvas, hairline borders, no floating card clutter, and high contrast typography.
 - Verified test suite and type checking.
 
+---
+
+### 2026-10-01 — Import Watermelon Hero-8 and Adapt Landing Hero Showcase
+
+**What:**
+- Installed `https://registry.watermelon.sh/r/hero-8.json` via shadcn CLI.
+- Created `components/landing/LandingNav.tsx`: Sticky blurred glass navigation, `PA` monogram, anchor links (`#product`, `#story`, `#features`, `#privacy`), "Log in" action, "Start locally" primary button, and mobile menu.
+- Created `components/landing/LandingHero.tsx`:
+  - Truthful product headline: "Make your days visible."
+  - Layered 3D perspective dashboard showcase with pointer parallax tilt (reduced-motion safe).
+  - Floating planes for GitHub connector activity and AES-GCM local storage encryption badge.
+  - Three-point factual trust strip: Local-first by default, No account required, Connector-ready by design.
+- `app/page.tsx`: Set up public landing page at `/`.
+
+**How:**
+- Imported in a dedicated commit per `personal-landing-auth.md`.
+- Verified type safety and clean responsive styling.
+
+
 
 
 
