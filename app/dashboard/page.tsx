@@ -202,20 +202,51 @@ export default function DashboardPage() {
         }
       />
 
-      {/* Metrics Overview Row */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3.5 mb-6">
-        <div className="card p-3 sm:p-4">
-          <MetricValue label="Active Streak" value={`${streak} days`} size="sm" />
-        </div>
-        <div className="card p-3 sm:p-4">
-          <MetricValue label="Visible Widgets" value={visibleWidgets.length} size="sm" />
-        </div>
-        <div className="card p-3 sm:p-4 col-span-2 sm:col-span-1">
-          <MetricValue label="Logged Days" value={`${recentLogs.length} / 90`} size="sm" />
+      {/* Composed Overview Strip (Capitalio reference style) */}
+      <div className="rounded-xl border border-border/80 bg-surface/50 p-1 mb-6 overflow-hidden">
+        <div className="grid grid-cols-2 sm:grid-cols-4 divide-y sm:divide-y-0 sm:divide-x divide-border/60">
+          <div className="p-3 sm:p-3.5">
+            <span className="text-[11px] font-mono uppercase tracking-wider text-muted-foreground block mb-1">
+              Active Streak
+            </span>
+            <div className="flex items-baseline gap-1.5">
+              <span className="text-xl font-bold font-mono tabular-nums text-foreground">{streak}</span>
+              <span className="text-xs text-muted-foreground">days</span>
+            </div>
+          </div>
+          <div className="p-3 sm:p-3.5">
+            <span className="text-[11px] font-mono uppercase tracking-wider text-muted-foreground block mb-1">
+              Active Charts
+            </span>
+            <div className="flex items-baseline gap-1.5">
+              <span className="text-xl font-bold font-mono tabular-nums text-foreground">{visibleWidgets.length}</span>
+              <span className="text-xs text-muted-foreground">widgets</span>
+            </div>
+          </div>
+          <div className="p-3 sm:p-3.5">
+            <span className="text-[11px] font-mono uppercase tracking-wider text-muted-foreground block mb-1">
+              Logged Workdays
+            </span>
+            <div className="flex items-baseline gap-1.5">
+              <span className="text-xl font-bold font-mono tabular-nums text-foreground">{recentLogs.length}</span>
+              <span className="text-xs text-muted-foreground">/ 90d</span>
+            </div>
+          </div>
+          <div className="p-3 sm:p-3.5">
+            <span className="text-[11px] font-mono uppercase tracking-wider text-muted-foreground block mb-1">
+              Storage Mode
+            </span>
+            <div className="flex items-baseline gap-1.5">
+              <span className="text-xs font-semibold text-accent flex items-center gap-1.5 pt-1">
+                <span className="size-1.5 rounded-full bg-accent" />
+                Local & Private
+              </span>
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* Widgets Grid */}
+      {/* Widgets Grid with Primary Analysis Focus */}
       {visibleWidgets.length === 0 ? (
         <EmptyState
           title="No visible widgets"
@@ -229,21 +260,25 @@ export default function DashboardPage() {
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 items-start">
           {visibleWidgets.map((widget, idx) => (
-            <MetricWidget
+            <div
               key={widget.id}
-              widget={widget}
-              today={today}
-              isFirst={idx === 0}
-              isLast={idx === visibleWidgets.length - 1}
-              onEdit={() => setEditingWidget(widget)}
-              onDelete={() => removeWidget.mutate(widget.id)}
-              onToggleVisible={() => toggleVisibility(widget)}
-              onMoveUp={() => moveWidget(widget.id, "up")}
-              onMoveDown={() => moveWidget(widget.id, "down")}
-              onSelectDate={setSelectedDate}
-              selectedDate={selectedDate}
-              customMetrics={profile?.preferences?.customMetrics}
-            />
+              className={idx === 0 && visibleWidgets.length > 1 ? "lg:col-span-2" : "col-span-1"}
+            >
+              <MetricWidget
+                widget={widget}
+                today={today}
+                isFirst={idx === 0}
+                isLast={idx === visibleWidgets.length - 1}
+                onEdit={() => setEditingWidget(widget)}
+                onDelete={() => removeWidget.mutate(widget.id)}
+                onToggleVisible={() => toggleVisibility(widget)}
+                onMoveUp={() => moveWidget(widget.id, "up")}
+                onMoveDown={() => moveWidget(widget.id, "down")}
+                onSelectDate={setSelectedDate}
+                selectedDate={selectedDate}
+                customMetrics={profile?.preferences?.customMetrics}
+              />
+            </div>
           ))}
         </div>
       )}

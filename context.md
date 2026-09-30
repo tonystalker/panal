@@ -332,6 +332,21 @@ None in application code yet. Process note: running `git` from `panal` initially
 - Reuses semantic dark tokens (`#09090b` canvas, `#111113` surface, `#a3ff12` acid-lime signal color).
 - Tested typecheck and layout rendering.
 
+---
+
+### 2026-10-01 — Refactor Dashboard with Capitalio Data-First Composition
+
+**What:**
+- `app/dashboard/page.tsx`:
+  - Replaced floating KPI cards with a unified Capitalio-inspired overview strip: 4 key metrics (Active Streak, Active Charts, Logged Workdays, Local & Private Storage Mode) in a single hairline-bordered container (`divide-x divide-border/60 bg-surface/50`).
+  - Added primary analysis emphasis: the first widget in the grid spans full width (`lg:col-span-2`) as the dominant analytical hero chart, followed by secondary charts in a responsive two-column grid.
+  - Maintained all existing Dexie queries, widget reordering, metric source selection, date detail inspector, and custom metric visualizations.
+
+**How:**
+- Translated Watermelon Capitalio composition into truthful personal analytics workspace (no fabricated financial terms).
+- Tested responsive behavior and ran vitest suite (87 tests passed).
+
+
 
 
 

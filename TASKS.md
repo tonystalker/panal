@@ -24,7 +24,7 @@ This file tracks **progress**. `context.md` tracks **how it was done** (changelo
 
 - [x] Import `capitalio-dashboard` registry item from Watermelon UI
 - [x] Adapt app shell & sidebar navigation with typographic PA monogram
-- [ ] Refactor Dashboard with Capitalio data-first composition
+- [x] Refactor Dashboard with Capitalio data-first composition
 - [ ] Import and adapt `integrations-2` for Connectors
 - [ ] Refactor Today, Calendar, and Settings pages
 - [ ] Import and adapt `landing-01` & `hero-8` (Landing hero & showcase)
