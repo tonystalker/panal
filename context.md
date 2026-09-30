@@ -303,5 +303,21 @@ None in application code yet. Process note: running `git` from `panal` initially
 - Custom metrics immediately integrate with Recharts visualizations and are selectable in dashboard widget creation and configuration dialogs.
 - Adheres strictly to `UI.md`: hairline borders, near-black dark surfaces, acid-lime accent, tabular numbers, and clean micro-interactions.
 
+---
+
+### 2026-10-01 — Import Watermelon Capitalio Dashboard Registry Item
+
+**What:**
+- Installed `https://registry.watermelon.sh/r/capitalio-dashboard.json` via shadcn CLI.
+- Added dependencies: `@base-ui/react`, adjusted `recharts` compatibility.
+- Added Shadcn UI primitives: `avatar.tsx`, `dropdown-menu.tsx`, `separator.tsx`, `sheet.tsx`, `sidebar.tsx`, `skeleton.tsx`, `tooltip.tsx`, and `hooks/use-mobile.ts`.
+- Imported reference dashboard component suite into `components/watermelon/capitalio-dashboard/` for compositional reference (sidebar, topbar, navigation, data, dashboard layout).
+- Updated `.gitignore` to strictly exclude prompt specification files.
+
+**How:**
+- Imported in a dedicated, isolated commit prior to adaptation per `personal-ui-refactor.md`.
+- Verified compilation and types with `npm run typecheck`.
+
+
 
 

@@ -15,7 +15,24 @@ This file tracks **progress**. `context.md` tracks **how it was done** (changelo
 - [x] Milestone 0 — product spec, schema, export format
 - [x] Milestone 1 — offline personal tracker (core PWA)
 - [x] Milestone 2 — GitHub connector
-- [~] Milestone 3 — LeetCode + chart customization (in progress)
+- [x] Milestone 3 — LeetCode + chart customization
+- [~] Milestone UI & Landing — Watermelon UI & Capitalio / Landing 01 Refactor (in progress)
+
+---
+
+## Milestone UI & Landing — Watermelon UI & Capitalio / Landing 01 Refactor
+
+- [x] Import `capitalio-dashboard` registry item from Watermelon UI
+- [ ] Adapt app shell & sidebar navigation with typographic PA monogram
+- [ ] Refactor Dashboard with Capitalio data-first composition
+- [ ] Import and adapt `integrations-2` for Connectors
+- [ ] Refactor Today, Calendar, and Settings pages
+- [ ] Import and adapt `landing-01` & `hero-8` (Landing hero & showcase)
+- [ ] Import and adapt `feature-3` & scroll-driven product story
+- [ ] Import and adapt `cta-4`, privacy section, and footer
+- [ ] Import and adapt `auth-01` & `error-3` (Auth shell + error page)
+- [ ] Responsive polish, accessibility, unit tests, and documentation
+
 
 ---
 
