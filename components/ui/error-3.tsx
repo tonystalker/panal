@@ -21,7 +21,8 @@ export default function ErrorPage() {
             >
               404
             </h1>
-            <motion.h1
+            <motion.span
+              aria-hidden="true"
               animate={{ x: [-3, 3, -3], opacity: [0.8, 1, 0.8] }}
               transition={{
                 duration: 0.15,
@@ -32,8 +33,9 @@ export default function ErrorPage() {
               style={{ clipPath: "polygon(0 0, 100% 0, 100% 45%, 0 45%)" }}
             >
               404
-            </motion.h1>
-            <motion.h1
+            </motion.span>
+            <motion.span
+              aria-hidden="true"
               animate={{ x: [3, -3, 3], opacity: [0.8, 1, 0.8] }}
               transition={{
                 duration: 0.25,
@@ -46,10 +48,13 @@ export default function ErrorPage() {
               }}
             >
               404
-            </motion.h1>
-            <h1 className="absolute inset-0 text-8xl font-black tracking-tighter text-white select-none md:text-[10rem]">
+            </motion.span>
+            <span
+              aria-hidden="true"
+              className="absolute inset-0 text-8xl font-black tracking-tighter text-white select-none md:text-[10rem]"
+            >
               404
-            </h1>
+            </span>
           </motion.div>
 
           <motion.div

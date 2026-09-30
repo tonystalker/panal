@@ -181,6 +181,7 @@ export function Auth1({
                     key={provider.name}
                     variant="outline"
                     type="button"
+                    aria-label={provider.name}
                     className="bg-muted h-10 gap-1.5 border-0 text-xs font-medium shadow-xs"
                     onClick={provider.onClick}
                   >

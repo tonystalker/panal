@@ -91,7 +91,7 @@ function TodayContent() {
   const { data: log } = useQuery({
     queryKey: ["dailyLog", dateKey],
     queryFn: () => getOrCreateDailyLog(dateKey, tz),
-    enabled: !!dateKey && !!tz,
+    enabled: !!profile && !!dateKey && !!tz,
   });
 
   // Current day tasks

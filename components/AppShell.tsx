@@ -46,12 +46,10 @@ export function AppShell({ children }: AppShellProps) {
   const currentTitle = currentItem?.label ?? "Personal Analytics";
 
   // Public landing, auth, legal, and error routes render directly without dashboard sidebar
-  const isDashboardRoute =
-    pathname.startsWith("/today") ||
-    pathname.startsWith("/calendar") ||
-    pathname.startsWith("/dashboard") ||
-    pathname.startsWith("/connectors") ||
-    pathname.startsWith("/settings");
+  const DASHBOARD_ROUTES = ["/today", "/calendar", "/dashboard", "/connectors", "/settings"];
+  const isDashboardRoute = DASHBOARD_ROUTES.some(
+    (r) => pathname === r || pathname.startsWith(`${r}/`)
+  );
 
   if (!isDashboardRoute) {
     return (

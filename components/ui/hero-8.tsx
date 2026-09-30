@@ -1,3 +1,5 @@
+"use client";
+
 import { useState, type ReactNode } from 'react';
 import { AnimatePresence, motion, type Variants } from 'motion/react';
 import { FaBars, FaChevronDown, FaPlay, FaXmark } from 'react-icons/fa6';
