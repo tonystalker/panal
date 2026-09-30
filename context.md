@@ -475,3 +475,19 @@ None in application code yet. Process note: running `git` from `panal` initially
 
 **How:**
 - Verified with `npm run typecheck`, `npm run lint`, and `npm test` (all 93 tests passing).
+
+---
+
+### 2026-10-01 — Add Logout Button Accessible Name, Fix Y-Axis Tick Formatting & Theme Icon Colors
+
+**What:**
+- `components/watermelon/capitalio-dashboard/components/capitalio/sidebar.tsx`:
+  - Added `aria-label="Log out"` to the icon-only logout button for screen reader accessibility.
+- `components/watermelon/capitalio-dashboard/components/capitalio/analytics-page.tsx`:
+  - Changed `tickFormatter` from appending `.0K` (which produced `2.5.0K` on fractional values) to `${Number(value).toFixed(1)}K`.
+- `components/ui/integrations-2.tsx`:
+  - Replaced hard-coded `text-white` with `text-muted-foreground` in the second logo loop so `currentColor` SVGs remain visible in both dark and light modes.
+
+**How:**
+- Verified with `npm run typecheck`, `npm run lint`, and `npm test` (all 93 tests passing).
+
