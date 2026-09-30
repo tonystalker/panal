@@ -109,9 +109,9 @@ function TodayContent() {
   });
 
   // Previous operational day query (for unfinished task shortcut banner on Today)
-  const { data: prevLog } = useQuery({
+  const { data: prevLog = null } = useQuery({
     queryKey: ["dailyLog", prevWorkdayKey],
-    queryFn: () => getDailyLogByDate(prevWorkdayKey),
+    queryFn: async () => (await getDailyLogByDate(prevWorkdayKey)) ?? null,
     enabled: isCurrentOperationalToday && !!prevWorkdayKey,
   });
 

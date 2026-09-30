@@ -48,8 +48,9 @@ export async function getOrCreateProfile(timezone?: string): Promise<UserProfile
   return profile;
 }
 
-export async function getDailyLogByDate(dateKey: string): Promise<DailyLog | undefined> {
-  return db.dailyLogs.where("date").equals(dateKey).and((l) => l.deletedAt === null).first();
+export async function getDailyLogByDate(dateKey: string): Promise<DailyLog | null> {
+  const log = await db.dailyLogs.where("date").equals(dateKey).and((l) => l.deletedAt === null).first();
+  return log ?? null;
 }
 
 export async function updateProfile(patch: Partial<UserProfile>): Promise<void> {
