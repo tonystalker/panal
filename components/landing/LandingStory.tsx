@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { CheckCircle2Icon, GitCommitIcon, CalendarIcon, LineChartIcon, ShieldCheckIcon } from "lucide-react";
+import { CheckCircle2Icon, ShieldCheckIcon } from "lucide-react";
 
 const CHAPTERS = [
   {

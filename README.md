@@ -33,39 +33,62 @@ npm run test:e2e     # E2E tests (Playwright)
 npm run format       # Prettier
 ```
 
-## Pages
+## Routes
 
-| Route | Purpose |
-|-------|---------|
-| `/today` | Plan tasks, log quantities, enter manual metrics |
-| `/dashboard` | Charts over selectable date ranges |
-| `/calendar` | Monthly grid, streaks, daily summaries |
-| `/connectors` | Connect GitHub and LeetCode (Milestone 2) |
-| `/settings` | Timezone, export, encrypted backup, delete data |
+| Route | Purpose | Access model |
+|-------|---------|--------------|
+| `/` | Public landing page (Hero-8, Feature-3 story, CTA-4) | Public |
+| `/today` | Plan tasks, log quantities, enter custom & manual metrics | Local app |
+| `/dashboard` | Capitalio data-first overview strip & primary analysis charts | Local app |
+| `/calendar` | Monthly grid, streaks, daily summaries, date navigation | Local app |
+| `/connectors` | Integrations-2 provider panels (GitHub, LeetCode) | Local app |
+| `/settings` | Preferences, workday cutoff, encrypted backup, data wipe | Local app |
+| `/login` | Account login visual shell with prominent local bypass | Public / optional |
+| `/signup` | Early-access sync registration with "Use locally" bypass | Public / optional |
+| `/privacy` | Complete privacy promise & local-first architecture details | Public |
+| `/app` | Convenient redirection to `/today` | Shortcut |
+| `/*` (404) | Branded Swiss-style 404 recovery page (Error-3) | Public |
 
-## Local data
+## Visual Architecture & Watermelon Components
 
-All data is stored in IndexedDB via Dexie. Schema is in [`lib/db.ts`](lib/db.ts). Repositories are in [`lib/repositories.ts`](lib/repositories.ts).
+The interface adapts composition references from Watermelon UI with pure Swiss editorial aesthetics:
+- **Dashboard Composition**: Adapted from Watermelon Capitalio with a 4-metric overview strip, dominant primary analysis chart, and secondary widgets.
+- **Landing Page Composition**: Adapted from Watermelon Landing 01:
+  - `Hero-8` (`components/landing/LandingHero.tsx`) — 3D perspective dashboard staging, fine-pointer tilt parallax, and truthful trust strip.
+  - `Feature-3` (`components/landing/LandingStory.tsx` & `LandingFeatures.tsx`) — 3-chapter sticky scroll story and 5 core benefits grid.
+  - `CTA-4` (`components/landing/LandingCTA.tsx`) — high-contrast closing conversion container ("Start with one honest day").
+  - `Auth-01` (`components/ui/auth-01.tsx`, `app/login`, `app/signup`) — split-panel authentication shells with local bypass.
+  - `Error-3` (`components/ui/error-3.tsx`, `app/not-found.tsx`) — restrained recovery route.
+  - Editorial photograph (`public/images/landing/editorial-desk.jpg`) — dark workspace with subtle film grain and edge fade.
 
-## Encrypted backup
+## Local-First Auth Boundary
 
-Settings → **Export .panal-backup** — creates an AES-GCM encrypted file.  
-Settings → **Import backup** — validates schema, confirms before overwriting.
+Personal Analytics operates without a central authentication server. The `lib/auth.tsx` module provides an `AuthAdapter` interface:
+```ts
+export interface AuthAdapter {
+  signUp(email: string, password: string): Promise<AuthResponse>;
+  login(email: string, password: string): Promise<AuthResponse>;
+  logout(): Promise<void>;
+  getSession(): Promise<UserSession | null>;
+  requestPasswordReset(email: string): Promise<AuthResponse>;
+}
+```
+All personal tracking logs remain exclusively in browser IndexedDB. No fake cloud authentication is claimed.
 
-The passphrase never leaves your device. Losing both the file and the passphrase is intentionally unrecoverable.
+## Local data & Encryption
 
-## PWA / offline
+All data is stored in IndexedDB via Dexie v1 (`lib/db.ts`).
+- **Encrypted backup**: Settings → **Export .panal-backup** (PBKDF2 + AES-GCM 256-bit encryption).
+- **Connector credentials**: Stored locally in a Web Crypto AES-GCM vault with browser-direct API calls.
 
-The app registers a service worker on first load. After that it loads fully offline. Install as a PWA from the browser's address bar.
+## Environment Variables
 
-## Vercel deployment
-
-Push to `main` → auto-deploys on Vercel. No environment variables needed for V1 (no server personal data).
-
+No mandatory environment variables are required for offline or local-first use.
+Optional configuration for GitHub device flow OAuth proxy:
 ```bash
-vercel --prod
+GITHUB_CLIENT_ID=your_github_oauth_client_id
 ```
 
-## Privacy
+## Privacy Promise
 
-Version 1 stores personal data only on this device. No account, no server personal data. See [docs/product-brief.md](docs/product-brief.md) for the full promise.
+Version 1 stores personal data only on this device. No account required, no server personal data, no analytics trackers. See [`/privacy`](app/privacy/page.tsx) or [`docs/product-brief.md`](docs/product-brief.md) for the full architecture.

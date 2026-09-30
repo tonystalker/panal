@@ -36,7 +36,6 @@ import {
 import { type CustomMetric } from "@/lib/db";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { ChartWidget } from "@/components/ChartWidget";
-import { MetricValue } from "@/components/ui/MetricValue";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { PlusIcon, RotateCcwIcon, FlameIcon, XIcon, Trash2Icon } from "lucide-react";
 import Link from "next/link";

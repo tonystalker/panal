@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "motion/react";
+import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 
 export default function ErrorPage() {
@@ -75,7 +76,7 @@ export default function ErrorPage() {
             transition={{ duration: 0.5, delay: 0.6 }}
             className="flex flex-col items-center justify-center gap-4 pt-4 sm:flex-row"
           >
-            <a
+            <Link
               href="/"
               className="group relative overflow-hidden bg-lime-500 px-8 py-4 text-sm font-bold tracking-widest text-black uppercase transition-all duration-300 hover:scale-105"
             >
@@ -84,7 +85,7 @@ export default function ErrorPage() {
                 <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-1" />
                 <span>Initialize Reboot</span>
               </div>
-            </a>
+            </Link>
 
             <button
               onClick={() => window.location.reload()}
