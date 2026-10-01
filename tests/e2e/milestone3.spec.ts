@@ -126,7 +126,7 @@ test.describe("Connectors — LeetCode panel", () => {
 
   test("LeetCode panel is visible", async ({ page }) => {
     await expect(page.locator("h1")).toContainText("Connectors");
-    await expect(page.locator("text=LeetCode")).toBeVisible();
+    await expect(page.getByRole("heading", { name: "LeetCode" })).toBeVisible();
   });
 
   test("LeetCode connect button is disabled without username", async ({ page }) => {
@@ -189,7 +189,7 @@ test.describe("Connectors — LeetCode panel", () => {
 test.describe("Connectors — GitHub panel", () => {
   test("GitHub panel is visible with connect button", async ({ page }) => {
     await page.goto("/connectors");
-    await expect(page.locator("text=GitHub")).toBeVisible();
+    await expect(page.getByRole("heading", { name: "GitHub" })).toBeVisible();
     await expect(page.locator("#connector-connect-github")).toBeVisible();
   });
 });

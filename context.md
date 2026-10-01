@@ -575,8 +575,27 @@ None in application code yet. Process note: running `git` from `panal` initially
   - `npm run lint`: 0 errors, 0 warnings.
   - `npm run typecheck`: 0 errors.
   - `npm run test`: 6 test files, 98/98 unit tests passing.
-  - `npm run build`: Clean production build with all 16 static/dynamic routes.
   - `npx playwright test tests/e2e/landing-production.spec.ts`: 12/12 passing against production server.
+
+### 2026-10-01 — Fix LeetCode Connection and GraphQL Fetch Error
+
+- **Root Causes Identified**:
+  1. *Schema mismatch*: `lib/connectors/leetcode.ts` queried `userCalendar(username: $username)` at the root `Query` level, which does not exist in LeetCode's GraphQL schema and caused LeetCode to return `400 Bad Request` (`Cannot query field "userCalendar" on type "Query"`).
+  2. *Browser CORS & forbidden headers*: Direct browser fetches to `https://leetcode.com/graphql` failed with `TypeError: Failed to fetch` because LeetCode's API does not emit CORS headers (`Access-Control-Allow-Origin`) for arbitrary origins, and browsers prohibit programmatically setting the required `Referer: https://leetcode.com` header.
+- **Solution & Implementation**:
+  - `app/api/leetcode/route.ts`: Created a server-side Next.js route handler proxy with Zod payload validation (`username`, `limit`) that dispatches the request to `https://leetcode.com/graphql` with server-side `Referer: https://leetcode.com` and a browser `User-Agent`.
+  - `lib/connectors/leetcode.ts`:
+    - Updated `RECENT_SUBMISSIONS_QUERY` to place `submissionCalendar` inside `matchedUser(username: $username)`.
+    - Updated `fetchLeetCodeData` to route through `/api/leetcode` in browser contexts and combine daily counts from both `submissionCalendar` (full historical activity) and `recentSubmissionList`.
+    - Updated `validateToken` to verify username existence against LeetCode prior to saving connections.
+  - `app/connectors/page.tsx`: Updated `connectMut` to validate usernames through `leetcodeAdapter.validateToken(uname)` before saving to the local encrypted vault.
+  - `tests/e2e/milestone3.spec.ts`: Fixed strict-mode locator ambiguities on `page.getByRole("heading", { name: "LeetCode" })` and `GitHub`.
+- **Verification**:
+  - Tested `/api/leetcode` with real LeetCode profiles (`lee215`, `tourist`); verified `200 OK` with full submissions and calendar breakdowns.
+  - Tested invalid usernames (`this_user_does_not_exist_xyz9876`); verified clean error surface.
+  - Ran Playwright E2E suite (`tests/e2e/milestone3.spec.ts`): 15/15 passed.
+  - Unit tests: 98/98 passed; typecheck: 0 errors; lint: 0 errors.
+
 
 
 

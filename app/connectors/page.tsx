@@ -444,23 +444,27 @@ function LeetCodePanel() {
       const uname = username.trim();
       if (!uname) throw new Error("Enter a LeetCode username.");
 
-      const settings: LeetCodeSettings = { username: uname, syncDays };
+      // Validate username with LeetCode before storing connection
+      const validatedUsername = await leetcodeAdapter.validateToken(uname);
+
+      const settings: LeetCodeSettings = { username: validatedUsername, syncDays };
+      const token = uname === "mock" ? "mock" : validatedUsername;
       await vaultStore(
         "leetcode",
-        process.env.NODE_ENV === "development" ? "mock" : uname,
+        token,
         settings as unknown as Record<string, unknown>,
-        `LeetCode (@${uname})`,
+        `LeetCode (@${validatedUsername})`,
       );
 
       const to = new Date().toISOString().slice(0, 10);
       const from = format(subDays(parseISO(to), syncDays - 1), "yyyy-MM-dd");
-      const token = await vaultRead("leetcode");
-      const result = await leetcodeAdapter.sync(settings, token, from, to);
+      const vaultToken = await vaultRead("leetcode");
+      const result = await leetcodeAdapter.sync(settings, vaultToken, from, to);
       await persistSyncResult("leetcode", result);
 
       qc.invalidateQueries({ queryKey: ["connector", "leetcode"] });
       qc.invalidateQueries({ queryKey: ["metricEvents"] });
-      showSuccess(`Connected as @${uname}`);
+      showSuccess(`Connected as @${validatedUsername}`);
       setUsername("");
     },
     onError: (e: Error) => setError(e.message),
@@ -477,7 +481,8 @@ function LeetCodePanel() {
       await db.connectorConnections.update(conn.id, { status: "syncing", updatedAt: nowISO() });
       qc.invalidateQueries({ queryKey: ["connector", "leetcode"] });
 
-      const result = await leetcodeAdapter.sync(settings, settings.username, from, to);
+      const vaultToken = (await vaultRead("leetcode").catch(() => null)) ?? settings.username;
+      const result = await leetcodeAdapter.sync(settings, vaultToken, from, to);
       const counts = await persistSyncResult("leetcode", result);
       return { counts, result };
     },

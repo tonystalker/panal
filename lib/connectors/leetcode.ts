@@ -41,16 +41,13 @@ interface RecentSubmission {
   lang: string;
 }
 
-interface UserCalendar {
-  submissionCalendar: string; // JSON string: { [timestamp: string]: number }
-}
-
 interface LCProfileResponse {
-  data: {
-    recentSubmissionList: RecentSubmission[] | null;
-    userCalendar: UserCalendar | null;
-    matchedUser: {
-      submitStats: {
+  data?: {
+    recentSubmissionList?: RecentSubmission[] | null;
+    matchedUser?: {
+      username: string;
+      submissionCalendar?: string | null;
+      submitStats?: {
         acSubmissionNum: {
           difficulty: string;
           count: number;
@@ -149,10 +146,9 @@ const RECENT_SUBMISSIONS_QUERY = `
       statusDisplay
       lang
     }
-    userCalendar(username: $username) {
-      submissionCalendar
-    }
     matchedUser(username: $username) {
+      username
+      submissionCalendar
       submitStats {
         acSubmissionNum {
           difficulty
@@ -175,17 +171,29 @@ async function fetchLeetCodeData(
 ): Promise<{ events: MetricEventInput[]; latencyMs: number }> {
   const t0 = Date.now();
 
-  const res = await fetch(LC_GRAPHQL_URL, {
+  const isBrowser = typeof window !== "undefined";
+  const url = isBrowser ? "/api/leetcode" : LC_GRAPHQL_URL;
+
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+  };
+  if (!isBrowser) {
+    headers["Referer"] = "https://leetcode.com";
+    headers["User-Agent"] =
+      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36";
+  }
+
+  const body = isBrowser
+    ? JSON.stringify({ username, limit: 100 })
+    : JSON.stringify({
+        query: RECENT_SUBMISSIONS_QUERY,
+        variables: { username, limit: 100 },
+      });
+
+  const res = await fetch(url, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      // LeetCode's public endpoint requires Referer
-      Referer: "https://leetcode.com",
-    },
-    body: JSON.stringify({
-      query: RECENT_SUBMISSIONS_QUERY,
-      variables: { username, limit: 100 },
-    }),
+    headers,
+    body,
   });
 
   const latencyMs = Date.now() - t0;
@@ -200,29 +208,37 @@ async function fetchLeetCodeData(
     throw new Error(`LeetCode GraphQL error: ${json.errors[0].message}`);
   }
 
-  if (!json.data.matchedUser) {
+  if (!json.data?.matchedUser) {
     throw new Error(`LeetCode user "${username}" not found or profile is private.`);
   }
 
   const submissions = json.data.recentSubmissionList ?? [];
-
-  // Aggregate accepted submissions by date
   const byDate = new Map<string, { easy: number; medium: number; hard: number }>();
 
+  // Layer 1: submissionCalendar covering all days in range
+  if (json.data.matchedUser.submissionCalendar) {
+    try {
+      const cal = JSON.parse(json.data.matchedUser.submissionCalendar) as Record<string, number>;
+      for (const [epochSecStr, count] of Object.entries(cal)) {
+        const dateStr = epochToDateStr(parseInt(epochSecStr, 10));
+        if (dateStr >= fromDate && dateStr <= toDate) {
+          byDate.set(dateStr, { easy: count, medium: 0, hard: 0 });
+        }
+      }
+    } catch {
+      // Non-fatal if calendar parsing encounters an issue
+    }
+  }
+
+  // Layer 2: recentSubmissionList accepted count verification
   for (const sub of submissions) {
     if (sub.statusDisplay !== "Accepted") continue;
     const dateStr = epochToDateStr(parseInt(sub.timestamp, 10));
     if (dateStr < fromDate || dateStr > toDate) continue;
 
     if (!byDate.has(dateStr)) {
-      byDate.set(dateStr, { easy: 0, medium: 0, hard: 0 });
+      byDate.set(dateStr, { easy: 1, medium: 0, hard: 0 });
     }
-    // Note: LeetCode's recentSubmissionList doesn't include difficulty directly.
-    // We record accepted count; difficulty breakdown requires the calendar + problem metadata.
-    // For V1, we store total accepted per day. Difficulty breakdown stays as 0 until a
-    // more detailed endpoint is available. The manual DSA entry remains the fallback.
-    const day = byDate.get(dateStr)!;
-    day.easy += 1; // approximation: count all as easy for now
   }
 
   const events: MetricEventInput[] = [];
@@ -249,10 +265,38 @@ export const leetcodeAdapter: ConnectorAdapter<LeetCodeSettings> = {
   id: "leetcode",
 
   async validateToken(_token: string): Promise<string> {
-    // LeetCode doesn't use a token — username is all we need.
-    // This method is called with the username stored in settings.
-    // Return the username as the "authenticated identity".
-    return _token; // token = username for this connector
+    const username = _token.trim();
+    if (!username) throw new Error("Enter a LeetCode username.");
+    if (username === "mock") return "mock";
+
+    const isBrowser = typeof window !== "undefined";
+    const url = isBrowser ? "/api/leetcode" : LC_GRAPHQL_URL;
+    const headers: Record<string, string> = { "Content-Type": "application/json" };
+    if (!isBrowser) {
+      headers["Referer"] = "https://leetcode.com";
+      headers["User-Agent"] =
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36";
+    }
+
+    const body = isBrowser
+      ? JSON.stringify({ username, limit: 1 })
+      : JSON.stringify({
+          query: RECENT_SUBMISSIONS_QUERY,
+          variables: { username, limit: 1 },
+        });
+
+    const res = await fetch(url, { method: "POST", headers, body });
+    if (!res.ok) {
+      throw new Error(`LeetCode connection error: ${res.status} ${res.statusText}`);
+    }
+    const json = (await res.json()) as LCProfileResponse;
+    if (json.errors?.length) {
+      throw new Error(`LeetCode error: ${json.errors[0].message}`);
+    }
+    if (!json.data?.matchedUser) {
+      throw new Error(`LeetCode user "${username}" not found or profile is private.`);
+    }
+    return json.data.matchedUser.username;
   },
 
   async sync(
@@ -262,7 +306,7 @@ export const leetcodeAdapter: ConnectorAdapter<LeetCodeSettings> = {
     toDate: string,
   ): Promise<SyncResult> {
     const fetchedAt = new Date().toISOString();
-    const isDev = process.env.NODE_ENV === "development" && token === "mock";
+    const isDev = token === "mock";
 
     if (isDev) {
       return buildMockedLeetCodeResult(fromDate, toDate, fetchedAt, settings.username || "mockuser");
@@ -282,3 +326,4 @@ export const leetcodeAdapter: ConnectorAdapter<LeetCodeSettings> = {
     }
   },
 };
+
