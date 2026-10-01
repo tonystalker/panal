@@ -82,13 +82,13 @@ export default function SignupPage() {
           <div className="mb-8">
             <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full border border-white/10 bg-[#121214] text-xs font-mono text-[#a1a1aa] mb-4">
               <span className="size-1.5 rounded-full bg-[#a3ff12]" />
-              Account Sync Preparation
+              Optional Account Registration
             </div>
             <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight text-white mb-2">
               Create your account
             </h1>
             <p className="text-sm text-[#a1a1aa] leading-relaxed">
-              Panal works completely offline without an account. Registering prepares your identity for future encrypted sync early access.
+              Panal works completely offline without an account. Registering is optional for future updates.
             </p>
           </div>
 
@@ -215,7 +215,7 @@ export default function SignupPage() {
               disabled={loading}
               className="w-full bg-white text-[#0a0a0b] hover:bg-white/90 font-medium text-xs h-10 transition-colors"
             >
-              {loading ? "Registering..." : "Join sync early access"}
+              {loading ? "Registering..." : "Register account"}
             </Button>
           </form>
 
@@ -268,7 +268,7 @@ export default function SignupPage() {
           <div className="space-y-3 pt-2">
             <div className="flex items-center gap-3 text-xs text-zinc-300 font-mono">
               <Database className="size-4 text-[#a3ff12] shrink-0" />
-              <span>Zero-knowledge client: code runs in your browser</span>
+              <span>Local client: code runs in your browser</span>
             </div>
             <div className="flex items-center gap-3 text-xs text-zinc-300 font-mono">
               <ShieldCheck className="size-4 text-[#a3ff12] shrink-0" />

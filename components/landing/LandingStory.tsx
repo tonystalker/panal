@@ -32,9 +32,15 @@ const CHAPTERS = [
 
 export function LandingStory() {
   const [activeChapter, setActiveChapter] = useState(0);
+  const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
   const chapterRefs = useRef<(HTMLDivElement | null)[]>([]);
 
   useEffect(() => {
+    const mqMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+    setPrefersReducedMotion(mqMotion.matches);
+    const motionHandler = (e: MediaQueryListEvent) => setPrefersReducedMotion(e.matches);
+    mqMotion.addEventListener("change", motionHandler);
+
     const observers = chapterRefs.current.map((ref, idx) => {
       if (!ref) return null;
       const observer = new IntersectionObserver(
@@ -52,6 +58,7 @@ export function LandingStory() {
     });
 
     return () => {
+      mqMotion.removeEventListener("change", motionHandler);
       observers.forEach((obs) => obs?.disconnect());
     };
   }, []);
@@ -75,64 +82,80 @@ export function LandingStory() {
         {/* Desktop Sticky Showcase Layout */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
           {/* Left Column: Narrative Chapters (5 cols) */}
-          <div className="lg:col-span-5 flex flex-col gap-24 py-8">
-            {CHAPTERS.map((ch, idx) => (
-              <div
-                key={ch.step}
-                ref={(el) => {
-                  chapterRefs.current[idx] = el;
-                }}
-                className={`scroll-mt-36 transition-all duration-300 ${
-                  activeChapter === idx
-                    ? "opacity-100"
-                    : "opacity-75 hover:opacity-100"
-                }`}
-              >
-                <div className="flex items-center gap-3 mb-2 font-mono text-xs">
-                  <span
-                    className={
-                      activeChapter === idx ? "text-accent font-bold" : "text-zinc-500 font-bold"
-                    }
-                  >
-                    {ch.step}
-                  </span>
-                  <span className="text-border-strong">&mdash;</span>
-                  <span className="text-muted-foreground uppercase tracking-widest text-[10px]">
-                    {ch.eyebrow}
-                  </span>
-                </div>
-                <h3
-                  className={`text-xl sm:text-2xl font-semibold tracking-tight mb-3 transition-colors ${
-                    activeChapter === idx ? "text-foreground" : "text-zinc-200"
-                  }`}
+          <div className="lg:col-span-5 flex flex-col gap-24 py-4 md:py-8">
+            {CHAPTERS.map((ch, idx) => {
+              const isActive = activeChapter === idx;
+              return (
+                <div
+                  key={ch.step}
+                  ref={(el) => {
+                    chapterRefs.current[idx] = el;
+                  }}
+                  className="scroll-mt-32 md:scroll-mt-40 transition-colors duration-200"
                 >
-                  {ch.title}
-                </h3>
-                <p
-                  className={`text-sm leading-relaxed mb-4 transition-colors ${
-                    activeChapter === idx ? "text-muted-foreground" : "text-zinc-400"
-                  }`}
-                >
-                  {ch.description}
-                </p>
-                <div className="inline-flex items-center gap-1.5 text-xs font-mono text-subtle-foreground bg-surface-muted/60 px-2.5 py-1 rounded border border-border/40">
-                  <span
-                    className={`size-1.5 rounded-full ${
-                      activeChapter === idx ? "bg-accent" : "bg-zinc-600"
+                  <div className="flex items-center gap-3 mb-2 font-mono text-xs">
+                    <span
+                      className={`font-bold transition-colors ${
+                        isActive ? "text-accent" : "text-zinc-400"
+                      }`}
+                    >
+                      {ch.step}
+                    </span>
+                    <span className="text-border-strong">&mdash;</span>
+                    <span
+                      className={`uppercase tracking-widest text-[10px] transition-colors ${
+                        isActive ? "text-muted-foreground font-semibold" : "text-zinc-400"
+                      }`}
+                    >
+                      {ch.eyebrow}
+                    </span>
+                  </div>
+
+                  <h3
+                    className={`text-xl sm:text-2xl font-semibold tracking-tight mb-3 transition-colors ${
+                      isActive ? "text-foreground" : "text-zinc-200"
                     }`}
-                  />
-                  <span>{ch.detail}</span>
+                  >
+                    {ch.title}
+                  </h3>
+
+                  <p
+                    className={`text-sm leading-relaxed mb-4 transition-colors ${
+                      isActive ? "text-foreground/90" : "text-zinc-300"
+                    }`}
+                  >
+                    {ch.description}
+                  </p>
+
+                  <div
+                    className={`inline-flex items-center gap-1.5 text-xs font-mono px-2.5 py-1 rounded border transition-colors ${
+                      isActive
+                        ? "bg-surface-muted/90 border-accent/30 text-foreground"
+                        : "bg-surface-muted/50 border-border/60 text-zinc-400"
+                    }`}
+                  >
+                    <span
+                      className={`size-1.5 rounded-full transition-colors ${
+                        isActive ? "bg-accent" : "bg-zinc-500"
+                      }`}
+                    />
+                    <span>{ch.detail}</span>
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
 
           {/* Right Column: Sticky Transforming Visual Frame (7 cols) */}
-          <div className="lg:col-span-7 lg:sticky lg:top-28">
+          <div className="lg:col-span-7 lg:sticky lg:top-28 lg:self-start">
             <div className="rounded-2xl border border-border bg-surface p-6 shadow-2xl relative overflow-hidden min-h-[380px] flex flex-col justify-center">
               {/* Dynamic Mockup based on activeChapter */}
               {activeChapter === 0 && (
-                <div className="space-y-4 animate-in fade-in duration-300">
+                <div
+                  className={`space-y-4 ${
+                    prefersReducedMotion ? "" : "animate-in fade-in duration-200"
+                  }`}
+                >
                   <div className="flex items-center justify-between pb-3 border-b border-border/60">
                     <div>
                       <span className="text-[11px] font-mono text-muted-foreground uppercase">
@@ -182,18 +205,22 @@ export function LandingStory() {
               )}
 
               {activeChapter === 1 && (
-                <div className="space-y-4 animate-in fade-in duration-300">
+                <div
+                  className={`space-y-4 ${
+                    prefersReducedMotion ? "" : "animate-in fade-in duration-200"
+                  }`}
+                >
                   <div className="flex items-center justify-between pb-3 border-b border-border/60">
                     <div>
                       <span className="text-[11px] font-mono text-muted-foreground uppercase">
-                        Connector Integrations
+                        Supported Connectors
                       </span>
                       <h4 className="text-base font-semibold text-foreground">
                         Local Credential Vault
                       </h4>
                     </div>
                     <span className="px-2.5 py-1 rounded bg-surface-muted border border-border text-xs font-mono text-muted-foreground flex items-center gap-1.5">
-                      <ShieldCheckIcon className="size-3 text-accent" />
+                      <ShieldCheckIcon className="size-3 text-zinc-300" />
                       AES-GCM local
                     </span>
                   </div>
@@ -233,7 +260,11 @@ export function LandingStory() {
               )}
 
               {activeChapter === 2 && (
-                <div className="space-y-4 animate-in fade-in duration-300">
+                <div
+                  className={`space-y-4 ${
+                    prefersReducedMotion ? "" : "animate-in fade-in duration-200"
+                  }`}
+                >
                   <div className="flex items-center justify-between pb-3 border-b border-border/60">
                     <div>
                       <span className="text-[11px] font-mono text-muted-foreground uppercase">

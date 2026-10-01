@@ -28,14 +28,14 @@ export function LandingCTA() {
             <Link
               href="/today"
               id="cta-open-app-btn"
-              className="btn btn-primary h-11 px-7 text-sm font-semibold flex items-center justify-center gap-2 w-full sm:w-auto shadow-lg shadow-accent/15"
+              className="btn btn-primary h-11 px-7 text-sm font-semibold flex items-center justify-center gap-2 w-full sm:w-auto shadow-lg shadow-accent/15 focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-none"
             >
               <span>Open Panal</span>
               <ArrowRightIcon className="size-4" />
             </Link>
             <Link
               href="/privacy"
-              className="btn btn-ghost h-11 px-5 text-sm font-medium text-muted-foreground hover:text-foreground w-full sm:w-auto border border-border/80"
+              className="btn btn-ghost h-11 px-5 text-sm font-medium text-muted-foreground hover:text-foreground w-full sm:w-auto border border-border/80 focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-none"
             >
               Read the privacy promise
             </Link>

@@ -12,10 +12,13 @@ import {
   TrendingUpIcon,
 } from "lucide-react";
 
+const RESTING_ROTATE = { x: 1.8, y: -1.4 };
+const RESTING_TRANSLATE = { x: 0, y: 0 };
+
 export function LandingHero() {
   const containerRef = useRef<HTMLDivElement>(null);
-  const [rotate, setRotate] = useState({ x: 0, y: 0 });
-  const [translate, setTranslate] = useState({ x: 0, y: 0 });
+  const [rotate, setRotate] = useState(RESTING_ROTATE);
+  const [translate, setTranslate] = useState(RESTING_TRANSLATE);
   const [hasFinePointer, setHasFinePointer] = useState(false);
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
 
@@ -39,29 +42,30 @@ export function LandingHero() {
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     if (prefersReducedMotion || !hasFinePointer || !containerRef.current) return;
     const rect = containerRef.current.getBoundingClientRect();
-    const x = e.clientX - rect.left - rect.width / 2;
-    const y = e.clientY - rect.top - rect.height / 2;
-    // Restrained tilt: maximum 2.2 degrees
-    const rotX = -(y / (rect.height / 2)) * 2.2;
-    const rotY = (x / (rect.width / 2)) * 2.2;
-    // Bounded parallax translation: 8-10px
-    const transX = (x / (rect.width / 2)) * 9;
-    const transY = (y / (rect.height / 2)) * 9;
+    const x = (e.clientX - rect.left - rect.width / 2) / (rect.width / 2);
+    const y = (e.clientY - rect.top - rect.height / 2) / (rect.height / 2);
+
+    // Restrained tilt: strictly maximum 2.2 degrees
+    const rotX = -y * 2.2;
+    const rotY = x * 2.2;
+    // Bounded parallax translation: 8-10px maximum
+    const transX = x * 9;
+    const transY = y * 9;
 
     setRotate({ x: rotX, y: rotY });
     setTranslate({ x: transX, y: transY });
   };
 
   const handleMouseLeave = () => {
-    setRotate({ x: 0, y: 0 });
-    setTranslate({ x: 0, y: 0 });
+    setRotate(RESTING_ROTATE);
+    setTranslate(RESTING_TRANSLATE);
   };
 
   return (
     <section id="product" className="relative pt-28 pb-16 md:pt-36 md:pb-24 overflow-hidden scroll-mt-20">
-      {/* Background glow and subtle grid */}
+      {/* Background glow - restrained, soft depth */}
       <div className="absolute inset-0 pointer-events-none -z-10 flex items-center justify-center">
-        <div className="w-[600px] h-[350px] bg-accent/5 blur-[120px] rounded-full" />
+        <div className="w-[500px] h-[300px] bg-accent/[0.04] blur-[140px] rounded-full" />
       </div>
 
       <div className="max-w-6xl mx-auto px-4 sm:px-6 flex flex-col items-center text-center">
@@ -86,7 +90,7 @@ export function LandingHero() {
           <Link
             href="/today"
             id="hero-primary-cta"
-            className="btn btn-primary h-11 px-6 text-sm font-semibold flex items-center justify-center gap-2 w-full sm:w-auto shadow-lg shadow-accent/10"
+            className="btn btn-primary h-11 px-6 text-sm font-semibold flex items-center justify-center gap-2 w-full sm:w-auto shadow-lg shadow-accent/10 focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-none"
           >
             <span>Start locally, it’s free</span>
             <ArrowRightIcon className="size-4" />
@@ -94,14 +98,14 @@ export function LandingHero() {
           <a
             href="#story"
             id="hero-secondary-cta"
-            className="btn btn-ghost h-11 px-5 text-sm font-medium text-muted-foreground hover:text-foreground w-full sm:w-auto border border-border/80"
+            className="btn btn-ghost h-11 px-5 text-sm font-medium text-muted-foreground hover:text-foreground w-full sm:w-auto border border-border/80 focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-none"
           >
-            Explore the product
+            How it works
           </a>
         </div>
 
-        {/* Truthful microcopy */}
-        <p className="text-xs text-subtle-foreground font-mono mb-10 sm:mb-14">
+        {/* Truthful microcopy in primary sans-serif */}
+        <p className="text-xs font-sans text-muted-foreground mb-10 sm:mb-14">
           No account required. Your data stays on your device.
         </p>
 
@@ -110,7 +114,7 @@ export function LandingHero() {
           ref={containerRef}
           onMouseMove={handleMouseMove}
           onMouseLeave={handleMouseLeave}
-          style={{ perspective: 1200 }}
+          style={{ perspective: hasFinePointer && !prefersReducedMotion ? 1200 : "none" }}
           className="w-full max-w-5xl relative cursor-default px-2 sm:px-4"
         >
           <div
@@ -120,7 +124,7 @@ export function LandingHero() {
                   ? `rotateX(${rotate.x}deg) rotateY(${rotate.y}deg) translate3d(${translate.x}px, ${translate.y}px, 0)`
                   : "none",
               transformStyle: "preserve-3d",
-              transition: "transform 0.25s cubic-bezier(0.16, 1, 0.3, 1)",
+              transition: "transform 0.35s cubic-bezier(0.16, 1, 0.3, 1)",
             }}
             className="rounded-2xl border border-border-strong bg-surface/90 shadow-2xl p-4 sm:p-6 backdrop-blur-md relative"
           >
@@ -157,7 +161,7 @@ export function LandingHero() {
                 <div className="space-y-2 text-xs">
                   <div className="flex items-center gap-2 text-foreground font-medium">
                     <CheckCircle2Icon className="size-3.5 text-accent shrink-0" />
-                    <span>Deep work: Core database engine</span>
+                    <span>Deep work: Core architecture</span>
                   </div>
                   <div className="flex items-center gap-2 text-foreground font-medium">
                     <CheckCircle2Icon className="size-3.5 text-accent shrink-0" />
@@ -211,13 +215,16 @@ export function LandingHero() {
               </div>
             </div>
 
-            {/* Floating Plane 1: Connector Badge with foreground translateZ */}
+            {/* Floating Plane 1: Connector Badge with foreground translateZ & small shadow */}
             <div
               style={{
-                transform: hasFinePointer && !prefersReducedMotion ? "translateZ(26px)" : "none",
-                transition: "transform 0.25s cubic-bezier(0.16, 1, 0.3, 1)",
+                transform:
+                  hasFinePointer && !prefersReducedMotion
+                    ? `translateZ(34px) translate3d(${translate.x * 0.4}px, ${translate.y * 0.4}px, 0)`
+                    : "none",
+                transition: "transform 0.35s cubic-bezier(0.16, 1, 0.3, 1)",
               }}
-              className="absolute -top-3 right-4 sm:right-6 hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg border border-border-strong bg-surface-raised shadow-md backdrop-blur-md z-10"
+              className="absolute -top-3 right-4 sm:right-6 hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg border border-border-strong/90 bg-surface-raised/95 shadow-[0_8px_20px_rgba(0,0,0,0.5)] backdrop-blur-md z-10"
             >
               <GitCommitIcon className="size-3.5 text-accent" />
               <span className="text-xs font-mono text-foreground font-medium">
@@ -225,13 +232,16 @@ export function LandingHero() {
               </span>
             </div>
 
-            {/* Floating Plane 2: Privacy Guarantee Badge with foreground translateZ */}
+            {/* Floating Plane 2: Privacy Guarantee Badge with foreground translateZ & small shadow */}
             <div
               style={{
-                transform: hasFinePointer && !prefersReducedMotion ? "translateZ(26px)" : "none",
-                transition: "transform 0.25s cubic-bezier(0.16, 1, 0.3, 1)",
+                transform:
+                  hasFinePointer && !prefersReducedMotion
+                    ? `translateZ(34px) translate3d(${-translate.x * 0.3}px, ${-translate.y * 0.3}px, 0)`
+                    : "none",
+                transition: "transform 0.35s cubic-bezier(0.16, 1, 0.3, 1)",
               }}
-              className="absolute -bottom-3 left-4 sm:left-6 hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg border border-border-strong bg-surface-raised shadow-md backdrop-blur-md z-10"
+              className="absolute -bottom-3 left-4 sm:left-6 hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg border border-border-strong/90 bg-surface-raised/95 shadow-[0_8px_20px_rgba(0,0,0,0.5)] backdrop-blur-md z-10"
             >
               <LockIcon className="size-3.5 text-accent" />
               <span className="text-xs font-mono text-foreground font-medium">
@@ -245,7 +255,7 @@ export function LandingHero() {
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 max-w-3xl w-full mt-16 pt-10 border-t border-border/60">
           <div className="flex items-center justify-center sm:justify-start gap-2.5 text-left">
             <div className="size-8 rounded-lg bg-surface-muted border border-border/80 flex items-center justify-center shrink-0">
-              <ShieldCheckIcon className="size-4 text-accent" />
+              <ShieldCheckIcon className="size-4 text-foreground/80" />
             </div>
             <div>
               <span className="text-xs font-semibold text-foreground block">
@@ -259,7 +269,7 @@ export function LandingHero() {
 
           <div className="flex items-center justify-center sm:justify-start gap-2.5 text-left">
             <div className="size-8 rounded-lg bg-surface-muted border border-border/80 flex items-center justify-center shrink-0">
-              <ZapIcon className="size-4 text-accent" />
+              <ZapIcon className="size-4 text-foreground/80" />
             </div>
             <div>
               <span className="text-xs font-semibold text-foreground block">
@@ -273,7 +283,7 @@ export function LandingHero() {
 
           <div className="flex items-center justify-center sm:justify-start gap-2.5 text-left">
             <div className="size-8 rounded-lg bg-surface-muted border border-border/80 flex items-center justify-center shrink-0">
-              <CheckCircle2Icon className="size-4 text-accent" />
+              <CheckCircle2Icon className="size-4 text-foreground/80" />
             </div>
             <div>
               <span className="text-xs font-semibold text-foreground block">

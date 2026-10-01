@@ -7,9 +7,10 @@ import { Providers } from "./providers";
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://panal.local"),
   title: "Panal — Personal analytics, local-first",
   description:
-    "Private, local-first personal analytics. Track your daily tasks, quantitative targets, and supported services like GitHub and LeetCode — 100% on your device, no account required.",
+    "Private, local-first personal analytics. Track your daily tasks, quantitative targets, and supported services such as GitHub and LeetCode — 100% on your device, no account required.",
   manifest: "/manifest.json",
   appleWebApp: { capable: true, statusBarStyle: "black-translucent", title: "Panal" },
   icons: { icon: "/favicon.ico", apple: "/icon-192.png" },

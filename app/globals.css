@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 /* ────────────────────────────────────────────────────────────────────────── */
-/* Design Tokens — Personal Analytics (Dark-first, Swiss Editorial, Acid-lime)*/
+/* Design Tokens — Panal (Dark-first, Swiss Editorial, Acid-lime)*/
 /* ────────────────────────────────────────────────────────────────────────── */
 :root {
   --background: #09090b;          /* near-black page canvas */

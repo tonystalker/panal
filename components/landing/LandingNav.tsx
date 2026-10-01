@@ -27,7 +27,11 @@ export function LandingNav() {
     >
       <div className="max-w-6xl mx-auto px-4 sm:px-6 flex items-center justify-between">
         {/* Brand Lockup */}
-        <Link href="/" className="flex items-center gap-2.5 group outline-none">
+        <Link
+          href="/"
+          className="flex items-center gap-2.5 group outline-none rounded-md focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-none"
+          aria-label="Panal — Personal analytics, local-first"
+        >
           <AppMonogram size="sm" />
           <div className="flex flex-col text-left">
             <span className="text-sm font-bold tracking-tight text-foreground leading-none group-hover:text-accent transition-colors">
@@ -40,17 +44,29 @@ export function LandingNav() {
         </Link>
 
         {/* Desktop Nav Items */}
-        <nav className="hidden md:flex items-center gap-6 text-xs font-medium text-muted-foreground">
-          <a href="#product" className="hover:text-foreground transition-colors">
+        <nav className="hidden md:flex items-center gap-6 text-xs font-medium text-muted-foreground" aria-label="Main navigation">
+          <a
+            href="#product"
+            className="hover:text-foreground transition-colors rounded-sm focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-none"
+          >
             Product
           </a>
-          <a href="#story" className="hover:text-foreground transition-colors">
+          <a
+            href="#story"
+            className="hover:text-foreground transition-colors rounded-sm focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-none"
+          >
             How it works
           </a>
-          <a href="#features" className="hover:text-foreground transition-colors">
+          <a
+            href="#features"
+            className="hover:text-foreground transition-colors rounded-sm focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-none"
+          >
             Connectors
           </a>
-          <a href="#privacy" className="hover:text-foreground transition-colors">
+          <a
+            href="#privacy"
+            className="hover:text-foreground transition-colors rounded-sm focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-none"
+          >
             Privacy
           </a>
         </nav>
@@ -59,14 +75,14 @@ export function LandingNav() {
         <div className="hidden md:flex items-center gap-3">
           <Link
             href="/login"
-            className="text-xs font-medium text-muted-foreground hover:text-foreground px-3 py-1.5 transition-colors"
+            className="text-xs font-medium text-muted-foreground hover:text-foreground px-3 py-1.5 transition-colors rounded-md focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-none"
           >
             Log in
           </Link>
           <Link
             href="/today"
             id="hero-start-locally-nav"
-            className="btn btn-primary btn-sm text-xs font-semibold px-3.5 h-8 flex items-center gap-1.5"
+            className="btn btn-primary btn-sm text-xs font-semibold px-3.5 h-8 flex items-center gap-1.5 focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-none"
           >
             <span>Start locally</span>
             <ArrowRightIcon className="size-3" />
@@ -77,8 +93,10 @@ export function LandingNav() {
         <button
           type="button"
           onClick={() => setMobileMenuOpen((o) => !o)}
-          className="md:!hidden flex items-center justify-center size-8 rounded-md border border-border bg-transparent text-muted-foreground hover:text-foreground hover:bg-surface-muted transition-colors cursor-pointer"
+          className="md:!hidden flex items-center justify-center size-8 rounded-md border border-border bg-transparent text-muted-foreground hover:text-foreground hover:bg-surface-muted transition-colors cursor-pointer focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-none"
           aria-label="Toggle mobile menu"
+          aria-expanded={mobileMenuOpen}
+          aria-controls="mobile-nav-menu"
         >
           {mobileMenuOpen ? <XIcon className="size-4" /> : <MenuIcon className="size-4" />}
         </button>
@@ -86,7 +104,10 @@ export function LandingNav() {
 
       {/* Mobile Menu Dropdown */}
       {mobileMenuOpen && (
-        <div className="md:hidden border-b border-border bg-surface/95 backdrop-blur-xl px-4 py-5 flex flex-col gap-4 animate-in fade-in duration-150">
+        <div
+          id="mobile-nav-menu"
+          className="md:hidden border-b border-border bg-surface/95 backdrop-blur-xl px-4 py-5 flex flex-col gap-4 animate-in fade-in duration-150"
+        >
           <nav className="flex flex-col gap-3 text-sm font-medium text-muted-foreground">
             <a
               href="#product"

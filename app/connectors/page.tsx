@@ -61,7 +61,7 @@ export default function ConnectorsPage() {
     <div className="page fade-in">
       <PageHeader
         title="Connectors"
-        description="Connect developer services to import metrics automatically. All data and credentials remain on-device."
+        description="Connect supported services to import metrics automatically. All data and credentials remain on-device."
       />
 
       <div className="flex flex-col gap-6 max-w-3xl">

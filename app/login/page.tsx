@@ -73,13 +73,13 @@ export default function LoginPage() {
           <div className="mb-8">
             <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full border border-white/10 bg-[#121214] text-xs font-mono text-[#a1a1aa] mb-4">
               <span className="size-1.5 rounded-full bg-[#a3ff12]" />
-              Account Sync Preview
+              Optional Account Access
             </div>
             <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight text-white mb-2">
               Log in to Panal
             </h1>
             <p className="text-sm text-[#a1a1aa] leading-relaxed">
-              Personal logs live on your device by default. Remote accounts are currently in preview for early-access testing.
+              Personal logs live on your device by default. Signing in is optional.
             </p>
           </div>
 
@@ -108,7 +108,7 @@ export default function LoginPage() {
             </div>
             <div className="relative flex justify-center text-xs">
               <span className="bg-[#080809] px-3 font-mono text-[#71717a] uppercase tracking-wider">
-                or sign in with preview credentials
+                or sign in with email
               </span>
             </div>
           </div>
@@ -196,7 +196,7 @@ export default function LoginPage() {
               disabled={loading}
               className="w-full bg-white text-[#0a0a0b] hover:bg-white/90 font-medium text-xs h-10 transition-colors"
             >
-              {loading ? "Checking credentials..." : "Sign in (Preview)"}
+              {loading ? "Checking credentials..." : "Sign in"}
             </Button>
           </form>
 
