@@ -234,15 +234,21 @@ describe("Custom metrics registry and formatting", () => {
     expect(metricLabel("task.completion_percent")).toBe("Task Completion");
   });
 
-  it("addCustomMetric avoids colliding with built-in manualMetricKey", async () => {
+  it("addCustomMetric generates clean key and avoids duplicates", async () => {
     const { addCustomMetric } = await import("@/lib/repositories");
-    // "Exercise Minutes" would slugify to "exercise_minutes", which collides with built-in manualMetricKey
-    const metric = await addCustomMetric({
+    const m1 = await addCustomMetric({
       label: "Exercise Minutes",
       unit: "min",
       addToDashboard: false,
     });
-    expect(metric.key).toBe("exercise_minutes_1");
+    expect(m1.key).toBe("exercise_minutes");
+
+    const m2 = await addCustomMetric({
+      label: "Exercise Minutes",
+      unit: "min",
+      addToDashboard: false,
+    });
+    expect(m2.key).toBe("exercise_minutes_1");
   });
 
   it("deleteCustomMetric only removes widgets matching manual.${key}", async () => {
@@ -316,5 +322,52 @@ describe("Custom metrics registry and formatting", () => {
     await restoreDefaultMetric("dsa_problems");
     profile = await getOrCreateProfile();
     expect(profile.preferences.hiddenDefaultMetrics).not.toContain("dsa_problems");
+  });
+
+  it("DEFAULT_WIDGETS does not include unadded manual metrics", () => {
+    const hasManual = DEFAULT_WIDGETS.some((dw) => dw.metricKey.startsWith("manual."));
+    expect(hasManual).toBe(false);
+  });
+
+  it("cleanupUnaddedManualWidgets removes legacy manual widgets when not in customMetrics", async () => {
+    const { cleanupUnaddedManualWidgets, getDashboardWidgets, upsertDashboardWidget } = await import("@/lib/repositories");
+    const { generateId } = await import("@/lib/uuid");
+
+    const legacyWidget = {
+      id: generateId(),
+      metricKeys: ["manual.dsa_problems"],
+      chartType: "bar" as const,
+      range: "7d" as const,
+      aggregation: "daily" as const,
+      config: { goalLine: 3, rollingAverage: null, title: "DSA Problems", color: null, visible: true },
+      position: 99,
+    };
+    await upsertDashboardWidget(legacyWidget);
+
+    await cleanupUnaddedManualWidgets();
+
+    const remaining = await getDashboardWidgets();
+    expect(remaining.some((w) => w.id === legacyWidget.id)).toBe(false);
+  });
+
+  it("addCustomMetric pairs with dashboard widget and deleteCustomMetric removes it", async () => {
+    const { addCustomMetric, deleteCustomMetric, getDashboardWidgets } = await import("@/lib/repositories");
+
+    const metric = await addCustomMetric({
+      label: "Meditation",
+      unit: "min",
+      goalLine: 15,
+      addToDashboard: true,
+    });
+
+    const widgetsAfterAdd = await getDashboardWidgets();
+    const pairedWidget = widgetsAfterAdd.find((w) => w.metricKeys.includes(`manual.${metric.key}`));
+    expect(pairedWidget).toBeDefined();
+    expect(pairedWidget?.config.title).toBe("Meditation");
+
+    await deleteCustomMetric(metric.key);
+
+    const widgetsAfterDelete = await getDashboardWidgets();
+    expect(widgetsAfterDelete.some((w) => w.metricKeys.includes(`manual.${metric.key}`))).toBe(false);
   });
 });

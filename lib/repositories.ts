@@ -23,7 +23,6 @@ import {
 } from "./db";
 import { generateId } from "./uuid";
 import { nowISO } from "./date";
-import { METRIC_DEFINITIONS } from "./metrics/definitions";
 
 // ---------------------------------------------------------------------------
 // UserProfile
@@ -71,6 +70,7 @@ export async function updateProfile(patch: Partial<UserProfile>): Promise<void> 
 }
 
 export async function addCustomMetric(data: {
+  key?: string;
   label: string;
   unit: string;
   goalLine?: number | null;
@@ -78,21 +78,23 @@ export async function addCustomMetric(data: {
   addToDashboard?: boolean;
 }): Promise<CustomMetric> {
   const profile = await getOrCreateProfile();
-  const slug =
-    data.label
-      .toLowerCase()
-      .trim()
-      .replace(/[^a-z0-9]+/g, "_")
-      .replace(/^_+|_+$/g, "") || `metric_${Date.now()}`;
+  const currentCustom = profile.preferences.customMetrics ?? [];
+  const existingCustomKeys = new Set(currentCustom.map((m) => m.key));
 
-  let key = slug;
-  let counter = 1;
-  const existingKeys = new Set([
-    ...(profile.preferences.customMetrics ?? []).map((m) => m.key),
-    ...METRIC_DEFINITIONS.flatMap((d) => (d.manualMetricKey ? [d.manualMetricKey] : [])),
-  ]);
-  while (existingKeys.has(key)) {
-    key = `${slug}_${counter++}`;
+  let key = data.key;
+  if (!key || existingCustomKeys.has(key)) {
+    const slug =
+      (data.key || data.label)
+        .toLowerCase()
+        .trim()
+        .replace(/[^a-z0-9]+/g, "_")
+        .replace(/^_+|_+$/g, "") || `metric_${Date.now()}`;
+
+    key = slug;
+    let counter = 1;
+    while (existingCustomKeys.has(key)) {
+      key = `${slug}_${counter++}`;
+    }
   }
 
   const metric: CustomMetric = {
@@ -104,7 +106,7 @@ export async function addCustomMetric(data: {
     createdAt: nowISO(),
   };
 
-  const updatedCustom = [...(profile.preferences.customMetrics ?? []), metric];
+  const updatedCustom = [...currentCustom, metric];
   await updateProfile({
     preferences: {
       ...profile.preferences,
@@ -112,7 +114,7 @@ export async function addCustomMetric(data: {
     },
   });
 
-  if (data.addToDashboard) {
+  if (data.addToDashboard !== false) {
     const currentWidgets = await getDashboardWidgets();
     const newWidget = DashboardWidgetSchema.parse({
       id: generateId(),
@@ -385,6 +387,24 @@ export async function seedDefaultWidgets(): Promise<void> {
   });
 
   await db.dashboardWidgets.bulkAdd(widgets);
+}
+
+/**
+ * Remove legacy default manual widgets (e.g. exercise_minutes, mobile_usage_minutes, dsa_problems)
+ * if the user has not explicitly added them to customMetrics.
+ */
+export async function cleanupUnaddedManualWidgets(): Promise<void> {
+  const profile = await getOrCreateProfile();
+  const addedKeys = new Set((profile.preferences.customMetrics ?? []).map((m) => `manual.${m.key}`));
+  const legacyKeys = new Set(["manual.exercise_minutes", "manual.dsa_problems", "manual.mobile_usage_minutes"]);
+
+  const widgets = await getDashboardWidgets();
+  for (const w of widgets) {
+    const isLegacyUnadded = w.metricKeys.some((k) => legacyKeys.has(k) && !addedKeys.has(k));
+    if (isLegacyUnadded) {
+      await deleteWidget(w.id);
+    }
+  }
 }
 
 // ---------------------------------------------------------------------------

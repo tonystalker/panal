@@ -21,8 +21,7 @@ import {
   getDailyLogByDate,
   addCustomMetric,
   deleteCustomMetric,
-  hideDefaultMetric,
-  restoreDefaultMetric,
+  cleanupUnaddedManualWidgets,
 } from "@/lib/repositories";
 import { operationalDate, dateLabel, isValidDateKey } from "@/lib/date";
 import { format, parseISO, subDays, addDays } from "date-fns";
@@ -41,18 +40,20 @@ import {
   XIcon,
 } from "lucide-react";
 
-export interface ActiveMetricItem {
+export interface MetricPreset {
   key: string;
   label: string;
   unit: string;
-  placeholder?: string;
-  isDefault: boolean;
+  goalLine: number | null;
+  defaultChart: "bar" | "line" | "area";
 }
 
-const DEFAULT_MANUAL_METRICS: ActiveMetricItem[] = [
-  { key: "exercise_minutes", label: "Exercise", unit: "min", placeholder: "0", isDefault: true },
-  { key: "dsa_problems", label: "DSA problems", unit: "solved", placeholder: "0", isDefault: true },
-  { key: "mobile_usage_minutes", label: "Mobile usage", unit: "min", placeholder: "0", isDefault: true },
+const POPULAR_METRIC_PRESETS: MetricPreset[] = [
+  { key: "exercise_minutes", label: "Exercise", unit: "min", goalLine: 30, defaultChart: "bar" },
+  { key: "dsa_problems", label: "DSA problems", unit: "solved", goalLine: 3, defaultChart: "bar" },
+  { key: "mobile_usage_minutes", label: "Mobile usage", unit: "min", goalLine: 120, defaultChart: "line" },
+  { key: "reading", label: "Reading", unit: "pages", goalLine: 20, defaultChart: "bar" },
+  { key: "water_intake", label: "Water intake", unit: "glasses", goalLine: 8, defaultChart: "bar" },
 ];
 
 function TodayContent() {
@@ -79,6 +80,7 @@ function TodayContent() {
 
   useEffect(() => {
     setTimezone(Intl.DateTimeFormat().resolvedOptions().timeZone);
+    cleanupUnaddedManualWidgets();
   }, []);
 
   const { data: profile } = useQuery({
@@ -138,20 +140,9 @@ function TodayContent() {
 
   const getMetricValue = (key: string) => metrics.find((m) => m.metricKey === key)?.value ?? 0;
 
-  const hiddenDefaults = new Set(profile?.preferences?.hiddenDefaultMetrics ?? []);
-
-  const activeMetrics: ActiveMetricItem[] = [
-    ...DEFAULT_MANUAL_METRICS.filter((m) => !hiddenDefaults.has(m.key)),
-    ...(profile?.preferences?.customMetrics ?? []).map((cm) => ({
-      key: cm.key,
-      label: cm.label,
-      unit: cm.unit,
-      placeholder: "0",
-      isDefault: false,
-    })),
-  ];
-
-  const hiddenDefaultList = DEFAULT_MANUAL_METRICS.filter((m) => hiddenDefaults.has(m.key));
+  const activeMetrics = profile?.preferences?.customMetrics ?? [];
+  const activeKeys = new Set(activeMetrics.map((m) => m.key));
+  const availablePresets = POPULAR_METRIC_PRESETS.filter((p) => !activeKeys.has(p.key));
 
   // Navigation handlers
   const navigateToDate = (targetDate: string) => {
@@ -275,55 +266,16 @@ function TodayContent() {
     onSuccess: invalidate,
   });
 
-  const hideDefaultMetricMut = useMutation({
-    mutationFn: async (key: string) => {
-      await hideDefaultMetric(key);
-    },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["profile"] });
-      qc.invalidateQueries({ queryKey: ["widgets"] });
-    },
-  });
-
-  const restoreDefaultMetricMut = useMutation({
-    mutationFn: async (key: string) => {
-      await restoreDefaultMetric(key);
-    },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["profile"] });
-      qc.invalidateQueries({ queryKey: ["widgets"] });
-    },
-  });
-
-  const deleteMetric = (key: string, isDefault: boolean) => {
-    if (isDefault) {
-      hideDefaultMetricMut.mutate(key);
-    } else {
-      deleteCustomMetricMut.mutate(key);
-    }
-  };
-
-  const addCustomMetricMut = useMutation({
-    mutationFn: async () => {
-      const trimmedName = metricName.trim();
-      if (!trimmedName) return;
-
-      const matchingPreset = hiddenDefaultList.find(
-        (p) =>
-          p.label.toLowerCase() === trimmedName.toLowerCase() ||
-          p.key.toLowerCase() === trimmedName.toLowerCase(),
-      );
-
-      if (matchingPreset) {
-        await restoreDefaultMetric(matchingPreset.key);
-      } else {
-        await addCustomMetric({
-          label: trimmedName,
-          unit: metricUnit.trim(),
-          goalLine: metricGoal ? parseFloat(metricGoal) : null,
-          addToDashboard: metricAddToDashboard,
-        });
-      }
+  const addMetricMut = useMutation({
+    mutationFn: async (data: {
+      key?: string;
+      label: string;
+      unit: string;
+      goalLine?: number | null;
+      defaultChart?: "bar" | "line" | "area";
+      addToDashboard?: boolean;
+    }) => {
+      await addCustomMetric(data);
     },
     onSuccess: () => {
       setMetricName("");
@@ -333,16 +285,18 @@ function TodayContent() {
       setShowAddMetric(false);
       qc.invalidateQueries({ queryKey: ["profile"] });
       qc.invalidateQueries({ queryKey: ["widgets"] });
+      qc.invalidateQueries({ queryKey: ["manualMetrics"] });
     },
   });
 
-  const deleteCustomMetricMut = useMutation({
+  const deleteMetricMut = useMutation({
     mutationFn: async (key: string) => {
       await deleteCustomMetric(key);
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["profile"] });
       qc.invalidateQueries({ queryKey: ["widgets"] });
+      qc.invalidateQueries({ queryKey: ["manualMetrics"] });
     },
   });
 
@@ -691,20 +645,29 @@ function TodayContent() {
                   </button>
                 </div>
 
-                {hiddenDefaultList.length > 0 && (
+                {availablePresets.length > 0 && (
                   <div className="space-y-1.5 pb-2.5 border-b border-border/40">
                     <span className="text-[11px] font-medium text-muted-foreground block">
-                      Restore preset metrics:
+                      Popular presets (1-click add):
                     </span>
                     <div className="flex flex-wrap gap-1.5">
-                      {hiddenDefaultList.map((preset) => (
+                      {availablePresets.map((preset) => (
                         <button
                           key={preset.key}
                           type="button"
-                          id={`restore-preset-${preset.key}`}
+                          id={`preset-${preset.key}`}
                           className="btn btn-secondary btn-sm text-xs h-7 px-2.5 flex items-center gap-1.5 text-foreground hover:border-foreground/40 transition-colors"
-                          onClick={() => restoreDefaultMetricMut.mutate(preset.key)}
-                          title={`Restore ${preset.label}`}
+                          onClick={() => {
+                            addMetricMut.mutate({
+                              key: preset.key,
+                              label: preset.label,
+                              unit: preset.unit,
+                              goalLine: preset.goalLine,
+                              defaultChart: preset.defaultChart,
+                              addToDashboard: true,
+                            });
+                          }}
+                          title={`Add ${preset.label}`}
                         >
                           <PlusIcon className="size-3 text-accent" />
                           <span>{preset.label}</span>
@@ -716,6 +679,9 @@ function TodayContent() {
                 )}
 
                 <div className="space-y-2.5">
+                  <span className="text-[11px] font-medium text-muted-foreground block">
+                    Or create custom metric:
+                  </span>
                   <div>
                     <label className="block text-[11px] font-medium text-muted-foreground mb-1">
                       Metric Name
@@ -731,7 +697,12 @@ function TodayContent() {
                       onKeyDown={(e) => {
                         if (e.key === "Enter" && metricName.trim()) {
                           e.preventDefault();
-                          addCustomMetricMut.mutate();
+                          addMetricMut.mutate({
+                            label: metricName.trim(),
+                            unit: metricUnit.trim(),
+                            goalLine: metricGoal ? parseFloat(metricGoal) : null,
+                            addToDashboard: metricAddToDashboard,
+                          });
                         }
                       }}
                     />
@@ -790,10 +761,17 @@ function TodayContent() {
                     id="save-custom-metric-btn"
                     type="button"
                     className="btn btn-primary btn-sm text-xs h-7 px-3"
-                    disabled={!metricName.trim() || addCustomMetricMut.isPending}
-                    onClick={() => addCustomMetricMut.mutate()}
+                    disabled={!metricName.trim() || addMetricMut.isPending}
+                    onClick={() =>
+                      addMetricMut.mutate({
+                        label: metricName.trim(),
+                        unit: metricUnit.trim(),
+                        goalLine: metricGoal ? parseFloat(metricGoal) : null,
+                        addToDashboard: metricAddToDashboard,
+                      })
+                    }
                   >
-                    {addCustomMetricMut.isPending ? "Adding…" : "Add Metric"}
+                    {addMetricMut.isPending ? "Adding…" : "Add Metric"}
                   </button>
                 </div>
               </div>
@@ -801,17 +779,19 @@ function TodayContent() {
 
             <div className="rounded-xl border border-border/80 divide-y divide-border/60 bg-surface/50 overflow-hidden">
               {activeMetrics.length === 0 ? (
-                <div className="py-6 px-4 flex flex-col items-center justify-center text-center">
-                  <p className="text-xs text-muted-foreground">
-                    No check-in metrics configured.
+                <div className="py-7 px-4 flex flex-col items-center justify-center text-center">
+                  <p className="text-xs font-medium text-foreground">No check-in metrics configured.</p>
+                  <p className="text-[11px] text-muted-foreground mt-0.5 max-w-xs leading-relaxed">
+                    Track daily habits like workouts, reading, or screen time. Click Add to choose a preset or create your own.
                   </p>
                   <button
+                    id="empty-add-metric-btn"
                     type="button"
-                    className="btn btn-secondary btn-sm mt-2.5 text-xs h-7 flex items-center gap-1"
+                    className="btn btn-secondary btn-sm mt-3 text-xs h-7 flex items-center gap-1.5"
                     onClick={() => setShowAddMetric(true)}
                   >
                     <PlusIcon className="size-3" />
-                    <span>Add metric</span>
+                    <span>Add check-in metric</span>
                   </button>
                 </div>
               ) : (
@@ -837,7 +817,7 @@ function TodayContent() {
                         style={{ width: "4rem" }}
                         className="h-7 w-16 shrink-0 rounded-md border border-border/80 bg-surface-muted/60 px-2 text-right font-mono text-xs tabular-nums text-foreground outline-none transition-colors hover:border-border-strong focus:border-border-strong focus:bg-surface-muted focus:ring-1 focus:ring-border-strong"
                         defaultValue={getMetricValue(m.key) || ""}
-                        placeholder={m.placeholder ?? "0"}
+                        placeholder="0"
                         onBlur={(e) => {
                           const val = parseFloat(e.target.value);
                           if (!isNaN(val) && val >= 0) {
@@ -851,14 +831,14 @@ function TodayContent() {
                         }}
                       />
                       <button
-                        id={m.isDefault ? `delete-metric-${m.key}` : `delete-custom-metric-${m.key}`}
+                        id={`delete-metric-${m.key}`}
                         type="button"
                         className="btn-icon size-7 text-muted-foreground hover:text-destructive opacity-40 hover:opacity-100 transition-opacity"
-                        onClick={() => deleteMetric(m.key, m.isDefault)}
+                        onClick={() => deleteMetricMut.mutate(m.key)}
                         title={`Remove ${m.label}`}
                         aria-label={`Remove ${m.label}`}
                       >
-                        <Trash2Icon className="size-3" />
+                        <Trash2Icon className="size-3.5" />
                       </button>
                     </div>
                   </div>

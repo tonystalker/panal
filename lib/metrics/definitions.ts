@@ -245,10 +245,7 @@ export interface DefaultWidget {
 }
 
 export const DEFAULT_WIDGETS: DefaultWidget[] = [
-  { metricKey: "task.completion_percent",   chartType: "line", range: "30d" },
-  { metricKey: "manual.mobile_usage_minutes", chartType: "line", range: "7d" },
-  { metricKey: "github.contributions",      chartType: "bar",  range: "30d" },
-  { metricKey: "leetcode.accepted",         chartType: "bar",  range: "30d" },
-  { metricKey: "manual.exercise_minutes",   chartType: "bar",  range: "7d"  },
-  { metricKey: "manual.dsa_problems",       chartType: "bar",  range: "7d"  },
+  { metricKey: "task.completion_percent", chartType: "line", range: "30d" },
+  { metricKey: "github.contributions",    chartType: "bar",  range: "30d" },
+  { metricKey: "leetcode.accepted",       chartType: "bar",  range: "30d" },
 ];

@@ -23,7 +23,7 @@ import { db } from "@/lib/db";
 import type { DashboardWidget } from "@/lib/db";
 import {
   getDashboardWidgets, upsertDashboardWidget, deleteWidget,
-  reorderWidgets, seedDefaultWidgets,
+  reorderWidgets, seedDefaultWidgets, cleanupUnaddedManualWidgets,
   getDailyLogsInRange, getTasksForLog, getOrCreateProfile,
 } from "@/lib/repositories";
 import { operationalDate } from "@/lib/date";
@@ -75,10 +75,12 @@ export default function DashboardPage() {
   const cutoff = profile?.preferences?.workdayCutoff ?? "00:00";
   const today = operationalDate(new Date(), tz, cutoff);
 
-  // Seed default widgets on first load
+  // Seed default widgets on first load & prune unadded manual widgets
   useEffect(() => {
     if (!timezone || timezone === "UTC") return;
-    seedDefaultWidgets().then(() => qc.invalidateQueries({ queryKey: ["widgets"] }));
+    seedDefaultWidgets()
+      .then(() => cleanupUnaddedManualWidgets())
+      .then(() => qc.invalidateQueries({ queryKey: ["widgets"] }));
   }, [timezone, qc]);
 
   const { data: widgets = [] } = useQuery({
