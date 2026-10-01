@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
+export const dynamic = "force-dynamic";
+
 const LC_GRAPHQL_URL = "https://leetcode.com/graphql";
 
 const LEETCODE_QUERY = `

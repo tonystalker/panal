@@ -6,8 +6,16 @@ import { Providers } from "./providers";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 
+const siteUrl = process.env.NEXT_PUBLIC_APP_URL
+  ? process.env.NEXT_PUBLIC_APP_URL
+  : process.env.VERCEL_PROJECT_PRODUCTION_URL
+  ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
+  : process.env.VERCEL_URL
+  ? `https://${process.env.VERCEL_URL}`
+  : "https://panal.local";
+
 export const metadata: Metadata = {
-  metadataBase: new URL("https://panal.local"),
+  metadataBase: new URL(siteUrl),
   title: "Panal — Personal analytics, local-first",
   description:
     "Private, local-first personal analytics. Track your daily tasks, quantitative targets, and supported services such as GitHub and LeetCode — 100% on your device, no account required.",

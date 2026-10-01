@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
+export const dynamic = "force-dynamic";
+
 const DEVICE_CODE_URL = "https://github.com/login/device/code";
 
 const deviceRequestSchema = z.object({

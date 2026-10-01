@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
+export const dynamic = "force-dynamic";
+
 const TOKEN_URL = "https://github.com/login/oauth/access_token";
 
 const tokenRequestSchema = z.object({
