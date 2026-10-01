@@ -16,7 +16,8 @@ This file tracks **progress**. `context.md` tracks **how it was done** (changelo
 - [x] Milestone 1 — offline personal tracker (core PWA)
 - [x] Milestone 2 — GitHub connector
 - [x] Milestone 3 — LeetCode + chart customization
-- [~] Milestone UI & Landing — Watermelon UI & Capitalio / Landing 01 Refactor (in progress)
+- [x] Milestone UI & Landing — Watermelon UI & Capitalio / Landing 01 Refactor
+- [x] Codebase Cleanup, Simplification & Security Audit
 
 ---
 
@@ -30,11 +31,24 @@ This file tracks **progress**. `context.md` tracks **how it was done** (changelo
 - [x] Import and adapt `landing-01` & `hero-8` (Landing hero & showcase)
 - [x] Import and adapt `feature-3` & scroll-driven product story
 - [x] Import and adapt `cta-4`, privacy section, and footer
-- [ ] Import and adapt `auth-01` & `error-3` (Auth shell + error page)
-- [ ] Responsive polish, accessibility, unit tests, and documentation
-
+- [x] Import and adapt `auth-01` & `error-3` (Auth shell + error page)
+- [x] Responsive polish, accessibility, unit tests, and documentation
 
 ---
+
+## Codebase Cleanup, Simplification & Security Audit
+
+- [x] Add CSP, nosniff, frame-ancestors, referrer, and permissions policy headers to `next.config.ts`
+- [x] Harden service worker caching in `public/sw.js` (exclude `/api/`, `.panal-backup`, CSV/JSON exports)
+- [x] Harden credential vault in `lib/connectors/vault.ts` (validate blob format, sanitize decryption errors)
+- [x] Harden backup envelope and payload parsing in `lib/crypto.ts` (strict property guards, error handling)
+- [x] Add Zod schema validation to backup restore in `app/settings/page.tsx` before executing transaction
+- [x] Add Zod input validation and error sanitization to `app/api/github/device` and `app/api/github/token`
+- [x] Prune dead code and template leftovers (`components/watermelon/`, 17 unused `components/ui/` templates, `assets/`)
+- [x] Clean up `components/ui/tooltip.tsx` to import project `cn` utility from `@/lib/utils`
+- [x] Remove unreferenced npm dependencies (`@base-ui/react`, `cn`, `react-icons`, `zustand`)
+- [x] Add unit tests for credential vault, malformed envelopes, and corrupted payloads (98 passing tests)
+- [x] Verify production build (16 static/dynamic routes), e2e tests (12/12 passing), typecheck, and lint
 
 ## Milestone 0 — product specification and durable local schema
 
@@ -249,4 +263,6 @@ If no: keep improving V1 daily loop. Do not start Milestone 5.
 | 2026-10-01 | Capitalio dashboard shell, metrics strip, primary chart, connectors | UI Refactor: Capitalio & Integrations-2 |
 | 2026-10-01 | Watermelon Hero-8, Feature-3, CTA-4, editorial visual, privacy promise | UI Refactor: Landing 01 & Privacy |
 | 2026-10-01 | Watermelon Auth-01, Error-3, lib/auth adapter, /login, /signup, /not-found | UI Refactor: Auth & Error boundary |
+| 2026-10-01 | Codebase cleanup, dead code pruning, security audit & headers | Codebase Cleanup & Security Audit |
+
 

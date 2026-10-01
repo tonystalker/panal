@@ -547,5 +547,37 @@ None in application code yet. Process note: running `git` from `panal` initially
   - `npm test` passed (93/93 tests passing).
   - Browser subagent visual inspection confirmed clean, high-resolution rendering of Panal logo and brand across Landing, Today, and Login pages.
 
+### 2026-10-01 — Codebase Cleanup, Simplification & Security Audit
+
+- **Security Hardening**:
+  - `next.config.ts`: Configured comprehensive HTTP security headers:
+    - `Content-Security-Policy`: Restricts scripts, styles, fonts, and images; restricts connectors strictly to `'self'`, `https://api.github.com`, and `https://leetcode.com`; blocks frame embedding with `frame-ancestors 'none'`.
+    - `X-Content-Type-Options: nosniff`.
+    - `X-Frame-Options: DENY`.
+    - `Referrer-Policy: strict-origin-when-cross-origin`.
+    - `Permissions-Policy: camera=(), microphone=(), geolocation=(), browsing-topics=()`.
+  - `public/sw.js`: Hardened service worker caching rules to explicitly bypass caching on `/api/*` endpoints and backup/export files (`.panal-backup`, CSV, dynamic JSON exports).
+  - `lib/connectors/vault.ts`: Added validation for credential blob format (`salt:iv:ciphertext` 3-part check) and wrapped decryption/base64-decoding in sanitized try/catch blocks that throw clean, generic errors without leaking token material, raw keys, or internal stack traces.
+  - `lib/crypto.ts`: Hardened `b64uDecode` and `decryptBackup` with strict structure guards on envelope fields, algorithm checks, and JSON parsing protection.
+  - `app/settings/page.tsx`: Added Zod schema validation (`backupPayloadSchema`) to decrypted backup contents prior to user confirmation and before initiating Dexie transaction, ensuring malformed backups are rejected with zero data loss or partial writes.
+  - `app/api/github/device/route.ts` & `app/api/github/token/route.ts`: Added Zod input validation on proxy request payloads and sanitized error responses.
+- **Dead Code & Template Pruning**:
+  - Removed `components/watermelon/` (12 demo files including `capitalio-dashboard` dummy data and styles).
+  - Removed 17 unused Shadcn/Watermelon template files in `components/ui/` (`hero-8.tsx`, `feature-3.tsx`, `cta-4.tsx`, `auth-01.tsx`, `error-3.tsx`, `integrations-2.tsx`, `sidebar.tsx`, `sheet.tsx`, `avatar.tsx`, `separator.tsx`, `skeleton.tsx`, `card.tsx`, `badge.tsx`, `dialog.tsx`, `dropdown-menu.tsx`, `progress.tsx`, `tabs.tsx`).
+  - Removed `assets/logo-icon.tsx`.
+  - Cleaned `components/ui/tooltip.tsx` to import internal `cn` helper from `@/lib/utils`.
+- **Dependency Pruning**:
+  - Uninstalled `@base-ui/react`, `cn`, `react-icons`, and `zustand` from `package.json` and lockfile after verifying zero references in remaining source/test code.
+- **Test Suite Enhancements**:
+  - `tests/unit/connectors.test.ts`: Added tests for `vaultStore`, `vaultRead`, `vaultClear`, and corrupted credential blob handling.
+  - `tests/unit/crypto.test.ts`: Added tests for malformed envelope rejection and corrupted ciphertext payload rejection.
+- **Verification Results**:
+  - `npm run lint`: 0 errors, 0 warnings.
+  - `npm run typecheck`: 0 errors.
+  - `npm run test`: 6 test files, 98/98 unit tests passing.
+  - `npm run build`: Clean production build with all 16 static/dynamic routes.
+  - `npx playwright test tests/e2e/landing-production.spec.ts`: 12/12 passing against production server.
+
+
 
 
