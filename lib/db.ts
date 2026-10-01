@@ -39,6 +39,7 @@ export const UserProfileSchema = z.object({
     theme: z.enum(["system", "light", "dark"]).default("system"),
     workdayCutoff: z.string().regex(/^\d{2}:\d{2}$/).default("00:00"), // Local cutoff time "HH:mm", defaults to "00:00"
     customMetrics: z.array(CustomMetricSchema).default([]),
+    hiddenDefaultMetrics: z.array(z.string()).default([]),
   }),
 });
 

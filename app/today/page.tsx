@@ -21,6 +21,8 @@ import {
   getDailyLogByDate,
   addCustomMetric,
   deleteCustomMetric,
+  hideDefaultMetric,
+  restoreDefaultMetric,
 } from "@/lib/repositories";
 import { operationalDate, dateLabel, isValidDateKey } from "@/lib/date";
 import { format, parseISO, subDays, addDays } from "date-fns";
@@ -39,14 +41,19 @@ import {
   XIcon,
 } from "lucide-react";
 
-type ManualMetricKey = "exercise_minutes" | "mobile_usage_minutes" | "dsa_problems";
+export interface ActiveMetricItem {
+  key: string;
+  label: string;
+  unit: string;
+  placeholder?: string;
+  isDefault: boolean;
+}
 
-const MANUAL_METRICS: { key: ManualMetricKey; label: string; unit: string; placeholder: string }[] =
-  [
-    { key: "exercise_minutes", label: "Exercise", unit: "min", placeholder: "0" },
-    { key: "dsa_problems", label: "DSA problems", unit: "solved", placeholder: "0" },
-    { key: "mobile_usage_minutes", label: "Mobile usage", unit: "min", placeholder: "0" },
-  ];
+const DEFAULT_MANUAL_METRICS: ActiveMetricItem[] = [
+  { key: "exercise_minutes", label: "Exercise", unit: "min", placeholder: "0", isDefault: true },
+  { key: "dsa_problems", label: "DSA problems", unit: "solved", placeholder: "0", isDefault: true },
+  { key: "mobile_usage_minutes", label: "Mobile usage", unit: "min", placeholder: "0", isDefault: true },
+];
 
 function TodayContent() {
   const qc = useQueryClient();
@@ -130,6 +137,21 @@ function TodayContent() {
   const activeTasks = tasks.filter((t) => t.status !== "skipped").length;
 
   const getMetricValue = (key: string) => metrics.find((m) => m.metricKey === key)?.value ?? 0;
+
+  const hiddenDefaults = new Set(profile?.preferences?.hiddenDefaultMetrics ?? []);
+
+  const activeMetrics: ActiveMetricItem[] = [
+    ...DEFAULT_MANUAL_METRICS.filter((m) => !hiddenDefaults.has(m.key)),
+    ...(profile?.preferences?.customMetrics ?? []).map((cm) => ({
+      key: cm.key,
+      label: cm.label,
+      unit: cm.unit,
+      placeholder: "0",
+      isDefault: false,
+    })),
+  ];
+
+  const hiddenDefaultList = DEFAULT_MANUAL_METRICS.filter((m) => hiddenDefaults.has(m.key));
 
   // Navigation handlers
   const navigateToDate = (targetDate: string) => {
@@ -253,15 +275,55 @@ function TodayContent() {
     onSuccess: invalidate,
   });
 
+  const hideDefaultMetricMut = useMutation({
+    mutationFn: async (key: string) => {
+      await hideDefaultMetric(key);
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["profile"] });
+      qc.invalidateQueries({ queryKey: ["widgets"] });
+    },
+  });
+
+  const restoreDefaultMetricMut = useMutation({
+    mutationFn: async (key: string) => {
+      await restoreDefaultMetric(key);
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["profile"] });
+      qc.invalidateQueries({ queryKey: ["widgets"] });
+    },
+  });
+
+  const deleteMetric = (key: string, isDefault: boolean) => {
+    if (isDefault) {
+      hideDefaultMetricMut.mutate(key);
+    } else {
+      deleteCustomMetricMut.mutate(key);
+    }
+  };
+
   const addCustomMetricMut = useMutation({
     mutationFn: async () => {
-      if (!metricName.trim()) return;
-      await addCustomMetric({
-        label: metricName.trim(),
-        unit: metricUnit.trim(),
-        goalLine: metricGoal ? parseFloat(metricGoal) : null,
-        addToDashboard: metricAddToDashboard,
-      });
+      const trimmedName = metricName.trim();
+      if (!trimmedName) return;
+
+      const matchingPreset = hiddenDefaultList.find(
+        (p) =>
+          p.label.toLowerCase() === trimmedName.toLowerCase() ||
+          p.key.toLowerCase() === trimmedName.toLowerCase(),
+      );
+
+      if (matchingPreset) {
+        await restoreDefaultMetric(matchingPreset.key);
+      } else {
+        await addCustomMetric({
+          label: trimmedName,
+          unit: metricUnit.trim(),
+          goalLine: metricGoal ? parseFloat(metricGoal) : null,
+          addToDashboard: metricAddToDashboard,
+        });
+      }
     },
     onSuccess: () => {
       setMetricName("");
@@ -618,7 +680,7 @@ function TodayContent() {
             {showAddMetric && (
               <div className="rounded-xl border border-border/80 bg-surface/80 p-3.5 flex flex-col gap-3 animate-in fade-in duration-150">
                 <div className="flex items-center justify-between pb-1.5 border-b border-border/40">
-                  <span className="text-xs font-semibold text-foreground">Add Custom Metric</span>
+                  <span className="text-xs font-semibold text-foreground">Add Daily Metric</span>
                   <button
                     type="button"
                     className="btn-icon size-6 text-muted-foreground hover:text-foreground"
@@ -628,6 +690,30 @@ function TodayContent() {
                     <XIcon className="size-3.5" />
                   </button>
                 </div>
+
+                {hiddenDefaultList.length > 0 && (
+                  <div className="space-y-1.5 pb-2.5 border-b border-border/40">
+                    <span className="text-[11px] font-medium text-muted-foreground block">
+                      Restore preset metrics:
+                    </span>
+                    <div className="flex flex-wrap gap-1.5">
+                      {hiddenDefaultList.map((preset) => (
+                        <button
+                          key={preset.key}
+                          type="button"
+                          id={`restore-preset-${preset.key}`}
+                          className="btn btn-secondary btn-sm text-xs h-7 px-2.5 flex items-center gap-1.5 text-foreground hover:border-foreground/40 transition-colors"
+                          onClick={() => restoreDefaultMetricMut.mutate(preset.key)}
+                          title={`Restore ${preset.label}`}
+                        >
+                          <PlusIcon className="size-3 text-accent" />
+                          <span>{preset.label}</span>
+                          <span className="text-[10px] text-muted-foreground">({preset.unit})</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
                 <div className="space-y-2.5">
                   <div>
@@ -714,85 +800,70 @@ function TodayContent() {
             )}
 
             <div className="rounded-xl border border-border/80 divide-y divide-border/60 bg-surface/50 overflow-hidden">
-              {MANUAL_METRICS.map((m) => (
-                <div
-                  key={m.key}
-                  className="flex items-center justify-between gap-4 px-3.5 py-2.5 hover:bg-surface-muted/20 transition-colors"
-                >
-                  <div className="flex items-baseline gap-1.5 shrink-0 select-none">
-                    <span className="text-xs font-medium text-foreground whitespace-nowrap">{m.label}</span>
-                    <span className="text-[11px] text-muted-foreground whitespace-nowrap">({m.unit})</span>
-                  </div>
-                  <input
-                    key={`${dateKey}-${m.key}`}
-                    id={`metric-${m.key}`}
-                    type="text"
-                    inputMode="numeric"
-                    style={{ width: "4rem" }}
-                    className="h-7 w-16 shrink-0 rounded-md border border-border/80 bg-surface-muted/60 px-2 text-right font-mono text-xs tabular-nums text-foreground outline-none transition-colors hover:border-border-strong focus:border-border-strong focus:bg-surface-muted focus:ring-1 focus:ring-border-strong"
-                    defaultValue={getMetricValue(m.key) || ""}
-                    placeholder={m.placeholder}
-                    onBlur={(e) => {
-                      const val = parseFloat(e.target.value);
-                      if (!isNaN(val) && val >= 0) {
-                        updateMetric.mutate({ key: m.key, value: val, unit: m.unit });
-                      }
-                    }}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") {
-                        (e.target as HTMLInputElement).blur();
-                      }
-                    }}
-                  />
+              {activeMetrics.length === 0 ? (
+                <div className="py-6 px-4 flex flex-col items-center justify-center text-center">
+                  <p className="text-xs text-muted-foreground">
+                    No check-in metrics configured.
+                  </p>
+                  <button
+                    type="button"
+                    className="btn btn-secondary btn-sm mt-2.5 text-xs h-7 flex items-center gap-1"
+                    onClick={() => setShowAddMetric(true)}
+                  >
+                    <PlusIcon className="size-3" />
+                    <span>Add metric</span>
+                  </button>
                 </div>
-              ))}
-
-              {(profile?.preferences?.customMetrics ?? []).map((cm) => (
-                <div
-                  key={cm.key}
-                  className="group flex items-center justify-between gap-4 px-3.5 py-2.5 hover:bg-surface-muted/20 transition-colors"
-                >
-                  <div className="flex items-baseline gap-1.5 shrink-0 select-none">
-                    <span className="text-xs font-medium text-foreground whitespace-nowrap">{cm.label}</span>
-                    {cm.unit && (
-                      <span className="text-[11px] text-muted-foreground whitespace-nowrap">({cm.unit})</span>
-                    )}
+              ) : (
+                activeMetrics.map((m) => (
+                  <div
+                    key={m.key}
+                    className="group flex items-center justify-between gap-3 px-3.5 py-2.5 hover:bg-surface-muted/20 transition-colors"
+                  >
+                    <div className="flex items-baseline gap-1.5 shrink-0 select-none min-w-0">
+                      <span className="text-xs font-medium text-foreground truncate">{m.label}</span>
+                      {m.unit && (
+                        <span className="text-[11px] text-muted-foreground whitespace-nowrap">
+                          ({m.unit})
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <input
+                        key={`${dateKey}-${m.key}`}
+                        id={`metric-${m.key}`}
+                        type="text"
+                        inputMode="numeric"
+                        style={{ width: "4rem" }}
+                        className="h-7 w-16 shrink-0 rounded-md border border-border/80 bg-surface-muted/60 px-2 text-right font-mono text-xs tabular-nums text-foreground outline-none transition-colors hover:border-border-strong focus:border-border-strong focus:bg-surface-muted focus:ring-1 focus:ring-border-strong"
+                        defaultValue={getMetricValue(m.key) || ""}
+                        placeholder={m.placeholder ?? "0"}
+                        onBlur={(e) => {
+                          const val = parseFloat(e.target.value);
+                          if (!isNaN(val) && val >= 0) {
+                            updateMetric.mutate({ key: m.key, value: val, unit: m.unit });
+                          }
+                        }}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            (e.target as HTMLInputElement).blur();
+                          }
+                        }}
+                      />
+                      <button
+                        id={m.isDefault ? `delete-metric-${m.key}` : `delete-custom-metric-${m.key}`}
+                        type="button"
+                        className="btn-icon size-7 text-muted-foreground hover:text-destructive opacity-40 hover:opacity-100 transition-opacity"
+                        onClick={() => deleteMetric(m.key, m.isDefault)}
+                        title={`Remove ${m.label}`}
+                        aria-label={`Remove ${m.label}`}
+                      >
+                        <Trash2Icon className="size-3" />
+                      </button>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-1.5">
-                    <input
-                      key={`${dateKey}-${cm.key}`}
-                      id={`metric-${cm.key}`}
-                      type="text"
-                      inputMode="numeric"
-                      style={{ width: "4rem" }}
-                      className="h-7 w-16 shrink-0 rounded-md border border-border/80 bg-surface-muted/60 px-2 text-right font-mono text-xs tabular-nums text-foreground outline-none transition-colors hover:border-border-strong focus:border-border-strong focus:bg-surface-muted focus:ring-1 focus:ring-border-strong"
-                      defaultValue={getMetricValue(cm.key) || ""}
-                      placeholder="0"
-                      onBlur={(e) => {
-                        const val = parseFloat(e.target.value);
-                        if (!isNaN(val) && val >= 0) {
-                          updateMetric.mutate({ key: cm.key, value: val, unit: cm.unit });
-                        }
-                      }}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter") {
-                          (e.target as HTMLInputElement).blur();
-                        }
-                      }}
-                    />
-                    <button
-                      id={`delete-custom-metric-${cm.key}`}
-                      type="button"
-                      className="btn-icon size-7 text-muted-foreground hover:text-destructive opacity-40 hover:opacity-100 transition-opacity"
-                      onClick={() => deleteCustomMetricMut.mutate(cm.key)}
-                      title={`Remove ${cm.label}`}
-                      aria-label={`Remove ${cm.label}`}
-                    >
-                      <Trash2Icon className="size-3" />
-                    </button>
-                  </div>
-                </div>
-              ))}
+                ))
+              )}
             </div>
           </section>
 

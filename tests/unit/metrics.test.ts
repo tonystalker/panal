@@ -295,4 +295,26 @@ describe("Custom metrics registry and formatting", () => {
     expect(ids).not.toContain(widget1Id);
     expect(ids).toContain(widget2Id);
   });
+
+  it("hideDefaultMetric and restoreDefaultMetric manage hiddenDefaultMetrics", async () => {
+    const { hideDefaultMetric, restoreDefaultMetric, getOrCreateProfile } = await import("@/lib/repositories");
+
+    await hideDefaultMetric("exercise_minutes");
+    let profile = await getOrCreateProfile();
+    expect(profile.preferences.hiddenDefaultMetrics).toContain("exercise_minutes");
+
+    await hideDefaultMetric("dsa_problems");
+    profile = await getOrCreateProfile();
+    expect(profile.preferences.hiddenDefaultMetrics).toContain("exercise_minutes");
+    expect(profile.preferences.hiddenDefaultMetrics).toContain("dsa_problems");
+
+    await restoreDefaultMetric("exercise_minutes");
+    profile = await getOrCreateProfile();
+    expect(profile.preferences.hiddenDefaultMetrics).not.toContain("exercise_minutes");
+    expect(profile.preferences.hiddenDefaultMetrics).toContain("dsa_problems");
+
+    await restoreDefaultMetric("dsa_problems");
+    profile = await getOrCreateProfile();
+    expect(profile.preferences.hiddenDefaultMetrics).not.toContain("dsa_problems");
+  });
 });

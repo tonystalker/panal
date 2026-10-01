@@ -104,7 +104,13 @@ export default function SettingsPage() {
     mutationFn: (cutoff: string) =>
       updateProfile({
         preferences: {
-          ...(profile?.preferences ?? { firstDayOfWeek: 1, theme: "system", workdayCutoff: "00:00", customMetrics: [] }),
+          ...(profile?.preferences ?? {
+            firstDayOfWeek: 1,
+            theme: "system",
+            workdayCutoff: "00:00",
+            customMetrics: [],
+            hiddenDefaultMetrics: [],
+          }),
           workdayCutoff: cutoff,
         },
       }),

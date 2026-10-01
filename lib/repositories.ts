@@ -34,7 +34,11 @@ export async function getOrCreateProfile(timezone?: string): Promise<UserProfile
   const existing = await db.userProfile.toCollection().first();
   if (existing) {
     const parsed = UserProfileSchema.parse(existing);
-    if (!existing.preferences?.workdayCutoff || !existing.preferences?.customMetrics) {
+    if (
+      !existing.preferences?.workdayCutoff ||
+      !existing.preferences?.customMetrics ||
+      !existing.preferences?.hiddenDefaultMetrics
+    ) {
       await db.userProfile.update(existing.id, { preferences: parsed.preferences });
     }
     return parsed;
@@ -43,7 +47,13 @@ export async function getOrCreateProfile(timezone?: string): Promise<UserProfile
     id: generateId(),
     timezone: tz,
     createdAt: nowISO(),
-    preferences: { firstDayOfWeek: 1, theme: "system", workdayCutoff: "00:00", customMetrics: [] },
+    preferences: {
+      firstDayOfWeek: 1,
+      theme: "system",
+      workdayCutoff: "00:00",
+      customMetrics: [],
+      hiddenDefaultMetrics: [],
+    },
   });
   await db.userProfile.add(profile);
   return profile;
@@ -142,6 +152,30 @@ export async function deleteCustomMetric(key: string): Promise<void> {
       await deleteWidget(w.id);
     }
   }
+}
+
+export async function hideDefaultMetric(key: string): Promise<void> {
+  const profile = await getOrCreateProfile();
+  const currentHidden = profile.preferences.hiddenDefaultMetrics ?? [];
+  if (!currentHidden.includes(key)) {
+    await updateProfile({
+      preferences: {
+        ...profile.preferences,
+        hiddenDefaultMetrics: [...currentHidden, key],
+      },
+    });
+  }
+}
+
+export async function restoreDefaultMetric(key: string): Promise<void> {
+  const profile = await getOrCreateProfile();
+  const currentHidden = profile.preferences.hiddenDefaultMetrics ?? [];
+  await updateProfile({
+    preferences: {
+      ...profile.preferences,
+      hiddenDefaultMetrics: currentHidden.filter((k) => k !== key),
+    },
+  });
 }
 
 // ---------------------------------------------------------------------------
