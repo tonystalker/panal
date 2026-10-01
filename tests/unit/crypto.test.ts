@@ -4,7 +4,7 @@
  */
 
 import { describe, it, expect } from "vitest";
-import { encryptBackup, decryptBackup } from "@/lib/crypto";
+import { encryptBackup, decryptBackup, type BackupEnvelope } from "@/lib/crypto";
 
 const PASSPHRASE = "test-passphrase-vitest";
 const DEVICE_ID = "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa";
@@ -56,12 +56,12 @@ describe("encryptBackup / decryptBackup round-trip", () => {
   }, 30_000);
 
   it("throws on malformed or incomplete envelope", async () => {
-    // @ts-expect-error testing invalid envelope
-    await expect(decryptBackup(null, PASSPHRASE)).rejects.toThrow("Invalid backup envelope");
+    await expect(decryptBackup(null as unknown as BackupEnvelope, PASSPHRASE)).rejects.toThrow(
+      "Invalid backup envelope",
+    );
 
     const envelope = await encryptBackup(SAMPLE_PAYLOAD, PASSPHRASE, DEVICE_ID);
-    // @ts-expect-error testing missing payload
-    const missingPayload = { ...envelope, payload: undefined };
+    const missingPayload = { ...envelope, payload: undefined } as unknown as BackupEnvelope;
     await expect(decryptBackup(missingPayload, PASSPHRASE)).rejects.toThrow(
       "Corrupted or malformed backup envelope",
     );
