@@ -40,6 +40,16 @@ self.addEventListener("fetch", (event) => {
   const url = new URL(event.request.url);
   if (url.origin !== self.location.origin) return;
 
+  // Never cache API routes, backups, or exports
+  if (
+    url.pathname.startsWith("/api/") ||
+    url.pathname.endsWith(".panal-backup") ||
+    url.pathname.endsWith(".csv") ||
+    (url.pathname.endsWith(".json") && url.pathname !== "/manifest.json")
+  ) {
+    return;
+  }
+
   event.respondWith(
     caches.match(event.request).then((cached) => {
       const networkFetch = fetch(event.request)

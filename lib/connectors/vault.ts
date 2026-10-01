@@ -33,10 +33,14 @@ function b64Encode(buf: ArrayBuffer): string {
 }
 
 function b64Decode(s: string): ArrayBuffer {
-  const binary = atob(s);
-  const buf = new Uint8Array(binary.length);
-  for (let i = 0; i < binary.length; i++) buf[i] = binary.charCodeAt(i);
-  return buf.buffer;
+  try {
+    const binary = atob(s);
+    const buf = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) buf[i] = binary.charCodeAt(i);
+    return buf.buffer;
+  } catch {
+    throw new Error("Invalid base64 encoding");
+  }
 }
 
 async function getOrCreateDeviceKey(): Promise<CryptoKey> {
@@ -77,16 +81,27 @@ async function encryptToken(token: string): Promise<string> {
 }
 
 async function decryptToken(blob: string): Promise<string> {
-  const [, ivB64, cipherB64] = blob.split(":");
-  const key = await getOrCreateDeviceKey();
-  const iv = b64Decode(ivB64);
-  const ciphertext = b64Decode(cipherB64);
-  const plaintext = await crypto.subtle.decrypt(
-    { name: "AES-GCM", iv, tagLength: TAG_LENGTH },
-    key,
-    ciphertext,
-  );
-  return new TextDecoder().decode(plaintext);
+  if (!blob || typeof blob !== "string") {
+    throw new Error("Invalid credential blob: empty or non-string");
+  }
+  const parts = blob.split(":");
+  if (parts.length !== 3 || !parts[0] || !parts[1] || !parts[2]) {
+    throw new Error("Invalid credential blob: expected salt:iv:ciphertext format");
+  }
+  const [, ivB64, cipherB64] = parts;
+  try {
+    const key = await getOrCreateDeviceKey();
+    const iv = b64Decode(ivB64);
+    const ciphertext = b64Decode(cipherB64);
+    const plaintext = await crypto.subtle.decrypt(
+      { name: "AES-GCM", iv, tagLength: TAG_LENGTH },
+      key,
+      ciphertext,
+    );
+    return new TextDecoder().decode(plaintext);
+  } catch {
+    throw new Error("Failed to decrypt connector credential");
+  }
 }
 
 // ---------------------------------------------------------------------------

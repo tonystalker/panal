@@ -54,4 +54,22 @@ describe("encryptBackup / decryptBackup round-trip", () => {
     const tampered = { ...envelope, version: 99 };
     await expect(decryptBackup(tampered, PASSPHRASE)).rejects.toThrow("Unsupported backup version: 99");
   }, 30_000);
+
+  it("throws on malformed or incomplete envelope", async () => {
+    // @ts-expect-error testing invalid envelope
+    await expect(decryptBackup(null, PASSPHRASE)).rejects.toThrow("Invalid backup envelope");
+
+    const envelope = await encryptBackup(SAMPLE_PAYLOAD, PASSPHRASE, DEVICE_ID);
+    // @ts-expect-error testing missing payload
+    const missingPayload = { ...envelope, payload: undefined };
+    await expect(decryptBackup(missingPayload, PASSPHRASE)).rejects.toThrow(
+      "Corrupted or malformed backup envelope",
+    );
+  }, 30_000);
+
+  it("throws on corrupted ciphertext payload", async () => {
+    const envelope = await encryptBackup(SAMPLE_PAYLOAD, PASSPHRASE, DEVICE_ID);
+    const tampered = { ...envelope, payload: "not-valid-base64!!!" };
+    await expect(decryptBackup(tampered, PASSPHRASE)).rejects.toThrow();
+  }, 30_000);
 });

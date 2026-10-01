@@ -23,11 +23,18 @@ function b64uEncode(buf: ArrayBuffer): string {
 }
 
 function b64uDecode(s: string): ArrayBuffer {
-  const padded = s.replace(/-/g, "+").replace(/_/g, "/");
-  const binary = atob(padded);
-  const buf = new Uint8Array(binary.length);
-  for (let i = 0; i < binary.length; i++) buf[i] = binary.charCodeAt(i);
-  return buf.buffer;
+  if (!s || typeof s !== "string") {
+    throw new Error("Invalid base64url string");
+  }
+  try {
+    const padded = s.replace(/-/g, "+").replace(/_/g, "/");
+    const binary = atob(padded);
+    const buf = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) buf[i] = binary.charCodeAt(i);
+    return buf.buffer;
+  } catch {
+    throw new Error("Failed to decode base64url data");
+  }
 }
 
 async function deriveKey(passphrase: string, salt: ArrayBuffer): Promise<CryptoKey> {
@@ -93,16 +100,37 @@ export async function encryptBackup(
 }
 
 export async function decryptBackup(envelope: BackupEnvelope, passphrase: string): Promise<object> {
+  if (!envelope || typeof envelope !== "object") {
+    throw new Error("Invalid backup envelope");
+  }
   if (envelope.app !== "personal-analytics") {
     throw new Error("Not a Personal Analytics backup file");
   }
   if (envelope.version !== 1) {
     throw new Error(`Unsupported backup version: ${envelope.version}`);
   }
+  if (
+    !envelope.encryption ||
+    envelope.encryption.algorithm !== "AES-GCM" ||
+    !envelope.encryption.kdfParams?.saltB64 ||
+    !envelope.encryption.ivB64 ||
+    !envelope.payload ||
+    !envelope.exportedAt
+  ) {
+    throw new Error("Corrupted or malformed backup envelope");
+  }
 
-  const salt = b64uDecode(envelope.encryption.kdfParams.saltB64);
-  const iv = b64uDecode(envelope.encryption.ivB64);
-  const ciphertext = b64uDecode(envelope.payload);
+  let salt: ArrayBuffer;
+  let iv: ArrayBuffer;
+  let ciphertext: ArrayBuffer;
+  try {
+    salt = b64uDecode(envelope.encryption.kdfParams.saltB64);
+    iv = b64uDecode(envelope.encryption.ivB64);
+    ciphertext = b64uDecode(envelope.payload);
+  } catch {
+    throw new Error("Corrupted backup payload encoding");
+  }
+
   const key = await deriveKey(passphrase, salt);
   const additionalData = new TextEncoder().encode(`1:${envelope.exportedAt}`);
 
@@ -117,9 +145,19 @@ export async function decryptBackup(envelope: BackupEnvelope, passphrase: string
     throw new Error("Wrong passphrase or corrupted file");
   }
 
-  const parsed = JSON.parse(new TextDecoder().decode(plaintext));
-  if (parsed.schemaVersion !== envelope.version) {
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(new TextDecoder().decode(plaintext));
+  } catch {
+    throw new Error("Corrupted backup data: payload is not valid JSON");
+  }
+
+  if (
+    !parsed ||
+    typeof parsed !== "object" ||
+    (parsed as { schemaVersion?: number }).schemaVersion !== envelope.version
+  ) {
     throw new Error("Backup schema version mismatch");
   }
-  return parsed;
+  return parsed as object;
 }

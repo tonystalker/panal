@@ -14,6 +14,7 @@ import { describe, it, expect, beforeEach, vi } from "vitest";
 import { buildMockedResult } from "@/lib/connectors/github";
 import { githubAdapter } from "@/lib/connectors/github";
 import { persistSyncResult, deleteConnectorEvents } from "@/lib/connectors/sync";
+import { vaultStore, vaultRead, vaultClear } from "@/lib/connectors/vault";
 import type { SyncResult } from "@/lib/connectors/types";
 import { db } from "@/lib/db";
 import { generateId } from "@/lib/uuid";
@@ -414,6 +415,47 @@ describe("persistSyncResult — LeetCode", () => {
     const second = await persistSyncResult("leetcode", result);
     expect(second.inserted).toBe(0);
     expect(second.skipped).toBe(result.events.length);
+  });
+});
+
+describe("Encrypted Credential Vault", () => {
+  beforeEach(async () => {
+    await db.connectorConnections.clear();
+    localStorage.clear();
+  });
+
+  it("stores, reads, and decrypts a connector credential successfully", async () => {
+    const rawToken = "ghp_secret_test_token_12345";
+    await vaultStore("github", rawToken, { testSetting: true }, "GitHub Account");
+
+    const row = await db.connectorConnections.where("connectorId").equals("github").first();
+    expect(row).toBeDefined();
+    expect(row?.status).toBe("connected");
+    expect(row?.encryptedCredential).not.toContain(rawToken);
+
+    const decrypted = await vaultRead("github");
+    expect(decrypted).toBe(rawToken);
+  });
+
+  it("vaultClear wipes the stored encrypted credential", async () => {
+    await vaultStore("github", "secret-token", {}, "GitHub Account");
+    await vaultClear("github");
+
+    const row = await db.connectorConnections.where("connectorId").equals("github").first();
+    expect(row?.encryptedCredential).toBeNull();
+    expect(row?.status).toBe("not_connected");
+
+    await expect(vaultRead("github")).rejects.toThrow("No credential stored for github");
+  });
+
+  it("handles corrupted credential blob without leaking details", async () => {
+    await seedConnection("github");
+    const row = await db.connectorConnections.where("connectorId").equals("github").first();
+    await db.connectorConnections.update(row!.id, {
+      encryptedCredential: "corrupted:invalid:payload",
+    });
+
+    await expect(vaultRead("github")).rejects.toThrow("Failed to decrypt connector credential");
   });
 });
 

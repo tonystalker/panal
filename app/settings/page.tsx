@@ -2,6 +2,7 @@
 
 import { useState, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { z } from "zod";
 import { db } from "@/lib/db";
 import { getOrCreateProfile, updateProfile } from "@/lib/repositories";
 import { encryptBackup, decryptBackup, type BackupEnvelope } from "@/lib/crypto";
@@ -10,6 +11,21 @@ import { nowISO } from "@/lib/date";
 import { generateId } from "@/lib/uuid";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { SectionHeading } from "@/components/ui/SectionHeading";
+
+const backupPayloadSchema = z.object({
+  schemaVersion: z.literal(1),
+  exportedAt: z.string().optional(),
+  tables: z.object({
+    userProfile: z.array(z.record(z.string(), z.unknown())).optional().default([]),
+    dailyLogs: z.array(z.record(z.string(), z.unknown())).optional().default([]),
+    taskInstances: z.array(z.record(z.string(), z.unknown())).optional().default([]),
+    manualMetrics: z.array(z.record(z.string(), z.unknown())).optional().default([]),
+    connectorConnections: z.array(z.record(z.string(), z.unknown())).optional().default([]),
+    metricEvents: z.array(z.record(z.string(), z.unknown())).optional().default([]),
+    dashboardWidgets: z.array(z.record(z.string(), z.unknown())).optional().default([]),
+  }),
+});
+
 import {
   ShieldCheckIcon,
   DownloadIcon,
@@ -200,17 +216,22 @@ export default function SettingsPage() {
     }
     try {
       const text = await importFile.text();
-      const envelope = JSON.parse(text) as BackupEnvelope;
-      const payload = (await decryptBackup(envelope, importPassphrase)) as {
-        tables: {
-          userProfile: Parameters<typeof db.userProfile.bulkAdd>[0];
-          dailyLogs: Parameters<typeof db.dailyLogs.bulkAdd>[0];
-          taskInstances: Parameters<typeof db.taskInstances.bulkAdd>[0];
-          manualMetrics: Parameters<typeof db.manualMetrics.bulkAdd>[0];
-          metricEvents: Parameters<typeof db.metricEvents.bulkAdd>[0];
-          dashboardWidgets: Parameters<typeof db.dashboardWidgets.bulkAdd>[0];
-        };
-      };
+      let envelope: BackupEnvelope;
+      try {
+        envelope = JSON.parse(text) as BackupEnvelope;
+      } catch {
+        showStatus("error", "Failed to parse backup file: not valid JSON.");
+        return;
+      }
+
+      const decrypted = await decryptBackup(envelope, importPassphrase);
+      const parseResult = backupPayloadSchema.safeParse(decrypted);
+      if (!parseResult.success) {
+        showStatus("error", "Backup data validation failed: malformed or incompatible schema.");
+        return;
+      }
+
+      const payload = parseResult.data;
 
       if (!confirm(`This will replace all local data with the backup from ${envelope.exportedAt}. Continue?`)) return;
 
@@ -226,12 +247,12 @@ export default function SettingsPage() {
           await db.metricEvents.clear();
           await db.dashboardWidgets.clear();
           const t = payload.tables;
-          if (t.userProfile?.length) await db.userProfile.bulkAdd(t.userProfile);
-          if (t.dailyLogs?.length) await db.dailyLogs.bulkAdd(t.dailyLogs);
-          if (t.taskInstances?.length) await db.taskInstances.bulkAdd(t.taskInstances);
-          if (t.manualMetrics?.length) await db.manualMetrics.bulkAdd(t.manualMetrics);
-          if (t.metricEvents?.length) await db.metricEvents.bulkAdd(t.metricEvents);
-          if (t.dashboardWidgets?.length) await db.dashboardWidgets.bulkAdd(t.dashboardWidgets);
+          if (t.userProfile.length) await db.userProfile.bulkAdd(t.userProfile as unknown as Parameters<typeof db.userProfile.bulkAdd>[0]);
+          if (t.dailyLogs.length) await db.dailyLogs.bulkAdd(t.dailyLogs as unknown as Parameters<typeof db.dailyLogs.bulkAdd>[0]);
+          if (t.taskInstances.length) await db.taskInstances.bulkAdd(t.taskInstances as unknown as Parameters<typeof db.taskInstances.bulkAdd>[0]);
+          if (t.manualMetrics.length) await db.manualMetrics.bulkAdd(t.manualMetrics as unknown as Parameters<typeof db.manualMetrics.bulkAdd>[0]);
+          if (t.metricEvents.length) await db.metricEvents.bulkAdd(t.metricEvents as unknown as Parameters<typeof db.metricEvents.bulkAdd>[0]);
+          if (t.dashboardWidgets.length) await db.dashboardWidgets.bulkAdd(t.dashboardWidgets as unknown as Parameters<typeof db.dashboardWidgets.bulkAdd>[0]);
         },
       );
 
