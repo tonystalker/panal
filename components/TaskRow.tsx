@@ -1,11 +1,11 @@
 "use client";
 
-import type { TaskInstance } from "@/lib/db";
+import type { TaskInstance, WeeklyTask } from "@/lib/db";
 import { CheckIcon, MinusIcon, Trash2Icon } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export interface TaskRowProps {
-  task: TaskInstance;
+  task: TaskInstance | WeeklyTask;
   editing: boolean;
   onToggle: () => void;
   onSkip: () => void;

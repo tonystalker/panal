@@ -9,7 +9,20 @@
  *  - Never use new Date().toISOString().slice(0,10) — that is UTC, not local time.
  */
 
-import { format, parseISO, differenceInCalendarDays, isValid, subDays } from "date-fns";
+import {
+  format,
+  parseISO,
+  differenceInCalendarDays,
+  isValid,
+  subDays,
+  addDays,
+  startOfWeek,
+  endOfWeek,
+  addWeeks,
+  subWeeks,
+  getISOWeek,
+  getYear,
+} from "date-fns";
 import { toZonedTime, fromZonedTime } from "date-fns-tz";
 
 /**
@@ -119,3 +132,96 @@ export function dateRange(start: string, end: string): string[] {
 export function nowISO(): string {
   return new Date().toISOString();
 }
+
+function parseMidday(date: Date | string, timezone?: string): Date {
+  if (typeof date === "string" && /^\d{4}-\d{2}-\d{2}$/.test(date)) {
+    const [y, m, d] = date.split("-").map((v) => parseInt(v, 10));
+    return new Date(y, m - 1, d, 12, 0, 0);
+  }
+  const tz = timezone ?? Intl.DateTimeFormat().resolvedOptions().timeZone;
+  const d = date instanceof Date ? date : new Date(date);
+  const zoned = toZonedTime(d, tz);
+  return new Date(zoned.getFullYear(), zoned.getMonth(), zoned.getDate(), 12, 0, 0);
+}
+
+/**
+ * Resolves start date, end date, and metadata for a week containing the given date.
+ * weekStartsOn: 0 for Sunday, 1 for Monday (default 1).
+ */
+export function getWeekBounds(
+  date: Date | string = new Date(),
+  weekStartsOn: 0 | 1 = 1,
+  timezone?: string,
+): {
+  startDate: string;
+  endDate: string;
+  weekKey: string;
+  weekNumber: number;
+  year: number;
+} {
+  const parsed = parseMidday(date, timezone);
+  const start = startOfWeek(parsed, { weekStartsOn });
+  const end = endOfWeek(parsed, { weekStartsOn });
+
+  const startDate = format(start, "yyyy-MM-dd");
+  const endDate = format(end, "yyyy-MM-dd");
+
+  return {
+    startDate,
+    endDate,
+    weekKey: startDate,
+    weekNumber: getISOWeek(start),
+    year: getYear(start),
+  };
+}
+
+/**
+ * Returns a human-friendly label for a week range, e.g. "Oct 5 – Oct 11, 2026"
+ */
+export function formatWeekRange(startDate: string, endDate: string): string {
+  const start = parseMidday(startDate);
+  const end = parseMidday(endDate);
+  const startYear = getYear(start);
+  const endYear = getYear(end);
+
+  if (startYear === endYear) {
+    return `${format(start, "MMM d")} – ${format(end, "MMM d, yyyy")}`;
+  }
+  return `${format(start, "MMM d, yyyy")} – ${format(end, "MMM d, yyyy")}`;
+}
+
+/**
+ * Returns the start date of the previous week (7 days prior).
+ */
+export function getPrevWeekStartDate(startDate: string): string {
+  return format(subWeeks(parseMidday(startDate), 1), "yyyy-MM-dd");
+}
+
+/**
+ * Returns the start date of the next week (7 days after).
+ */
+export function getNextWeekStartDate(startDate: string): string {
+  return format(addWeeks(parseMidday(startDate), 1), "yyyy-MM-dd");
+}
+
+/**
+ * Returns array of 7 date keys ("YYYY-MM-DD") representing each day in the week.
+ */
+export function getWeekDays(startDate: string): string[] {
+  return dateRange(startDate, format(addDays(parseMidday(startDate), 6), "yyyy-MM-dd"));
+}
+
+/**
+ * Checks whether a given week startDate corresponds to the current operational week.
+ */
+export function isCurrentWeek(
+  startDate: string,
+  timezone?: string,
+  cutoffTime?: string,
+  weekStartsOn: 0 | 1 = 1,
+): boolean {
+  const today = operationalDate(new Date(), timezone, cutoffTime);
+  const currentBounds = getWeekBounds(today, weekStartsOn, timezone);
+  return startDate === currentBounds.startDate;
+}
+

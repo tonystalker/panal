@@ -13,6 +13,10 @@ import {
   DailyLogSchema,
   TaskInstance,
   TaskInstanceSchema,
+  WeeklyLog,
+  WeeklyLogSchema,
+  WeeklyTask,
+  WeeklyTaskSchema,
   ManualMetric,
   ManualMetricSchema,
   UserProfile,
@@ -276,6 +280,135 @@ export async function reorderTasks(orderedIds: string[]): Promise<void> {
 }
 
 // ---------------------------------------------------------------------------
+// WeeklyLog & WeeklyTask
+// ---------------------------------------------------------------------------
+
+export async function getOrCreateWeeklyLog(startDate: string, endDate: string): Promise<WeeklyLog> {
+  const existing = await db.weeklyLogs.where("startDate").equals(startDate).first();
+  if (existing) return existing;
+  const log = WeeklyLogSchema.parse({
+    id: generateId(),
+    weekKey: startDate,
+    startDate,
+    endDate,
+    note: "",
+    createdAt: nowISO(),
+    updatedAt: nowISO(),
+    deletedAt: null,
+  });
+  await db.weeklyLogs.add(log);
+  return log;
+}
+
+export async function getWeeklyLogByKey(weekKey: string): Promise<WeeklyLog | null> {
+  const log = await db.weeklyLogs.where("weekKey").equals(weekKey).and((l) => l.deletedAt === null).first();
+  return log ?? null;
+}
+
+export async function updateWeeklyLog(id: string, patch: Partial<WeeklyLog>): Promise<void> {
+  await db.weeklyLogs.update(id, { ...patch, updatedAt: nowISO() });
+}
+
+export async function getTasksForWeeklyLog(weeklyLogId: string): Promise<WeeklyTask[]> {
+  return db.weeklyTasks
+    .where("weeklyLogId")
+    .equals(weeklyLogId)
+    .and((t) => t.deletedAt === null)
+    .sortBy("sortOrder");
+}
+
+export async function createWeeklyTask(
+  weeklyLogId: string,
+  data: Pick<WeeklyTask, "title" | "targetValue" | "unit">,
+  sortOrder: number,
+): Promise<WeeklyTask> {
+  const task = WeeklyTaskSchema.parse({
+    id: generateId(),
+    weeklyLogId,
+    title: data.title,
+    targetValue: data.targetValue ?? null,
+    completedValue: 0,
+    unit: data.unit ?? null,
+    status: "todo",
+    sortOrder,
+    createdAt: nowISO(),
+    completedAt: null,
+    deletedAt: null,
+  });
+  await db.weeklyTasks.add(task);
+  return task;
+}
+
+export async function updateWeeklyTask(id: string, patch: Partial<WeeklyTask>): Promise<void> {
+  await db.weeklyTasks.update(id, patch);
+}
+
+export async function completeWeeklyTask(id: string): Promise<void> {
+  await db.weeklyTasks.update(id, { status: "done", completedAt: nowISO() });
+}
+
+export async function reopenWeeklyTask(id: string): Promise<void> {
+  await db.weeklyTasks.update(id, { status: "todo", completedAt: null });
+}
+
+export async function skipWeeklyTask(id: string): Promise<void> {
+  await db.weeklyTasks.update(id, { status: "skipped" });
+}
+
+export async function softDeleteWeeklyTask(id: string): Promise<void> {
+  await db.weeklyTasks.update(id, { deletedAt: nowISO() });
+}
+
+export async function carryForwardWeeklyTasks(
+  fromWeeklyLogId: string,
+  toWeeklyLogId: string,
+): Promise<WeeklyTask[]> {
+  const unfinished = await db.weeklyTasks
+    .where("weeklyLogId")
+    .equals(fromWeeklyLogId)
+    .and((t) => t.deletedAt === null && t.status === "todo")
+    .toArray();
+
+  if (unfinished.length === 0) return [];
+
+  const existingCurrentTasks = await getTasksForWeeklyLog(toWeeklyLogId);
+  let baseSortOrder = existingCurrentTasks.length;
+
+  const newTasks: WeeklyTask[] = [];
+  await db.transaction("rw", db.weeklyTasks, async () => {
+    for (const t of unfinished) {
+      const carried = WeeklyTaskSchema.parse({
+        id: generateId(),
+        weeklyLogId: toWeeklyLogId,
+        title: t.title,
+        targetValue: t.targetValue,
+        completedValue: t.completedValue,
+        unit: t.unit,
+        status: "todo",
+        sortOrder: baseSortOrder++,
+        createdAt: nowISO(),
+        completedAt: null,
+        deletedAt: null,
+      });
+      await db.weeklyTasks.add(carried);
+      // Mark original as skipped with note or leave as-is / skip
+      await db.weeklyTasks.update(t.id, { status: "skipped" });
+      newTasks.push(carried);
+    }
+  });
+
+  return newTasks;
+}
+
+export async function reorderWeeklyTasks(orderedIds: string[]): Promise<void> {
+  await db.transaction("rw", db.weeklyTasks, async () => {
+    for (let i = 0; i < orderedIds.length; i++) {
+      await db.weeklyTasks.update(orderedIds[i], { sortOrder: i });
+    }
+  });
+}
+
+// ---------------------------------------------------------------------------
 // ManualMetric
 // ---------------------------------------------------------------------------
 
@@ -412,7 +545,7 @@ export async function cleanupUnaddedManualWidgets(): Promise<void> {
 // ---------------------------------------------------------------------------
 
 /** Task completion % = done tasks / total non-skipped tasks (×100). */
-export function taskCompletionPercent(tasks: TaskInstance[]): number {
+export function taskCompletionPercent(tasks: Array<{ status: string }>): number {
   const active = tasks.filter((t) => t.status !== "skipped");
   if (active.length === 0) return 0;
   const done = active.filter((t) => t.status === "done").length;
@@ -420,13 +553,15 @@ export function taskCompletionPercent(tasks: TaskInstance[]): number {
 }
 
 /** Target progress % = sum(completedValue) / sum(targetValue) for quantitative tasks (×100). */
-export function targetProgressPercent(tasks: TaskInstance[]): number {
+export function targetProgressPercent(
+  tasks: Array<{ targetValue?: number | null; completedValue?: number; status: string }>,
+): number {
   const quantitative = tasks.filter(
     (t) => t.targetValue != null && t.targetValue > 0 && t.status !== "skipped",
   );
   if (quantitative.length === 0) return 0;
   const totalTarget = quantitative.reduce((sum, t) => sum + (t.targetValue ?? 0), 0);
-  const totalDone = quantitative.reduce((sum, t) => sum + t.completedValue, 0);
+  const totalDone = quantitative.reduce((sum, t) => sum + (t.completedValue ?? 0), 0);
   if (totalTarget === 0) return 0;
   return Math.round((totalDone / totalTarget) * 100);
 }

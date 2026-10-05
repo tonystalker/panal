@@ -79,6 +79,31 @@ export const TaskInstanceSchema = z.object({
   deletedAt: z.string().datetime().nullable().default(null),
 });
 
+export const WeeklyLogSchema = z.object({
+  id: z.string().uuid(),
+  weekKey: z.string().regex(/^\d{4}-\d{2}-\d{2}$/), // YYYY-MM-DD start date of the week
+  startDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  endDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  note: z.string().default(""),
+  createdAt: z.string().datetime(),
+  updatedAt: z.string().datetime(),
+  deletedAt: z.string().datetime().nullable().default(null),
+});
+
+export const WeeklyTaskSchema = z.object({
+  id: z.string().uuid(),
+  weeklyLogId: z.string().uuid(),
+  title: z.string().min(1).max(200),
+  targetValue: z.number().positive().nullable().default(null), // null = binary task
+  completedValue: z.number().min(0).default(0),
+  unit: z.string().max(50).nullable().default(null),
+  status: z.enum(["todo", "done", "skipped"]).default("todo"),
+  sortOrder: z.number().int().default(0),
+  createdAt: z.string().datetime(),
+  completedAt: z.string().datetime().nullable().default(null),
+  deletedAt: z.string().datetime().nullable().default(null),
+});
+
 export const ManualMetricSchema = z.object({
   id: z.string().uuid(),
   dailyLogId: z.string().uuid(),
@@ -150,6 +175,8 @@ export type UserProfile = z.infer<typeof UserProfileSchema>;
 export type DailyLog = z.infer<typeof DailyLogSchema>;
 export type TaskTemplate = z.infer<typeof TaskTemplateSchema>;
 export type TaskInstance = z.infer<typeof TaskInstanceSchema>;
+export type WeeklyLog = z.infer<typeof WeeklyLogSchema>;
+export type WeeklyTask = z.infer<typeof WeeklyTaskSchema>;
 export type ManualMetric = z.infer<typeof ManualMetricSchema>;
 export type ConnectorConnection = z.infer<typeof ConnectorConnectionSchema>;
 export type MetricEvent = z.infer<typeof MetricEventSchema>;
@@ -168,6 +195,8 @@ export class PersonalAnalyticsDB extends Dexie {
   connectorConnections!: EntityTable<ConnectorConnection, "id">;
   metricEvents!: EntityTable<MetricEvent, "id">;
   dashboardWidgets!: EntityTable<DashboardWidget, "id">;
+  weeklyLogs!: EntityTable<WeeklyLog, "id">;
+  weeklyTasks!: EntityTable<WeeklyTask, "id">;
 
   constructor() {
     super("personal-analytics");
@@ -213,6 +242,16 @@ export class PersonalAnalyticsDB extends Dexie {
 
       // Widget layout is ordered by position.
       dashboardWidgets: "&id, position",
+    });
+
+    /**
+     * version(2) — Weekly planner tables
+     * weeklyLogs: week-level logs identified by weekKey (start date YYYY-MM-DD)
+     * weeklyTasks: weekly plan to-dos independent of daily dashboard metrics
+     */
+    this.version(2).stores({
+      weeklyLogs: "&id, weekKey, startDate, endDate, deletedAt",
+      weeklyTasks: "&id, weeklyLogId, status, sortOrder, deletedAt",
     });
   }
 }

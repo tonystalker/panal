@@ -19,6 +19,8 @@ const backupPayloadSchema = z.object({
     userProfile: z.array(z.record(z.string(), z.unknown())).optional().default([]),
     dailyLogs: z.array(z.record(z.string(), z.unknown())).optional().default([]),
     taskInstances: z.array(z.record(z.string(), z.unknown())).optional().default([]),
+    weeklyLogs: z.array(z.record(z.string(), z.unknown())).optional().default([]),
+    weeklyTasks: z.array(z.record(z.string(), z.unknown())).optional().default([]),
     manualMetrics: z.array(z.record(z.string(), z.unknown())).optional().default([]),
     connectorConnections: z.array(z.record(z.string(), z.unknown())).optional().default([]),
     metricEvents: z.array(z.record(z.string(), z.unknown())).optional().default([]),
@@ -123,10 +125,12 @@ export default function SettingsPage() {
   // Export readable JSON
   const exportJSON = async () => {
     try {
-      const [dailyLogs, taskInstances, manualMetrics, metricEvents, dashboardWidgets, userProfile] =
+      const [dailyLogs, taskInstances, weeklyLogs, weeklyTasks, manualMetrics, metricEvents, dashboardWidgets, userProfile] =
         await Promise.all([
           db.dailyLogs.toArray(),
           db.taskInstances.toArray(),
+          db.weeklyLogs.toArray(),
+          db.weeklyTasks.toArray(),
           db.manualMetrics.toArray(),
           db.metricEvents.toArray(),
           db.dashboardWidgets.toArray(),
@@ -139,6 +143,8 @@ export default function SettingsPage() {
           userProfile,
           dailyLogs,
           taskInstances,
+          weeklyLogs,
+          weeklyTasks,
           manualMetrics,
           connectorConnections: [],
           metricEvents,
@@ -178,10 +184,12 @@ export default function SettingsPage() {
       return;
     }
     try {
-      const [dailyLogs, taskInstances, manualMetrics, metricEvents, dashboardWidgets, userProfile] =
+      const [dailyLogs, taskInstances, weeklyLogs, weeklyTasks, manualMetrics, metricEvents, dashboardWidgets, userProfile] =
         await Promise.all([
           db.dailyLogs.toArray(),
           db.taskInstances.toArray(),
+          db.weeklyLogs.toArray(),
+          db.weeklyTasks.toArray(),
           db.manualMetrics.toArray(),
           db.metricEvents.toArray(),
           db.dashboardWidgets.toArray(),
@@ -194,6 +202,8 @@ export default function SettingsPage() {
           userProfile,
           dailyLogs,
           taskInstances,
+          weeklyLogs,
+          weeklyTasks,
           manualMetrics,
           connectorConnections: [],
           metricEvents,
@@ -243,11 +253,23 @@ export default function SettingsPage() {
 
       await db.transaction(
         "rw",
-        [db.userProfile, db.dailyLogs, db.taskInstances, db.manualMetrics, db.connectorConnections, db.metricEvents, db.dashboardWidgets],
+        [
+          db.userProfile,
+          db.dailyLogs,
+          db.taskInstances,
+          db.weeklyLogs,
+          db.weeklyTasks,
+          db.manualMetrics,
+          db.connectorConnections,
+          db.metricEvents,
+          db.dashboardWidgets,
+        ],
         async () => {
           await db.userProfile.clear();
           await db.dailyLogs.clear();
           await db.taskInstances.clear();
+          await db.weeklyLogs.clear();
+          await db.weeklyTasks.clear();
           await db.manualMetrics.clear();
           await db.connectorConnections.clear();
           await db.metricEvents.clear();
@@ -256,6 +278,8 @@ export default function SettingsPage() {
           if (t.userProfile.length) await db.userProfile.bulkAdd(t.userProfile as unknown as Parameters<typeof db.userProfile.bulkAdd>[0]);
           if (t.dailyLogs.length) await db.dailyLogs.bulkAdd(t.dailyLogs as unknown as Parameters<typeof db.dailyLogs.bulkAdd>[0]);
           if (t.taskInstances.length) await db.taskInstances.bulkAdd(t.taskInstances as unknown as Parameters<typeof db.taskInstances.bulkAdd>[0]);
+          if (t.weeklyLogs?.length) await db.weeklyLogs.bulkAdd(t.weeklyLogs as unknown as Parameters<typeof db.weeklyLogs.bulkAdd>[0]);
+          if (t.weeklyTasks?.length) await db.weeklyTasks.bulkAdd(t.weeklyTasks as unknown as Parameters<typeof db.weeklyTasks.bulkAdd>[0]);
           if (t.manualMetrics.length) await db.manualMetrics.bulkAdd(t.manualMetrics as unknown as Parameters<typeof db.manualMetrics.bulkAdd>[0]);
           if (t.metricEvents.length) await db.metricEvents.bulkAdd(t.metricEvents as unknown as Parameters<typeof db.metricEvents.bulkAdd>[0]);
           if (t.dashboardWidgets.length) await db.dashboardWidgets.bulkAdd(t.dashboardWidgets as unknown as Parameters<typeof db.dashboardWidgets.bulkAdd>[0]);

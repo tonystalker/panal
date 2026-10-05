@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 import { AppMonogram } from "@/components/ui/AppMonogram";
 import {
   CalendarDaysIcon,
+  CalendarRangeIcon,
   CheckSquareIcon,
   ChevronsLeftIcon,
   ChevronsRightIcon,
@@ -22,6 +23,12 @@ export const NAV_ITEMS = [
     label: "Today",
     id: "nav-today",
     icon: CheckSquareIcon,
+  },
+  {
+    href: "/weekly",
+    label: "Weekly Planner",
+    id: "nav-weekly",
+    icon: CalendarRangeIcon,
   },
   {
     href: "/dashboard",
