@@ -25,6 +25,7 @@ import {
   getDashboardWidgets, upsertDashboardWidget, deleteWidget,
   reorderWidgets, seedDefaultWidgets, cleanupUnaddedManualWidgets,
   getDailyLogsInRange, getTasksForLog, getOrCreateProfile,
+  getDailyLogByDate, getManualMetricsForLog, upsertManualMetricByDate,
 } from "@/lib/repositories";
 import { operationalDate } from "@/lib/date";
 import { generateId } from "@/lib/uuid";
@@ -37,7 +38,7 @@ import { type CustomMetric } from "@/lib/db";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { ChartWidget } from "@/components/ChartWidget";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { PlusIcon, RotateCcwIcon, FlameIcon, XIcon, Trash2Icon } from "lucide-react";
+import { PlusIcon, RotateCcwIcon, FlameIcon, XIcon, Trash2Icon, ArrowRightIcon, ActivityIcon, CheckIcon } from "lucide-react";
 import Link from "next/link";
 
 function computeFrom(range: string, today: string): string {
@@ -149,12 +150,25 @@ export default function DashboardPage() {
     queryKey: ["detail", selectedDate],
     queryFn: async () => {
       if (!selectedDate) return null;
-      const log = recentLogs.find((l) => l.date === selectedDate);
-      if (!log) return { date: selectedDate, tasks: [], note: "" };
-      const tasks = await getTasksForLog(log.id);
-      return { date: selectedDate, tasks, note: log.note };
+      const log = (await getDailyLogByDate(selectedDate)) ?? recentLogs.find((l) => l.date === selectedDate);
+      const tasks = log ? await getTasksForLog(log.id) : [];
+      const manualMetrics = log ? await getManualMetricsForLog(log.id) : [];
+      return { date: selectedDate, logId: log?.id ?? null, tasks, manualMetrics, note: log?.note ?? "" };
     },
     enabled: !!selectedDate,
+  });
+
+  const updateDashboardMetric = useMutation({
+    mutationFn: async ({ date, key, value, unit }: { date: string; key: string; value: number; unit: string }) => {
+      await upsertManualMetricByDate(date, key, value, unit, tz);
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["metric"] });
+      qc.invalidateQueries({ queryKey: ["detail"] });
+      qc.invalidateQueries({ queryKey: ["manualMetrics"] });
+      qc.invalidateQueries({ queryKey: ["logs-recent"] });
+      qc.invalidateQueries({ queryKey: ["dailyLog"] });
+    },
   });
 
   return (
@@ -320,10 +334,10 @@ export default function DashboardPage() {
         </div>
       )}
 
-      {/* Selected Day Detail Panel */}
+      {/* Selected Day Detail Panel (Day Inspector) */}
       {selectedDate && selectedDetail && (
-        <div className="card card-raised mt-6 p-5 fade-in border-accent/30 max-w-xl">
-          <div className="flex items-center justify-between pb-3 mb-3 border-b border-border/60">
+        <div className="card card-raised mt-6 p-5 fade-in border-accent/30 max-w-2xl">
+          <div className="flex items-center justify-between pb-3 mb-4 border-b border-border/60">
             <div>
               <span className="text-[11px] font-mono uppercase tracking-wider text-muted-foreground">
                 Day Inspector
@@ -332,49 +346,149 @@ export default function DashboardPage() {
                 {format(parseISO(selectedDate), "EEEE, MMMM d, yyyy")}
               </h3>
             </div>
-            <button
-              className="btn-icon size-7 text-muted-foreground hover:text-foreground"
-              onClick={() => setSelectedDate(null)}
-              aria-label="Close day detail"
-            >
-              <XIcon className="size-4" />
-            </button>
+            <div className="flex items-center gap-2">
+              <Link
+                href={`/today?date=${selectedDate}`}
+                className="btn btn-ghost btn-sm text-xs h-7 px-2.5 flex items-center gap-1.5 text-foreground border border-border/60 hover:bg-surface-muted transition-colors"
+                title={`Open ${selectedDate} in Workday`}
+              >
+                <span>Open in Workday</span>
+                <ArrowRightIcon className="size-3 text-muted-foreground" />
+              </Link>
+              <button
+                className="btn-icon size-7 text-muted-foreground hover:text-foreground"
+                onClick={() => setSelectedDate(null)}
+                aria-label="Close day detail"
+              >
+                <XIcon className="size-4" />
+              </button>
+            </div>
           </div>
 
-          {selectedDetail.tasks.length === 0 ? (
-            <p className="text-xs text-subtle-foreground font-mono py-2">
-              No tasks logged for this day.
-            </p>
-          ) : (
-            <div className="flex flex-col divide-y divide-border/40">
-              {selectedDetail.tasks.map((t) => (
-                <div key={t.id} className="flex items-center justify-between py-2 text-sm">
-                  <span className={t.status === "done" ? "text-foreground" : "text-muted-foreground"}>
-                    {t.title}
-                  </span>
-                  <span
-                    className={`badge ${
-                      t.status === "done"
-                        ? "badge-success"
-                        : t.status === "skipped"
-                        ? "badge-muted"
-                        : "badge-warning"
-                    }`}
-                  >
-                    {t.status}
-                  </span>
-                </div>
-              ))}
-            </div>
-          )}
+          <div className="flex flex-col gap-5">
+            {/* Manual Check-ins Section (Exercises, Habits, DSA, etc.) */}
+            <div className="flex flex-col gap-2">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+                  <ActivityIcon className="size-3.5 text-accent" />
+                  <span>Manual Check-ins &amp; Habits</span>
+                </span>
+                <span className="text-[11px] text-muted-foreground font-mono">
+                  Edits update charts live
+                </span>
+              </div>
 
-          {selectedDetail.note && (
-            <div className="mt-3.5 p-3 rounded-lg bg-surface-muted/60 border border-border/50">
-              <p className="text-xs text-muted-foreground italic leading-relaxed">
-                &ldquo;{selectedDetail.note}&rdquo;
-              </p>
+              {(!profile?.preferences?.customMetrics || profile.preferences.customMetrics.length === 0) ? (
+                <div className="p-3 rounded-lg bg-surface-muted/40 border border-border/40 text-xs text-muted-foreground">
+                  No check-in metrics configured.{" "}
+                  <Link href="/today" className="text-accent underline underline-offset-2">
+                    Add metrics on Today ↗
+                  </Link>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  {profile.preferences.customMetrics.map((cm) => {
+                    const clean = cm.key.replace(/^manual\./, "");
+                    const current = selectedDetail.manualMetrics.find(
+                      (m) => m.metricKey === clean || m.metricKey === cm.key || m.metricKey === `manual.${clean}`
+                    );
+                    const val = current?.value ?? 0;
+
+                    return (
+                      <div
+                        key={cm.key}
+                        className="flex items-center justify-between gap-2 p-2.5 rounded-lg bg-surface-muted/40 border border-border/50 hover:border-border transition-colors"
+                      >
+                        <div className="flex flex-col min-w-0">
+                          <span className="text-xs font-medium text-foreground truncate">
+                            {cm.label}
+                          </span>
+                          {cm.unit && (
+                            <span className="text-[10px] text-muted-foreground">
+                              ({cm.unit}){cm.defaultGoalLine ? ` · Goal: ${cm.defaultGoalLine}` : ""}
+                            </span>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-1.5 shrink-0">
+                          <input
+                            key={`${selectedDate}-${cm.key}-${val}`}
+                            id={`inspector-metric-${cm.key}`}
+                            type="text"
+                            inputMode="numeric"
+                            style={{ width: "4.5rem" }}
+                            className="h-7 w-18 shrink-0 rounded-md border border-border/80 bg-surface px-2 text-right font-mono text-xs tabular-nums text-foreground outline-none transition-colors hover:border-border-strong focus:border-border-strong focus:ring-1 focus:ring-border-strong"
+                            defaultValue={val || ""}
+                            placeholder="0"
+                            onBlur={(e) => {
+                              const parsed = parseFloat(e.target.value);
+                              if (!isNaN(parsed) && parsed >= 0) {
+                                updateDashboardMetric.mutate({
+                                  date: selectedDate,
+                                  key: cm.key,
+                                  value: parsed,
+                                  unit: cm.unit,
+                                });
+                              }
+                            }}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter") {
+                                (e.target as HTMLInputElement).blur();
+                              }
+                            }}
+                          />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
-          )}
+
+            {/* Tasks Section */}
+            <div className="flex flex-col gap-2 pt-2 border-t border-border/40">
+              <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground block">
+                Tasks ({selectedDetail.tasks.length})
+              </span>
+              {selectedDetail.tasks.length === 0 ? (
+                <p className="text-xs text-subtle-foreground font-mono py-1">
+                  No tasks logged for this day.
+                </p>
+              ) : (
+                <div className="flex flex-col divide-y divide-border/40">
+                  {selectedDetail.tasks.map((t) => (
+                    <div key={t.id} className="flex items-center justify-between py-1.5 text-xs">
+                      <span className={t.status === "done" ? "text-foreground" : "text-muted-foreground"}>
+                        {t.title}
+                      </span>
+                      <span
+                        className={`badge ${
+                          t.status === "done"
+                            ? "badge-success"
+                            : t.status === "skipped"
+                            ? "badge-muted"
+                            : "badge-warning"
+                        }`}
+                      >
+                        {t.status}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Daily Note Section */}
+            {selectedDetail.note && (
+              <div className="p-3 rounded-lg bg-surface-muted/60 border border-border/50">
+                <span className="text-[10px] font-mono uppercase tracking-wider text-muted-foreground block mb-1">
+                  Daily Reflection
+                </span>
+                <p className="text-xs text-muted-foreground italic leading-relaxed">
+                  &ldquo;{selectedDetail.note}&rdquo;
+                </p>
+              </div>
+            )}
+          </div>
         </div>
       )}
 

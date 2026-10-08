@@ -28,14 +28,14 @@ export async function resolveMetricData(
   to: string,
 ): Promise<DataPoint[]> {
   const allDates = dateRange(from, to);
-  let def = METRIC_BY_KEY[metricKey];
+  const cleanKey = metricKey.replace(/^manual\./, "");
+  let def = METRIC_BY_KEY[metricKey] || METRIC_BY_KEY[`manual.${cleanKey}`];
 
   if (!def) {
-    if (metricKey.startsWith("manual.")) {
-      const rawKey = metricKey.replace(/^manual\./, "");
+    if (metricKey.startsWith("manual.") || cleanKey) {
       def = {
-        key: metricKey,
-        label: rawKey,
+        key: metricKey.startsWith("manual.") ? metricKey : `manual.${cleanKey}`,
+        label: cleanKey.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()),
         unit: "",
         aggregation: "sum",
         defaultChart: "bar",
@@ -43,7 +43,7 @@ export async function resolveMetricData(
         defaultColor: "#a3ff12",
         missingDataPolicy: "zero",
         source: "manual",
-        manualMetricKey: rawKey,
+        manualMetricKey: cleanKey,
       };
       return resolveManualMetric(def, from, to, allDates);
     }
@@ -107,7 +107,7 @@ async function resolveManualMetric(
   to: string,
   allDates: string[],
 ): Promise<DataPoint[]> {
-  const rawKey = def.manualMetricKey;
+  const rawKey = def.manualMetricKey || def.key.replace(/^manual\./, "");
   if (!rawKey) return allDates.map((d) => ({ date: d, value: null }));
 
   const data = await getManualMetricsInRange(rawKey, from, to);

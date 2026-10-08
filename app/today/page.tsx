@@ -15,6 +15,8 @@ import {
   softDeleteTask,
   getManualMetricsForLog,
   upsertManualMetric,
+  upsertManualMetricByDate,
+  getManualMetricsByDate,
   taskCompletionPercent,
   targetProgressPercent,
   getOrCreateProfile,
@@ -38,7 +40,11 @@ import {
   ClockIcon,
   Trash2Icon,
   XIcon,
+  RotateCcwIcon,
+  ActivityIcon,
+  ListTodoIcon,
 } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 export interface MetricPreset {
   key: string;
@@ -65,6 +71,8 @@ function TodayContent() {
   const [timezone, setTimezone] = useState("UTC");
   const [showAddTask, setShowAddTask] = useState(false);
   const [showPrevTasks, setShowPrevTasks] = useState(false);
+  const [prevViewMode, setPrevViewMode] = useState<"tasks" | "metrics">("tasks");
+  const [showYesterdayQuickInputs, setShowYesterdayQuickInputs] = useState(false);
   const [newTitle, setNewTitle] = useState("");
   const [newTarget, setNewTarget] = useState("");
   const [newUnit, setNewUnit] = useState("");
@@ -132,17 +140,34 @@ function TodayContent() {
 
   const unfinishedPrevTasks = prevTasks.filter((t) => t.status === "todo");
 
+  // Previous operational day manual metrics
+  const { data: prevMetrics = [] } = useQuery({
+    queryKey: ["manualMetrics", prevWorkdayKey],
+    queryFn: () => getManualMetricsByDate(prevWorkdayKey),
+    enabled: isCurrentOperationalToday && !!prevWorkdayKey,
+  });
+
   // Derived state
   const completion = taskCompletionPercent(tasks);
   const targetPct = targetProgressPercent(tasks);
   const doneTasks = tasks.filter((t) => t.status === "done").length;
   const activeTasks = tasks.filter((t) => t.status !== "skipped").length;
 
-  const getMetricValue = (key: string) => metrics.find((m) => m.metricKey === key)?.value ?? 0;
+  const getMetricValue = (key: string) => {
+    const clean = key.replace(/^manual\./, "");
+    return metrics.find((m) => m.metricKey === clean || m.metricKey === key || m.metricKey === `manual.${clean}`)?.value ?? 0;
+  };
 
   const activeMetrics = profile?.preferences?.customMetrics ?? [];
   const activeKeys = new Set(activeMetrics.map((m) => m.key));
   const availablePresets = POPULAR_METRIC_PRESETS.filter((p) => !activeKeys.has(p.key));
+
+  const getPrevMetricValue = (key: string) => {
+    const clean = key.replace(/^manual\./, "");
+    return prevMetrics.find((m) => m.metricKey === clean || m.metricKey === key || m.metricKey === `manual.${clean}`)?.value ?? 0;
+  };
+
+  const unloggedPrevMetrics = activeMetrics.filter((m) => getPrevMetricValue(m.key) === 0);
 
   // Navigation handlers
   const navigateToDate = (targetDate: string) => {
@@ -169,11 +194,13 @@ function TodayContent() {
 
   // Mutations
   const invalidate = () => {
-    qc.invalidateQueries({ queryKey: ["tasks", log?.id] });
-    qc.invalidateQueries({ queryKey: ["manualMetrics", log?.id] });
-    qc.invalidateQueries({ queryKey: ["dailyLog", dateKey] });
+    qc.invalidateQueries({ queryKey: ["tasks"] });
+    qc.invalidateQueries({ queryKey: ["manualMetrics"] });
+    qc.invalidateQueries({ queryKey: ["dailyLog"] });
     qc.invalidateQueries({ queryKey: ["calendar-completion"] });
     qc.invalidateQueries({ queryKey: ["logs-recent"] });
+    qc.invalidateQueries({ queryKey: ["metric"] });
+    qc.invalidateQueries({ queryKey: ["detail"] });
   };
 
   const addTask = useMutation({
@@ -210,13 +237,7 @@ function TodayContent() {
     mutationFn: async (taskId: string) => {
       await completeTask(taskId);
     },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["tasks", prevLog?.id] });
-      qc.invalidateQueries({ queryKey: ["tasks", log?.id] });
-      qc.invalidateQueries({ queryKey: ["dailyLog", prevWorkdayKey] });
-      qc.invalidateQueries({ queryKey: ["calendar-completion"] });
-      qc.invalidateQueries({ queryKey: ["logs-recent"] });
-    },
+    onSuccess: invalidate,
   });
 
   const completeAllPrevTasks = useMutation({
@@ -225,13 +246,7 @@ function TodayContent() {
         await completeTask(t.id);
       }
     },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["tasks", prevLog?.id] });
-      qc.invalidateQueries({ queryKey: ["tasks", log?.id] });
-      qc.invalidateQueries({ queryKey: ["dailyLog", prevWorkdayKey] });
-      qc.invalidateQueries({ queryKey: ["calendar-completion"] });
-      qc.invalidateQueries({ queryKey: ["logs-recent"] });
-    },
+    onSuccess: invalidate,
   });
 
   const skipTaskMut = useMutation({
@@ -248,6 +263,13 @@ function TodayContent() {
     mutationFn: async ({ key, value, unit }: { key: string; value: number; unit: string }) => {
       if (!log) return;
       await upsertManualMetric(log.id, key, value, unit);
+    },
+    onSuccess: invalidate,
+  });
+
+  const updatePrevMetric = useMutation({
+    mutationFn: async ({ key, value, unit }: { key: string; value: number; unit: string }) => {
+      await upsertManualMetricByDate(prevWorkdayKey, key, value, unit, tz);
     },
     onSuccess: invalidate,
   });
@@ -391,21 +413,38 @@ function TodayContent() {
         }
       />
 
-      {/* Previous Workday Unfinished Tasks Shortcut Banner */}
-      {isCurrentOperationalToday && unfinishedPrevTasks.length > 0 && (
+      {/* Previous Workday Unfinished Tasks & Manual Check-ins Shortcut Banner */}
+      {isCurrentOperationalToday && (unfinishedPrevTasks.length > 0 || activeMetrics.length > 0) && (
         <div
           id="prev-workday-banner"
           className="rounded-xl border border-border/80 bg-surface/80 p-3 sm:px-4 sm:py-3 flex flex-col gap-2.5 transition-all"
         >
           <div className="flex items-center justify-between gap-3 flex-wrap">
             <div className="flex items-center gap-2.5 min-w-0">
-              <span className="size-2 rounded-full bg-warning shrink-0" />
+              <span
+                className={cn(
+                  "size-2 rounded-full shrink-0",
+                  unfinishedPrevTasks.length > 0 || unloggedPrevMetrics.length > 0
+                    ? "bg-warning"
+                    : "bg-accent"
+                )}
+              />
               <div className="flex items-baseline gap-2 flex-wrap">
                 <span className="text-xs font-semibold text-foreground">
                   Previous workday
                 </span>
                 <span className="text-xs text-muted-foreground">
-                  · <span className="font-mono tabular-nums text-foreground">{unfinishedPrevTasks.length}</span> unfinished {unfinishedPrevTasks.length === 1 ? "task" : "tasks"}
+                  · {unfinishedPrevTasks.length > 0 ? (
+                    <><span className="font-mono tabular-nums text-foreground">{unfinishedPrevTasks.length}</span> unfinished {unfinishedPrevTasks.length === 1 ? "task" : "tasks"}</>
+                  ) : (
+                    <span className="text-accent/90">Tasks done</span>
+                  )}
+                  {" · "}
+                  {unloggedPrevMetrics.length > 0 ? (
+                    <><span className="font-mono tabular-nums text-foreground">{unloggedPrevMetrics.length}</span> unlogged {unloggedPrevMetrics.length === 1 ? "check-in" : "check-ins"}</>
+                  ) : (
+                    <span className="text-accent/90">Check-ins logged</span>
+                  )}
                 </span>
                 <span className="text-[11px] text-subtle-foreground font-mono">
                   ({format(parseISO(prevWorkdayKey), "MMM d")})
@@ -420,7 +459,7 @@ function TodayContent() {
                 className="btn btn-ghost btn-sm text-xs h-7 px-2.5"
                 onClick={() => setShowPrevTasks((v) => !v)}
               >
-                {showPrevTasks ? "Hide items" : "Quick complete"}
+                {showPrevTasks ? "Hide items" : "Quick review"}
               </button>
               <button
                 id="open-prev-workday-btn"
@@ -434,52 +473,148 @@ function TodayContent() {
             </div>
           </div>
 
-          {/* Expandable tasks list to mark items complete directly */}
+          {/* Expandable items: Tab switcher between Tasks and Check-ins */}
           {showPrevTasks && (
-            <div className="pt-2 border-t border-border/50 flex flex-col gap-1">
-              <div className="flex items-center justify-between pb-1 text-[11px] text-subtle-foreground font-mono">
-                <span>Incomplete from {prevWorkdayKey}:</span>
+            <div className="pt-2 border-t border-border/50 flex flex-col gap-2.5">
+              <div className="flex items-center gap-2 border-b border-border/40 pb-2">
                 <button
                   type="button"
-                  className="hover:text-foreground text-accent text-[11px] font-mono transition-colors"
-                  onClick={() => completeAllPrevTasks.mutate()}
+                  id="prev-tab-tasks"
+                  className={cn(
+                    "btn btn-sm text-xs h-7 px-2.5 flex items-center gap-1.5 transition-colors",
+                    prevViewMode === "tasks" ? "btn-secondary text-foreground font-medium" : "btn-ghost text-muted-foreground"
+                  )}
+                  onClick={() => setPrevViewMode("tasks")}
                 >
-                  Mark all complete
+                  <ListTodoIcon className="size-3.5" />
+                  <span>Tasks ({unfinishedPrevTasks.length})</span>
+                </button>
+                <button
+                  type="button"
+                  id="prev-tab-metrics"
+                  className={cn(
+                    "btn btn-sm text-xs h-7 px-2.5 flex items-center gap-1.5 transition-colors",
+                    prevViewMode === "metrics" ? "btn-secondary text-foreground font-medium" : "btn-ghost text-muted-foreground"
+                  )}
+                  onClick={() => setPrevViewMode("metrics")}
+                >
+                  <ActivityIcon className="size-3.5" />
+                  <span>Check-ins ({activeMetrics.length})</span>
                 </button>
               </div>
-              <div className="flex flex-col divide-y divide-border/30">
-                {unfinishedPrevTasks.map((t) => (
-                  <div
-                    key={t.id}
-                    className="flex items-center justify-between gap-3 py-2 px-1 hover:bg-surface-muted/20 transition-colors rounded"
-                  >
-                    <div className="flex items-center gap-2.5 min-w-0">
+
+              {prevViewMode === "tasks" ? (
+                // Tasks list
+                unfinishedPrevTasks.length === 0 ? (
+                  <p className="text-xs text-muted-foreground py-2 italic font-mono">
+                    All tasks for {format(parseISO(prevWorkdayKey), "MMM d")} are complete!
+                  </p>
+                ) : (
+                  <div className="flex flex-col gap-1">
+                    <div className="flex items-center justify-between pb-1 text-[11px] text-subtle-foreground font-mono">
+                      <span>Incomplete from {prevWorkdayKey}:</span>
                       <button
                         type="button"
-                        id={`complete-prev-${t.id}`}
-                        aria-label={`Complete task ${t.title}`}
-                        className="checkbox size-4 shrink-0"
-                        onClick={() => completePrevTask.mutate(t.id)}
+                        className="hover:text-foreground text-accent text-[11px] font-mono transition-colors"
+                        onClick={() => completeAllPrevTasks.mutate()}
                       >
-                        <CheckIcon className="size-2.5 text-background stroke-[2.5]" />
+                        Mark all complete
                       </button>
-                      <span className="text-xs text-foreground truncate">{t.title}</span>
-                      {t.targetValue != null && (
-                        <span className="text-[11px] text-subtle-foreground font-mono tabular-nums shrink-0">
-                          ({t.completedValue}/{t.targetValue} {t.unit ?? ""})
-                        </span>
-                      )}
                     </div>
-                    <button
-                      type="button"
-                      className="btn btn-ghost btn-sm text-[11px] h-6 px-2 font-mono text-muted-foreground hover:text-foreground shrink-0"
-                      onClick={() => completePrevTask.mutate(t.id)}
-                    >
-                      Done
-                    </button>
+                    <div className="flex flex-col divide-y divide-border/30">
+                      {unfinishedPrevTasks.map((t) => (
+                        <div
+                          key={t.id}
+                          className="flex items-center justify-between gap-3 py-2 px-1 hover:bg-surface-muted/20 transition-colors rounded"
+                        >
+                          <div className="flex items-center gap-2.5 min-w-0">
+                            <button
+                              type="button"
+                              id={`complete-prev-${t.id}`}
+                              aria-label={`Complete task ${t.title}`}
+                              className="checkbox size-4 shrink-0"
+                              onClick={() => completePrevTask.mutate(t.id)}
+                            >
+                              <CheckIcon className="size-2.5 text-background stroke-[2.5]" />
+                            </button>
+                            <span className="text-xs text-foreground truncate">{t.title}</span>
+                            {t.targetValue != null && (
+                              <span className="text-[11px] text-subtle-foreground font-mono tabular-nums shrink-0">
+                                ({t.completedValue}/{t.targetValue} {t.unit ?? ""})
+                              </span>
+                            )}
+                          </div>
+                          <button
+                            type="button"
+                            className="btn btn-ghost btn-sm text-[11px] h-6 px-2 font-mono text-muted-foreground hover:text-foreground shrink-0"
+                            onClick={() => completePrevTask.mutate(t.id)}
+                          >
+                            Done
+                          </button>
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                ))}
-              </div>
+                )
+              ) : (
+                // Manual check-ins list (Exercises, DSA, custom metrics)
+                <div className="flex flex-col gap-1.5">
+                  <div className="flex items-center justify-between pb-1 text-[11px] text-subtle-foreground font-mono">
+                    <span>Manual check-ins for {prevWorkdayKey} (Exercise, habits, etc.):</span>
+                    <span className="text-[10px] text-muted-foreground">Changes reflect live in Dashboard</span>
+                  </div>
+                  {activeMetrics.length === 0 ? (
+                    <p className="text-xs text-muted-foreground py-2 italic">
+                      No check-in metrics configured yet. Add one in the Manual Check-ins section below!
+                    </p>
+                  ) : (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      {activeMetrics.map((m) => {
+                        const currentVal = getPrevMetricValue(m.key);
+                        return (
+                          <div
+                            key={m.key}
+                            className="flex items-center justify-between gap-2 p-2 rounded-lg bg-surface-muted/30 border border-border/40 hover:border-border transition-colors"
+                          >
+                            <div className="flex flex-col min-w-0">
+                              <span className="text-xs font-medium text-foreground truncate">
+                                {m.label}
+                              </span>
+                              {m.unit && (
+                                <span className="text-[10px] text-muted-foreground">
+                                  ({m.unit}){m.defaultGoalLine ? ` · Goal: ${m.defaultGoalLine}` : ""}
+                                </span>
+                              )}
+                            </div>
+                            <div className="flex items-center gap-1.5 shrink-0">
+                              <input
+                                id={`prev-metric-${m.key}`}
+                                type="text"
+                                inputMode="numeric"
+                                style={{ width: "4rem" }}
+                                className="h-7 w-16 shrink-0 rounded-md border border-border/80 bg-surface px-2 text-right font-mono text-xs tabular-nums text-foreground outline-none transition-colors hover:border-border-strong focus:border-border-strong focus:ring-1 focus:ring-border-strong"
+                                defaultValue={currentVal || ""}
+                                placeholder="0"
+                                onBlur={(e) => {
+                                  const val = parseFloat(e.target.value);
+                                  if (!isNaN(val) && val >= 0) {
+                                    updatePrevMetric.mutate({ key: m.key, value: val, unit: m.unit });
+                                  }
+                                }}
+                                onKeyDown={(e) => {
+                                  if (e.key === "Enter") {
+                                    (e.target as HTMLInputElement).blur();
+                                  }
+                                }}
+                              />
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -617,19 +752,101 @@ function TodayContent() {
               title="Manual Check-ins"
               description={`Habits & metrics for ${format(parseISO(dateKey), "MMM d")}`}
               action={
-                <button
-                  id="add-custom-metric-btn"
-                  type="button"
-                  className="btn btn-ghost btn-sm h-7 px-2 text-xs flex items-center gap-1 text-muted-foreground hover:text-foreground"
-                  onClick={() => setShowAddMetric((prev) => !prev)}
-                  title="Add metric to track"
-                  aria-label="Add metric to track"
-                >
-                  <PlusIcon className="size-3.5" />
-                  <span>Add</span>
-                </button>
+                <div className="flex items-center gap-1.5">
+                  {isCurrentOperationalToday && (
+                    <button
+                      id="toggle-yesterday-checkins-btn"
+                      type="button"
+                      className="btn btn-ghost btn-sm h-7 px-2 text-xs flex items-center gap-1 text-muted-foreground hover:text-foreground"
+                      onClick={() => setShowYesterdayQuickInputs((prev) => !prev)}
+                      title="Update yesterday's check-ins"
+                      aria-label="Update yesterday's check-ins"
+                    >
+                      <RotateCcwIcon className="size-3" />
+                      <span>{showYesterdayQuickInputs ? "Hide yesterday" : "Yesterday"}</span>
+                    </button>
+                  )}
+                  <button
+                    id="add-custom-metric-btn"
+                    type="button"
+                    className="btn btn-ghost btn-sm h-7 px-2 text-xs flex items-center gap-1 text-muted-foreground hover:text-foreground"
+                    onClick={() => setShowAddMetric((prev) => !prev)}
+                    title="Add metric to track"
+                    aria-label="Add metric to track"
+                  >
+                    <PlusIcon className="size-3.5" />
+                    <span>Add</span>
+                  </button>
+                </div>
               }
             />
+
+            {/* Quick Yesterday Check-ins Panel */}
+            {showYesterdayQuickInputs && isCurrentOperationalToday && (
+              <div className="rounded-xl border border-accent/40 bg-surface/80 p-3 flex flex-col gap-2.5 animate-in fade-in duration-150">
+                <div className="flex items-center justify-between pb-1.5 border-b border-border/40">
+                  <div className="flex items-center gap-1.5">
+                    <span className="size-2 rounded-full bg-accent" />
+                    <span className="text-xs font-semibold text-foreground">
+                      Yesterday&apos;s Check-ins ({format(parseISO(prevWorkdayKey), "MMM d")})
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    className="btn-icon size-6 text-muted-foreground hover:text-foreground"
+                    onClick={() => setShowYesterdayQuickInputs(false)}
+                    aria-label="Close yesterday check-ins"
+                  >
+                    <XIcon className="size-3.5" />
+                  </button>
+                </div>
+                <p className="text-[11px] text-muted-foreground leading-relaxed">
+                  Did you exercise or complete habits yesterday but forgot to check in? Update them here and they will immediately reflect in the Dashboard.
+                </p>
+                {activeMetrics.length === 0 ? (
+                  <p className="text-xs text-muted-foreground italic py-1">No metrics configured yet.</p>
+                ) : (
+                  <div className="divide-y divide-border/30">
+                    {activeMetrics.map((m) => {
+                      const currentVal = getPrevMetricValue(m.key);
+                      return (
+                        <div
+                          key={`yesterday-row-${m.key}`}
+                          className="flex items-center justify-between gap-2 py-1.5"
+                        >
+                          <div className="flex items-baseline gap-1.5 min-w-0">
+                            <span className="text-xs font-medium text-foreground truncate">{m.label}</span>
+                            {m.unit && (
+                              <span className="text-[10px] text-muted-foreground">({m.unit})</span>
+                            )}
+                          </div>
+                          <input
+                            id={`yesterday-quick-metric-${m.key}`}
+                            type="text"
+                            inputMode="numeric"
+                            style={{ width: "4rem" }}
+                            className="h-7 w-16 shrink-0 rounded-md border border-border/80 bg-surface-muted/60 px-2 text-right font-mono text-xs tabular-nums text-foreground outline-none transition-colors hover:border-border-strong focus:border-border-strong focus:bg-surface-muted focus:ring-1 focus:ring-border-strong"
+                            defaultValue={currentVal || ""}
+                            placeholder="0"
+                            onBlur={(e) => {
+                              const val = parseFloat(e.target.value);
+                              if (!isNaN(val) && val >= 0) {
+                                updatePrevMetric.mutate({ key: m.key, value: val, unit: m.unit });
+                              }
+                            }}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter") {
+                                (e.target as HTMLInputElement).blur();
+                              }
+                            }}
+                          />
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            )}
 
             {showAddMetric && (
               <div className="rounded-xl border border-border/80 bg-surface/80 p-3.5 flex flex-col gap-3 animate-in fade-in duration-150">

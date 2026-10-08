@@ -370,4 +370,31 @@ describe("Custom metrics registry and formatting", () => {
     const widgetsAfterDelete = await getDashboardWidgets();
     expect(widgetsAfterDelete.some((w) => w.metricKeys.includes(`manual.${metric.key}`))).toBe(false);
   });
+
+  it("upsertManualMetricByDate updates previous day and reflects in resolveMetricData", async () => {
+    const { upsertManualMetricByDate, getManualMetricsByDate } = await import("@/lib/repositories");
+    const { resolveMetricData } = await import("@/lib/metrics/resolver");
+
+    const previousDate = "2026-10-05";
+    const todayDate = "2026-10-06";
+
+    // Update exercise minutes for previous day
+    await upsertManualMetricByDate(previousDate, "exercise_minutes", 45, "min", "UTC");
+
+    // Fetch by date
+    const prevMetrics = await getManualMetricsByDate(previousDate);
+    const exerciseMetric = prevMetrics.find((m) => m.metricKey === "exercise_minutes");
+    expect(exerciseMetric).toBeDefined();
+    expect(exerciseMetric?.value).toBe(45);
+
+    // Resolve data in range for manual.exercise_minutes (dashboard widget key)
+    const dataWithPrefix = await resolveMetricData("manual.exercise_minutes", previousDate, todayDate);
+    const prevPointPrefix = dataWithPrefix.find((d) => d.date === previousDate);
+    expect(prevPointPrefix?.value).toBe(45);
+
+    // Resolve data in range for bare key
+    const dataBare = await resolveMetricData("exercise_minutes", previousDate, todayDate);
+    const prevPointBare = dataBare.find((d) => d.date === previousDate);
+    expect(prevPointBare?.value).toBe(45);
+  });
 });

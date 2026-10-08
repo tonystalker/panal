@@ -416,27 +416,34 @@ export async function getManualMetricsForLog(dailyLogId: string): Promise<Manual
   return db.manualMetrics.where("dailyLogId").equals(dailyLogId).toArray();
 }
 
+export async function getManualMetricsByDate(dateKey: string): Promise<ManualMetric[]> {
+  const log = await getDailyLogByDate(dateKey);
+  if (!log) return [];
+  return getManualMetricsForLog(log.id);
+}
+
 export async function upsertManualMetric(
   dailyLogId: string,
   metricKey: string,
   value: number,
   unit: string,
 ): Promise<ManualMetric> {
+  const cleanKey = metricKey.replace(/^manual\./, "");
   const existing = await db.manualMetrics
     .where("dailyLogId")
     .equals(dailyLogId)
-    .and((m) => m.metricKey === metricKey)
+    .and((m) => m.metricKey === cleanKey || m.metricKey === metricKey || m.metricKey === `manual.${cleanKey}`)
     .first();
 
   if (existing) {
-    await db.manualMetrics.update(existing.id, { value });
-    return { ...existing, value };
+    await db.manualMetrics.update(existing.id, { value, metricKey: cleanKey });
+    return { ...existing, value, metricKey: cleanKey };
   }
 
   const metric = ManualMetricSchema.parse({
     id: generateId(),
     dailyLogId,
-    metricKey,
+    metricKey: cleanKey,
     value,
     unit,
     source: "manual",
@@ -446,11 +453,24 @@ export async function upsertManualMetric(
   return metric;
 }
 
+export async function upsertManualMetricByDate(
+  dateKey: string,
+  metricKey: string,
+  value: number,
+  unit: string,
+  timezone?: string,
+): Promise<ManualMetric> {
+  const tz = timezone ?? Intl.DateTimeFormat().resolvedOptions().timeZone;
+  const log = await getOrCreateDailyLog(dateKey, tz);
+  return upsertManualMetric(log.id, metricKey, value, unit);
+}
+
 export async function getManualMetricsInRange(
   metricKey: string,
   from: string,
   to: string,
 ): Promise<Array<{ date: string; value: number }>> {
+  const cleanKey = metricKey.replace(/^manual\./, "");
   // Get all daily logs in range, then join with manual metrics
   const logs = await getDailyLogsInRange(from, to);
   const logIds = logs.map((l) => l.id);
@@ -459,10 +479,18 @@ export async function getManualMetricsInRange(
   const metrics = await db.manualMetrics
     .where("dailyLogId")
     .anyOf(logIds)
-    .and((m) => m.metricKey === metricKey)
+    .and((m) => m.metricKey === cleanKey || m.metricKey === metricKey || m.metricKey === `manual.${cleanKey}`)
     .toArray();
 
-  return metrics.map((m) => ({ date: logIdToDate[m.dailyLogId] ?? "", value: m.value }));
+  const byDate = new Map<string, number>();
+  for (const m of metrics) {
+    const d = logIdToDate[m.dailyLogId];
+    if (d) {
+      byDate.set(d, m.value);
+    }
+  }
+
+  return Array.from(byDate.entries()).map(([date, value]) => ({ date, value }));
 }
 
 // ---------------------------------------------------------------------------
